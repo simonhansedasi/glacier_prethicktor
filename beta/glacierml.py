@@ -50,8 +50,3 @@ def build_dnn_model(norm):
                 optimizer=tf.keras.optimizers.Adam(0.01))
     
     return model
-
-def dnn_test_results(feature_name):
-    dnn_test_results[feature_name] = dnn_model.evaluate(
-        test_features[feature_name],
-        test_labels, verbose=0)
