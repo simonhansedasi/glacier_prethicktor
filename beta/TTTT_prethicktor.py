@@ -3,7 +3,15 @@ import pandas as pd
 import tensorflow as tf
 import glacierml as gl
 from tqdm import tqdm
-
+import os
+from tensorflow.python.util import deprecation
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  
+    
+print('Reading data')
 # import the data
 T = pd.read_csv('/home/sa42/data/glac/T_models/T.csv')
 T = T.drop([
@@ -69,6 +77,8 @@ test_features = test_dataset.copy()
 train_labels = train_features.pop('THICKNESS')
 test_labels = test_features.pop('THICKNESS')
 
+
+print('Normalizing Data')
 # DATA NORMALIZER
 normalizer = {}
 variable_list = list(train_features)
@@ -80,7 +90,7 @@ normalizer['ALL'].adapt(np.array(train_features))
 
 
 # LINEAR REGRESSION MODELS
-
+print('Running single-variable linear regression')
 linear_model = {}
 linear_history = {}
 linear_results = {}
@@ -100,7 +110,7 @@ for variable_name in tqdm(variable_list):
     
     
 # MULTIVARIABLE LINEAR REGRESSION 
-
+print('Running multi-variable linear regression')
 linear_model = gl.build_linear_model(normalizer['ALL'])
 
 linear_history['MULTI'] = linear_model.fit(
@@ -120,7 +130,7 @@ linear_model.save('saved_models/TTTT_linear_multivariable')
 dnn_model = {}
 dnn_history = {}
 dnn_results = {}
-
+print('Running single-variable dnn regression')
 for variable_name in tqdm(variable_list):
     dnn_model[variable_name] = gl.build_dnn_model(normalizer[variable_name])
     dnn_history[variable_name] = dnn_model[variable_name].fit(
@@ -136,7 +146,8 @@ for variable_name in tqdm(variable_list):
     dnn_model[variable_name].save('saved_models/TTTT_dnn_' + str([variable_name]))
 
     
-# DNN MULTIVARIABLE MODEL     
+# DNN MULTIVARIABLE MODEL 
+print('Running multi-variable dnn regression')
 dnn_model = gl.build_dnn_model(normalizer['ALL'])
 
 dnn_history['MULTI'] = dnn_model.fit(

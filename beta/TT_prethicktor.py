@@ -3,32 +3,38 @@ import pandas as pd
 import tensorflow as tf
 import glacierml as gl
 from tqdm import tqdm
+import warnings
+from tensorflow.python.util import deprecation
+import os
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-# import the data
+# import data
+print('Reading data')
 TT = pd.read_csv('/home/sa42/data/glac/T_models/TT.csv')
-glathida = TT
-glathida = glathida[[
-#     'GlaThiDa_ID',
-#     'POLITICAL_UNIT',
-#     'GLACIER_NAME',
-#     'SURVEY_DATE',
-    'LOWER_BOUND',
-    'UPPER_BOUND',
-    'AREA',
-    'MEAN_SLOPE',
-#     'MEAN_THICKNESS',
-#     'MEAN_THICKNESS_UNCERTAINTY',
-    'MAXIMUM_THICKNESS',
-#     'MAX_THICKNESS_UNCERTAINTY',
-#     'DATA_FLAG',
-#     'REMARKS'
-]]
-# drop null data
-glathida = glathida.dropna()
+TT = TT.drop([
+    'GlaThiDa_ID',
+    'POLITICAL_UNIT',
+    'GLACIER_NAME',
+    'SURVEY_DATE',
+#     'LOWER_BOUND',
+#     'UPPER_BOUND',
+#     'AREA',
+#     'MEAN_SLOPE',
+    'MEAN_THICKNESS',
+    'MEAN_THICKNESS_UNCERTAINTY',
+#     'MAXIMUM_THICKNESS',
+    'MAX_THICKNESS_UNCERTAINTY',
+    'DATA_FLAG',
+    'REMARKS'
+],axis=1)
+TT = TT.dropna()
 
 # split data set into training and testing
-train_dataset = glathida.sample(frac=0.8, random_state=0)
-test_dataset = glathida.drop(train_dataset.index)
+train_dataset = TT.sample(frac=0.8, random_state=0)
+test_dataset = TT.drop(train_dataset.index)
 train_features = train_dataset.copy()
 test_features = test_dataset.copy()
 
@@ -37,6 +43,8 @@ train_labels = train_features.pop('MAXIMUM_THICKNESS')
 test_labels = test_features.pop('MAXIMUM_THICKNESS')
 
 # DATA NORMALIZER
+print('Normalizing Data')
+
 normalizer = {}
 variable_list = list(train_features)
 for variable_name in tqdm(variable_list):
@@ -47,6 +55,7 @@ normalizer['ALL'].adapt(np.array(train_features))
 
 
 # LINEAR REGRESSION MODELS
+print('Running single-variable linear regression')
 
 linear_model = {}
 linear_history = {}
@@ -57,7 +66,7 @@ for variable_name in tqdm(variable_list):
     linear_model[variable_name] = gl.build_linear_model(normalizer[variable_name])
     linear_history[variable_name] = linear_model[variable_name].fit(
                                         train_features[variable_name], train_labels,        
-                                        epochs=1000,
+                                        epochs=100,
                                         verbose=0,
                                         validation_split = 0.2)    
     linear_results[variable_name] = linear_model[variable_name].evaluate(
@@ -67,12 +76,13 @@ for variable_name in tqdm(variable_list):
     
     
 # MULTIVARIABLE LINEAR REGRESSION 
+print('Running multi-variable linear regression')
 
 linear_model = gl.build_linear_model(normalizer['ALL'])
 
 linear_history['MULTI'] = linear_model.fit(
 train_features, train_labels,        
-   epochs=1000,
+   epochs=100,
    verbose=0,
    validation_split = 0.2)
 
@@ -88,11 +98,14 @@ dnn_model = {}
 dnn_history = {}
 dnn_results = {}
 
+print('Running single-variable dnn regression')
+
+
 for variable_name in tqdm(variable_list):
     dnn_model[variable_name] = gl.build_dnn_model(normalizer[variable_name])
     dnn_history[variable_name] = dnn_model[variable_name].fit(
                                         train_features[variable_name], train_labels,        
-                                        epochs=1000,
+                                        epochs=100,
                                         verbose=0,
                                         validation_split = 0.2)
     
@@ -104,12 +117,15 @@ for variable_name in tqdm(variable_list):
 
     
 # DNN MULTIVARIABLE MODEL     
+
+print('Running multi-variable dnn regression')
+
 dnn_model = gl.build_dnn_model(normalizer['ALL'])
 
 dnn_history['MULTI'] = dnn_model.fit(
     train_features, train_labels,
     validation_split=0.2,
-    verbose=0, epochs=1000)
+    verbose=0, epochs=100)
 
 dnn_results['MULTI'] = dnn_model.evaluate(
     test_features,

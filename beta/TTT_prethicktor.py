@@ -3,22 +3,30 @@ import pandas as pd
 import tensorflow as tf
 import glacierml as gl
 from tqdm import tqdm
+import warnings
+from tensorflow.python.util import deprecation
+import os
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 
 # import the data
+print('Reading data')
 TTT = pd.read_csv('/home/sa42/data/glac/T_models/TTT.csv')
-glathida = TTT
-glathida = glathida[[
+TTT = TTT[[
     'ELEVATION',
     'THICKNESS',
     'POINT_LAT',
     'POINT_LON'
 ]]
 # drop null data
-glathida = glathida.dropna()
+TTT = TTT.dropna()
 
 # split data set into training and testing
-train_dataset = glathida.sample(frac=0.8, random_state=0)
-test_dataset = glathida.drop(train_dataset.index)
+train_dataset = TTT.sample(frac=0.8, random_state=0)
+test_dataset = TTT.drop(train_dataset.index)
 train_features = train_dataset.copy()
 test_features = test_dataset.copy()
 
@@ -27,6 +35,7 @@ train_labels = train_features.pop('THICKNESS')
 test_labels = test_features.pop('THICKNESS')
 
 # DATA NORMALIZER
+print('Normalizing Data')
 normalizer = {}
 variable_list = list(train_features)
 for variable_name in tqdm(variable_list):
@@ -37,7 +46,7 @@ normalizer['ALL'].adapt(np.array(train_features))
 
 
 # LINEAR REGRESSION MODELS
-
+print('Running single-variable linear regression')
 linear_model = {}
 linear_history = {}
 linear_results = {}
@@ -57,7 +66,7 @@ for variable_name in tqdm(variable_list):
     
     
 # MULTIVARIABLE LINEAR REGRESSION 
-
+print('Running multi-variable linear regression')
 linear_model = gl.build_linear_model(normalizer['ALL'])
 
 linear_history['MULTI'] = linear_model.fit(
@@ -74,6 +83,7 @@ linear_model.save('saved_models/TTT_linear_multivariable')
 
 
 # DNN MODELS
+print('Running single-variable dnn regression')
 dnn_model = {}
 dnn_history = {}
 dnn_results = {}
@@ -93,7 +103,8 @@ for variable_name in tqdm(variable_list):
     dnn_model[variable_name].save('saved_models/TTT_dnn_' + str([variable_name]))
 
     
-# DNN MULTIVARIABLE MODEL     
+# DNN MULTIVARIABLE MODEL    
+print('Running multi-variable dnn regression')
 dnn_model = gl.build_dnn_model(normalizer['ALL'])
 
 dnn_history['MULTI'] = dnn_model.fit(
