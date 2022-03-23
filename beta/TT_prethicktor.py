@@ -115,7 +115,7 @@ dnn_results['MULTI'] = dnn_model.evaluate(
     test_features,
     test_labels, verbose=0)   
 
-dnn_model.save('saved_models/TT_dnn_multivariable_model')
+dnn_model.save('saved_models/TT_dnn_multivariable')
 
 # results collector
 dfs = pd.DataFrame()

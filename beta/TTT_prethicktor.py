@@ -4,24 +4,19 @@ import tensorflow as tf
 import glacierml as gl
 from tqdm import tqdm
 
+# import the data
 TTT = pd.read_csv('/home/sa42/data/glac/T_models/TTT.csv')
-glathida = TTT[[
-#     'GlaThiDa_ID',
-#     'POLITICAL_UNIT',
-#     'GLACIER_NAME',
-#     'SURVEY_DATE',
-#     'PROFILE_ID',
-#     'POINT_ID',
-    'POINT_LAT',
-    'POINT_LON',
+glathida = TTT
+glathida = glathida[[
     'ELEVATION',
     'THICKNESS',
-#     'THICKNESS_UNCERTAINTY',
-#     'DATA_FLAG',
-#     'REMARKS'
+    'POINT_LAT',
+    'POINT_LON'
 ]]
+# drop null data
 glathida = glathida.dropna()
 
+# split data set into training and testing
 train_dataset = glathida.sample(frac=0.8, random_state=0)
 test_dataset = glathida.drop(train_dataset.index)
 train_features = train_dataset.copy()
@@ -54,13 +49,11 @@ for variable_name in tqdm(variable_list):
                                         train_features[variable_name], train_labels,        
                                         epochs=100,
                                         verbose=0,
-                                        validation_split = 0.2)
-    
-    
+                                        validation_split = 0.2)    
     linear_results[variable_name] = linear_model[variable_name].evaluate(
                                         test_features[variable_name],
                                         test_labels, verbose=0)
-    linear_model[variable_name].save('saved_models/TTT_linear_'+str([variable_name])
+    linear_model[variable_name].save('saved_models/TTT_linear_' + str([variable_name]))
     
     
 # MULTIVARIABLE LINEAR REGRESSION 
@@ -86,18 +79,18 @@ dnn_history = {}
 dnn_results = {}
 
 for variable_name in tqdm(variable_list):
-
     dnn_model[variable_name] = gl.build_dnn_model(normalizer[variable_name])
     dnn_history[variable_name] = dnn_model[variable_name].fit(
                                         train_features[variable_name], train_labels,        
                                         epochs=100,
                                         verbose=0,
                                         validation_split = 0.2)
+    
     dnn_results[variable_name] = dnn_model[variable_name].evaluate(
                                         test_features[variable_name],
                                         test_labels, verbose=0)
     
-    model.save('saved_models/TTT_dnn' + str([variable_name]))
+    dnn_model[variable_name].save('saved_models/TTT_dnn_' + str([variable_name]))
 
     
 # DNN MULTIVARIABLE MODEL     
@@ -112,9 +105,9 @@ dnn_results['MULTI'] = dnn_model.evaluate(
     test_features,
     test_labels, verbose=0)   
 
-dnn_model.save('saved_models/dnn_multivariable_model')
-                                     
-# results collector                                     
+dnn_model.save('saved_models/TTT_dnn_multivariable')
+
+# results collector
 dfs = pd.DataFrame()
 for variable_name in list(dnn_history):    
     df1 = pd.DataFrame(dnn_history[variable_name].history)

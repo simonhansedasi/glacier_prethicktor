@@ -6,27 +6,64 @@ from tqdm import tqdm
 
 # import the data
 T = pd.read_csv('/home/sa42/data/glac/T_models/T.csv')
-glathida = T
-glathida = glathida[[
-    'LAT',
-    'LON',
-    'AREA',
-    'MEAN_SLOPE',
+T = T.drop([
+#     'GlaThiDa_ID',
+    'POLITICAL_UNIT',
+    'GLACIER_NAME',
+    'GLACIER_DB',
+    'GLACIER_ID',
+    'SURVEY_DATE',
+    'ELEVATION_DATE',
 #     'MEAN_THICKNESS',
+    'MEAN_THICKNESS_UNCERTAINTY',
     'MAXIMUM_THICKNESS',
-]]
-# drop null data
-glathida = glathida.dropna()
+    'MAX_THICKNESS_UNCERTAINTY',
+    'SURVEY_METHOD',
+    'SURVEY_METHOD_DETAILS',
+    'NUMBER_OF_SURVEY_POINTS',
+    'NUMBER_OF_SURVEY_PROFILES',
+    'TOTAL_LENGTH_OF_SURVEY_PROFILES',
+    'INTERPOLATION_METHOD',
+    'INVESTIGATOR',
+    'SPONSORING_AGENCY',
+    'REFERENCES',
+    'DATA_FLAG',
+    'REMARKS'
+],axis=1)
+T = T.dropna()
+
+TTT = pd.read_csv('/home/sa42/data/glac/T_models/TTT.csv')
+TTT = TTT.drop([
+#     'GlaThiDa_ID',
+    'POLITICAL_UNIT',
+    'GLACIER_NAME',
+    'SURVEY_DATE',
+    'PROFILE_ID',
+    'POINT_ID',
+#     'POINT_LAT',
+#     'POINT_LON',
+#     'ELEVATION',
+#     'THICKNESS',
+    'THICKNESS_UNCERTAINTY',
+    'DATA_FLAG',
+    'REMARKS'
+],axis=1)
+TTT = TTT.dropna()
+
+df = pd.merge(T,TTT, how='inner',on='GlaThiDa_ID')
+df = df.drop([
+    'GlaThiDa_ID'    
+],axis=1)
 
 # split data set into training and testing
-train_dataset = glathida.sample(frac=0.8, random_state=0)
-test_dataset = glathida.drop(train_dataset.index)
+train_dataset = df.sample(frac=0.8, random_state=0)
+test_dataset = df.drop(train_dataset.index)
 train_features = train_dataset.copy()
 test_features = test_dataset.copy()
 
 #define label - attribute training to be picked
-train_labels = train_features.pop('MAXIMUM_THICKNESS')
-test_labels = test_features.pop('MAXIMUM_THICKNESS')
+train_labels = train_features.pop('THICKNESS')
+test_labels = test_features.pop('THICKNESS')
 
 # DATA NORMALIZER
 normalizer = {}
@@ -49,13 +86,13 @@ for variable_name in tqdm(variable_list):
     linear_model[variable_name] = gl.build_linear_model(normalizer[variable_name])
     linear_history[variable_name] = linear_model[variable_name].fit(
                                         train_features[variable_name], train_labels,        
-                                        epochs=1000,
+                                        epochs=100,
                                         verbose=0,
                                         validation_split = 0.2)    
     linear_results[variable_name] = linear_model[variable_name].evaluate(
                                         test_features[variable_name],
                                         test_labels, verbose=0)
-    linear_model[variable_name].save('saved_models/T_linear_' + str([variable_name]))
+    linear_model[variable_name].save('saved_models/TTTT_linear_' + str([variable_name]))
     
     
 # MULTIVARIABLE LINEAR REGRESSION 
@@ -64,7 +101,7 @@ linear_model = gl.build_linear_model(normalizer['ALL'])
 
 linear_history['MULTI'] = linear_model.fit(
 train_features, train_labels,        
-   epochs=1000,
+   epochs=100,
    verbose=0,
    validation_split = 0.2)
 
@@ -72,7 +109,7 @@ linear_results['MULTI'] = linear_model.evaluate(
     test_features,
     test_labels, verbose=0)
 
-linear_model.save('saved_models/T_linear_multivariable')
+linear_model.save('saved_models/TTTT_linear_multivariable')
 
 
 # DNN MODELS
@@ -84,7 +121,7 @@ for variable_name in tqdm(variable_list):
     dnn_model[variable_name] = gl.build_dnn_model(normalizer[variable_name])
     dnn_history[variable_name] = dnn_model[variable_name].fit(
                                         train_features[variable_name], train_labels,        
-                                        epochs=1000,
+                                        epochs=100,
                                         verbose=0,
                                         validation_split = 0.2)
     
@@ -92,7 +129,7 @@ for variable_name in tqdm(variable_list):
                                         test_features[variable_name],
                                         test_labels, verbose=0)
     
-    dnn_model[variable_name].save('saved_models/T_dnn_' + str([variable_name]))
+    dnn_model[variable_name].save('saved_models/TTTT_dnn_' + str([variable_name]))
 
     
 # DNN MULTIVARIABLE MODEL     
@@ -101,13 +138,13 @@ dnn_model = gl.build_dnn_model(normalizer['ALL'])
 dnn_history['MULTI'] = dnn_model.fit(
     train_features, train_labels,
     validation_split=0.2,
-    verbose=0, epochs=1000)
+    verbose=0, epochs=100)
 
 dnn_results['MULTI'] = dnn_model.evaluate(
     test_features,
     test_labels, verbose=0)   
 
-dnn_model.save('saved_models/T_dnn_multivariable')
+dnn_model.save('saved_models/TTTT_dnn_multivariable')
 
 # results collector
 dfs = pd.DataFrame()
@@ -135,4 +172,4 @@ df.rename(columns = {
 },inplace=True)
 df = df.sort_values(by=['Architecture','Variable'], ascending=[False,False])
 # print(df.to_latex(index=False))
-df.to_csv('saved_results/T_loss')
+df.to_csv('saved_results/TTTT_loss')
