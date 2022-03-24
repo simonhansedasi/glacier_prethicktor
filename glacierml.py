@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
-
+import matplotlib.pyplot as plt
 
 def build_linear_model(normalizer):
     model = tf.keras.Sequential([
