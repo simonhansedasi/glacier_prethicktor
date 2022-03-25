@@ -17,16 +17,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 print('Loading data')
 #load and organize data
-T,TT,TTT = gl.data_loader()
+T,TT,TTT,TTTx = gl.data_loader()
 gl.thickness_renamer(T)
 gl.thickness_renamer(TT)
 
-glathida_list = T,TT,TTT
+glathida_list = T,TT,TTT,TTTx
 
 T.name = 'T'
 TT.name = 'TT'
 TTT.name = 'TTT'
-
+TTTx.name = 'TTTx'
 for i in glathida_list:
 #     split data
     (train_features,test_features,

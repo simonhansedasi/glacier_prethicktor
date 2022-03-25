@@ -10,6 +10,7 @@ def data_loader():
     pth = '/home/sa42/data/glac/T_models/'
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
     T = T[[
+        'GlaThiDa_ID',
         'LAT',
         'LON',
         'AREA',
@@ -29,13 +30,22 @@ def data_loader():
     ]]
     TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
     TTT = TTT[[
+        'GlaThiDa_ID',
         'POINT_LAT',
         'POINT_LON',
         'ELEVATION',
-        'THICKNESS',
+        'THICKNESS'
     ]]
     
-    return T,TT,TTT
+    TTTx = pd.merge(T,TTT, how = 'inner', on = 'GlaThiDa_ID')
+    TTTx.rename(columns = {
+        'LAT':'CENT_LAT',
+        'LON':'CENT_LON'
+    },inplace = True)
+    
+    T = T.drop('GlaThiDa_ID',axis = 1)
+    TTT = TTT.drop('GlaThiDa_ID',axis =1)
+    return T,TT,TTT,TTTx
 
 def thickness_renamer(T):
     T = T.rename(columns = {
