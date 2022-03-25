@@ -5,7 +5,58 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 import matplotlib.pyplot as plt
+
+def data_loader():
+    pth = '/home/sa42/data/glac/T_models/'
+    T = pd.read_csv(pth + 'T.csv')
+    T = T[[
+        'LAT',
+        'LON',
+        'AREA',
+        'MEAN_SLOPE',
+        'MAXIMUM_THICKNESS'
+    ]]
+        
+    T = T.dropna()
     
+    TT = pd.read_csv(pth + 'TT.csv')
+    TT = TT[[
+        'LOWER_BOUND',
+        'UPPER_BOUND',
+        'AREA',
+        'MEAN_SLOPE',
+        'MAXIMUM_THICKNESS',
+    ]]
+    TTT = pd.read_csv(pth + 'TTT.csv')
+    TTT = TTT[[
+        'POINT_LAT',
+        'POINT_LON',
+        'ELEVATION',
+        'THICKNESS',
+    ]]
+    
+    return T,TT,TTT
+
+def thickness_renamer(T):
+    T = T.rename(columns = {
+        'MAXIMUM_THICKNESS':'THICKNESS'
+    },inplace = True)
+
+def data_splitter(T):
+    train_dataset = T.sample(frac=0.8, random_state=0)
+    test_dataset = T.drop(train_dataset.index)
+
+    train_features = train_dataset.copy()
+    test_features = test_dataset.copy()
+
+    #define label - attribute training to be picked
+    train_labels = train_features.pop('THICKNESS')
+    test_labels = test_features.pop('THICKNESS')
+    
+    return train_features, test_features, train_labels, test_labels
+
+
+
 def build_linear_model(normalizer):
     model = tf.keras.Sequential([
         normalizer,
@@ -15,6 +66,18 @@ def build_linear_model(normalizer):
     model.compile(
         optimizer=tf.optimizers.Adam(learning_rate=0.1),
         loss='mean_absolute_error')
+    
+    return model
+
+def build_dnn_model(norm):
+    model = keras.Sequential([
+              norm,
+              layers.Dense(64, activation='relu'),
+              layers.Dense(64, activation='relu'),
+              layers.Dense(1) ])
+
+    model.compile(loss='mean_absolute_error',
+                optimizer=tf.keras.optimizers.Adam(0.01))
     
     return model
 
@@ -37,15 +100,3 @@ def plot_loss(history):
     plt.grid(True)
     
     return plot_loss
-
-def build_dnn_model(norm):
-    model = keras.Sequential([
-              norm,
-              layers.Dense(64, activation='relu'),
-              layers.Dense(64, activation='relu'),
-              layers.Dense(1) ])
-
-    model.compile(loss='mean_absolute_error',
-                optimizer=tf.keras.optimizers.Adam(0.01))
-    
-    return model
