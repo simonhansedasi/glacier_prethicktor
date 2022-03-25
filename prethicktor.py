@@ -15,8 +15,6 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-
-
 print('Loading data')
 #load and organize data
 T,TT,TTT = gl.data_loader()
@@ -30,11 +28,11 @@ TT.name = 'TT'
 TTT.name = 'TTT'
 
 for i in glathida_list:
-    #split data
+#     split data
     (train_features,test_features,
      train_labels,test_labels) = gl.data_splitter(i.head())
 
-    #normalize data
+#     normalize data
     print('Normalizing ' + str(i.name) + ' data')
     normalizer = {}
     variable_list = list(train_features)
@@ -45,7 +43,7 @@ for i in glathida_list:
     normalizer['ALL'] = gl.preprocessing.Normalization(axis=-1)
     normalizer['ALL'].adapt(np.array(train_features))
 
-#     # T linear model
+#       linear model
     print('Running single-variable linear regression on ' + str(i.name) + ' dataset')
     linear_model = {}
     linear_history = {}
@@ -80,10 +78,7 @@ for i in glathida_list:
     df.to_csv('saved_results/' + str(i.name) + '_linear_history' + str(['MULTI']))
     linear_model.save('saved_models/' + str(i.name) + '_linear_' + str(['MULTI']))
 
-
-
-
-    # T DNN model
+#      DNN model
     dnn_model = {}
     dnn_history = {}
     dnn_results = {}
