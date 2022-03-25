@@ -42,9 +42,14 @@ def data_loader():
         'LAT':'CENT_LAT',
         'LON':'CENT_LON'
     },inplace = True)
+    TTTx = TTTx.drop([
+        'GlaThiDa_ID',
+        'MAXIMUM_THICKNESS'
+    ],axis = 1)
     
     T = T.drop('GlaThiDa_ID',axis = 1)
     TTT = TTT.drop('GlaThiDa_ID',axis =1)
+    
     return T,TT,TTT,TTTx
 
 def thickness_renamer(T):
@@ -101,8 +106,8 @@ def plot_single_model_variable(x, y,feature_name):
       
 def plot_loss(history):
 #     plt.subplots(figsize=(10,5))
-    plt.plot(history.history['loss'], label='loss')
-    plt.plot(history.history['val_loss'], label='val_loss')
+    plt.plot(history['loss'], label='loss')
+    plt.plot(history['val_loss'], label='val_loss')
     #   plt.ylim([0, 10])
     plt.xlabel('Epoch')
     plt.ylabel('Error')
