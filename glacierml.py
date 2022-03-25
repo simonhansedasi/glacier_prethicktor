@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 def data_loader():
     pth = '/home/sa42/data/glac/T_models/'
-    T = pd.read_csv(pth + 'T.csv')
+    T = pd.read_csv(pth + 'T.csv', low_memory = False)
     T = T[[
         'LAT',
         'LON',
@@ -19,7 +19,7 @@ def data_loader():
         
     T = T.dropna()
     
-    TT = pd.read_csv(pth + 'TT.csv')
+    TT = pd.read_csv(pth + 'TT.csv', low_memory = False)
     TT = TT[[
         'LOWER_BOUND',
         'UPPER_BOUND',
@@ -27,7 +27,7 @@ def data_loader():
         'MEAN_SLOPE',
         'MAXIMUM_THICKNESS',
     ]]
-    TTT = pd.read_csv(pth + 'TTT.csv')
+    TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
     TTT = TTT[[
         'POINT_LAT',
         'POINT_LON',

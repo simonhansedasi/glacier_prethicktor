@@ -8,20 +8,27 @@ from tqdm import tqdm
 import warnings
 from tensorflow.python.util import deprecation
 import os
+import logging
+tf.get_logger().setLevel(logging.ERROR)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+
+
+print('Loading data')
 #load and organize data
 T,TT,TTT = gl.data_loader()
 gl.thickness_renamer(T)
 gl.thickness_renamer(TT)
 
 glathida_list = T,TT,TTT
+
 T.name = 'T'
 TT.name = 'TT'
 TTT.name = 'TTT'
+
 for i in glathida_list:
     #split data
     (train_features,test_features,
