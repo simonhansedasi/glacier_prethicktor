@@ -6,6 +6,63 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 import matplotlib.pyplot as plt
 
+def data_loader_w_ids():
+    pth = '/home/sa42/data/glac/T_models/'
+    T = pd.read_csv(pth + 'T.csv', low_memory = False)
+    T = T[[
+        'GlaThiDa_ID',
+        'LAT',
+        'LON',
+        'AREA',
+        'MEAN_SLOPE',
+        'MAXIMUM_THICKNESS',
+        'GLACIER_NAME',
+        'GLACIER_DB'        
+    ]]
+        
+    T = T.dropna()
+    
+    TT = pd.read_csv(pth + 'TT.csv', low_memory = False)
+    TT = TT[[
+        'LOWER_BOUND',
+        'UPPER_BOUND',
+        'AREA',
+        'MEAN_SLOPE',
+        'MAXIMUM_THICKNESS',
+        'GLACIER_NAME'
+    ]]
+    TT = TT.dropna()
+    
+    TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
+    TTT = TTT[[
+        'GlaThiDa_ID',
+        'POINT_LAT',
+        'POINT_LON',
+        'ELEVATION',
+        'THICKNESS',
+        'GLACIER_NAME',
+        'GLACIER_DB'
+        
+    ]]
+    
+    TTTx = pd.merge(T,TTT, how = 'inner', on = 'GlaThiDa_ID')
+    TTTx.rename(columns = {
+        'LAT':'CENT_LAT',
+        'LON':'CENT_LON'
+    },inplace = True)
+    
+    TTTx = TTTx.drop([
+        'GlaThiDa_ID',
+        'MAXIMUM_THICKNESS'
+    ],axis = 1)
+    TTTx = TTTx.dropna()
+    
+    T = T.drop('GlaThiDa_ID',axis = 1)
+    TTT = TTT.drop('GlaThiDa_ID',axis =1)
+    TTT = TTT.dropna()
+    
+    return T,TT,TTT,TTTx
+
 def data_loader():
     pth = '/home/sa42/data/glac/T_models/'
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
@@ -28,6 +85,8 @@ def data_loader():
         'MEAN_SLOPE',
         'MAXIMUM_THICKNESS',
     ]]
+    TT = TT.dropna()
+    
     TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
     TTT = TTT[[
         'GlaThiDa_ID',
@@ -42,13 +101,16 @@ def data_loader():
         'LAT':'CENT_LAT',
         'LON':'CENT_LON'
     },inplace = True)
+    
     TTTx = TTTx.drop([
         'GlaThiDa_ID',
         'MAXIMUM_THICKNESS'
     ],axis = 1)
+    TTTx = TTTx.dropna()
     
     T = T.drop('GlaThiDa_ID',axis = 1)
     TTT = TTT.drop('GlaThiDa_ID',axis =1)
+    TTT = TTT.dropna()
     
     return T,TT,TTT,TTTx
 
@@ -56,7 +118,8 @@ def thickness_renamer(T):
     T = T.rename(columns = {
         'MAXIMUM_THICKNESS':'THICKNESS'
     },inplace = True)
-
+    
+    
 def data_splitter(T):
     train_dataset = T.sample(frac=0.8, random_state=0)
     test_dataset = T.drop(train_dataset.index)
@@ -114,4 +177,3 @@ def plot_loss(history):
     plt.legend()
     plt.grid(True)
     
-    return plot_loss

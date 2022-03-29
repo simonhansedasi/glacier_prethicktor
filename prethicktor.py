@@ -3,8 +3,6 @@ import numpy as np
 import glacierml as gl
 from tqdm import tqdm
 import tensorflow as tf
-import glacierml as gl
-from tqdm import tqdm
 import warnings
 from tensorflow.python.util import deprecation
 import os
@@ -21,7 +19,7 @@ T,TT,TTT,TTTx = gl.data_loader()
 gl.thickness_renamer(T)
 gl.thickness_renamer(TT)
 
-glathida_list = T,TT,TTT,TTTx
+glathida_list = T,TT,TTTx
 
 T.name = 'T'
 TT.name = 'TT'
@@ -30,7 +28,7 @@ TTTx.name = 'TTTx'
 for i in glathida_list:
 #     split data
     (train_features,test_features,
-     train_labels,test_labels) = gl.data_splitter(i.head())
+     train_labels,test_labels) = gl.data_splitter(i)
 
 #     normalize data
     print('Normalizing ' + str(i.name) + ' data')
@@ -54,17 +52,17 @@ for i in glathida_list:
         linear_model[variable_name] = gl.build_linear_model(normalizer[variable_name])
         linear_history[variable_name] = linear_model[variable_name].fit(
                                             train_features[variable_name], train_labels,        
-                                            epochs=100,
+                                            epochs=1000,
                                             verbose=0,
                                             validation_split = 0.2)
         linear_model[variable_name].save(
-            'saved_models/' + str(i.name) + '_linear_' + str([variable_name]))
+            'saved_models/' + str(i.name) + '_linear_' + str(variable_name))
 
     print('Running multi-variable linear regression on ' + str(i.name) + ' dataset')
     linear_model = gl.build_linear_model(normalizer['ALL'])
     linear_history['MULTI'] = linear_model.fit(
     train_features, train_labels,        
-       epochs=100,
+       epochs=1000,
        verbose=0,
        validation_split = 0.2)
     
@@ -72,11 +70,11 @@ for i in glathida_list:
     for variable_name in tqdm(list(linear_history)):
         df = pd.DataFrame(linear_history[variable_name].history)
         df.to_csv(
-            'saved_results/' + str(i.name) + '_linear_history' + str([variable_name]))
+            'saved_results/' + str(i.name) + '_linear_history_' + str(variable_name))
 
     df = pd.DataFrame(linear_history['MULTI'].history)
-    df.to_csv('saved_results/' + str(i.name) + '_linear_history' + str(['MULTI']))
-    linear_model.save('saved_models/' + str(i.name) + '_linear_' + str(['MULTI']))
+    df.to_csv('saved_results/' + str(i.name) + '_linear_history_MULTI')
+    linear_model.save('saved_models/' + str(i.name) + '_linear_MULTI')
 
 #      DNN model
     dnn_model = {}
@@ -89,25 +87,25 @@ for i in glathida_list:
         dnn_model[variable_name] = gl.build_dnn_model(normalizer[variable_name])
         dnn_history[variable_name] = dnn_model[variable_name].fit(
                                             train_features[variable_name], train_labels,        
-                                            epochs=100,
+                                            epochs=1000,
                                             verbose=0,
                                             validation_split = 0.2)    
-        dnn_model[variable_name].save('saved_models/' + str(i.name) + '_dnn_' + str([variable_name]))
+        dnn_model[variable_name].save('saved_models/' + str(i.name) + '_dnn_' + str(variable_name))
 
     print('Running multi-variable DNN regression on ' + str(i.name) + ' dataset')
     dnn_model = gl.build_dnn_model(normalizer['ALL'])
     dnn_history['MULTI'] = dnn_model.fit(
         train_features, train_labels,
         validation_split=0.2,
-        verbose=0, epochs=100)
+        verbose=0, epochs=1000)
 
-    dnn_model.save('saved_models/' + str(i.name) + '_dnn_' + str(['MULTI']))
+    dnn_model.save('saved_models/' + str(i.name) + '_dnn_MULTI')
     
     print('Saving results')
     for variable_name in tqdm(list(dnn_history)):
         df = pd.DataFrame(dnn_history[variable_name].history)
-        df.to_csv('saved_results/' + str(i.name) + '_dnn_history'+str([variable_name]))
+        df.to_csv('saved_results/' + str(i.name) + '_dnn_history_'+str(variable_name))
 
     df = pd.DataFrame(dnn_history['MULTI'].history)
-    df.to_csv('saved_results/' + str(i.name) + '_dnn_' + str(['MULTI']))
-    dnn_model.save('saved_models/' + str(i.name) + '_dnn_' + str(['MULTI']))
+    df.to_csv('saved_results/' + str(i.name) + '_dnn_history_MULTI')
+    dnn_model.save('saved_models/' + str(i.name) + '_dnn_MULTI')
