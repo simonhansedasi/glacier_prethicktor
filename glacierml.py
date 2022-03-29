@@ -63,8 +63,7 @@ def data_loader_w_ids():
     
     return T,TT,TTT,TTTx
 
-def data_loader():
-    pth = '/home/sa42/data/glac/T_models/'
+def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
     T = T[[
         'GlaThiDa_ID',
