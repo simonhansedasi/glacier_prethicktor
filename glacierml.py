@@ -79,7 +79,7 @@ def data_splitter(T):
 
 
 
-def build_linear_model(normalizer):
+def build_linear_model(normalizer, learning_rate = 0.1):
     model = tf.keras.Sequential([
         normalizer,
         layers.Dense(1)
@@ -91,7 +91,7 @@ def build_linear_model(normalizer):
     
     return model
 
-def build_dnn_model(norm):
+def build_dnn_model(norm, learning_rate = 0.1):
     model = keras.Sequential([
               norm,
               layers.Dense(64, activation='relu'),
@@ -99,7 +99,7 @@ def build_dnn_model(norm):
               layers.Dense(1) ])
 
     model.compile(loss='mean_absolute_error',
-                optimizer=tf.keras.optimizers.Adam(learning_rate = 0.01))
+                optimizer=tf.keras.optimizers.Adam(learning_rate = 0.1))
     
     return model
 
@@ -125,13 +125,15 @@ def build_and_train_model(i):
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(i)
-
-        print('epochs for ' + i.name + ' dataset?')
+        
+        
+        
+        # define parameters for models
         epochs_input = 1000
 #         int(input())
-        print('validation split?')
         validation_split_input = 0.2
 #         float(input())
+        learning_rate = 0.1
 
         
         print(i.name)
@@ -156,7 +158,7 @@ def build_and_train_model(i):
         variable_list = list(train_features)
 
         for variable_name in tqdm(variable_list):
-            linear_model[variable_name] = build_linear_model(normalizer[variable_name])
+            linear_model[variable_name] = build_linear_model(normalizer[variable_name],learning_rate)
             linear_history[variable_name] = linear_model[variable_name].fit(
                                                 train_features[variable_name], train_labels,        
                                                 epochs=epochs_input,
@@ -166,7 +168,7 @@ def build_and_train_model(i):
                 'saved_models/' + str(i.name) + '_linear_' + str(variable_name))
 
         print('Running multi-variable linear regression on ' + str(i.name) + ' dataset')
-        linear_model = build_linear_model(normalizer['ALL'])
+        linear_model = build_linear_model(normalizer['ALL'],learning_rate)
         linear_history['MULTI'] = linear_model.fit(
         train_features, train_labels,        
            epochs=epochs_input,
@@ -191,7 +193,7 @@ def build_and_train_model(i):
         print('Running single-variable DNN regression on ' + str(i.name) + ' dataset')
         variable_list = tqdm(list(train_features))
         for variable_name in variable_list:
-            dnn_model[variable_name] = build_dnn_model(normalizer[variable_name])
+            dnn_model[variable_name] = build_dnn_model(normalizer[variable_name],learning_rate)
             dnn_history[variable_name] = dnn_model[variable_name].fit(
                                                 train_features[variable_name], train_labels,        
                                                 epochs=epochs_input,
@@ -200,7 +202,7 @@ def build_and_train_model(i):
             dnn_model[variable_name].save('saved_models/' + str(i.name) + '_dnn_' + str(variable_name))
 
         print('Running multi-variable DNN regression on ' + str(i.name) + ' dataset')
-        dnn_model = build_dnn_model(normalizer['ALL'])
+        dnn_model = build_dnn_model(normalizer['ALL'],learning_rate)
         dnn_history['MULTI'] = dnn_model.fit(
             train_features, train_labels,
             validation_split=validation_split_input,
