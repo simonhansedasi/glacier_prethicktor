@@ -13,9 +13,7 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-
 def main():
-    print('Loading data')
     #load and organize data
     T,TT,TTT,TTTx = gl.data_loader()
     gl.thickness_renamer(T)
