@@ -1,3 +1,5 @@
+# import sys
+# !{sys.executable} -m pip install pyjanitor
 import tensorflow as tf
 import pandas as pd
 import numpy as np
@@ -6,9 +8,11 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
+import janitor
 
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
+    print('Importing data...')
+    print('Importing T database')
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
     T = T[[
         'GlaThiDa_ID',
@@ -20,9 +24,10 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     ]]
         
     T = T.dropna()
-    
+    print('Importing TT database')
     TT = pd.read_csv(pth + 'TT.csv', low_memory = False)
     TT = TT[[
+        'GlaThiDa_ID',
         'LOWER_BOUND',
         'UPPER_BOUND',
         'AREA',
@@ -31,6 +36,7 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     ]]
     TT = TT.dropna()
     
+    print('Importing TTT database')
     TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
     TTT = TTT[[
         'GlaThiDa_ID',
@@ -39,7 +45,9 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
         'ELEVATION',
         'THICKNESS'
     ]]
+    TTT = TTT.dropna()
     
+    print('Building TTTx')
     TTTx = pd.merge(T,TTT, how = 'inner', on = 'GlaThiDa_ID')
     TTTx.rename(columns = {
         'LAT':'CENT_LAT',
@@ -52,11 +60,56 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     ],axis = 1)
     TTTx = TTTx.dropna()
     
-    T = T.drop('GlaThiDa_ID',axis = 1)
-    TTT = TTT.drop('GlaThiDa_ID',axis =1)
-    TTT = TTT.dropna()
+    print('Building TTT_full')
+    df1 = pd.merge(T,TT, how = 'inner', on = 'GlaThiDa_ID')
+    df1 = df1.rename(columns = {
+        'AREA_x':'T_AREA',
+        'MEAN_SLOPE_x':'T_MEAN_SLOPE',
+        'AREA_y':'TT_AREA',
+        'MEAN_SLOPE_y':'TT_MEAN_SLOPE'
+    })
     
-    return T,TT,TTT,TTTx
+    df1 = df1.drop([
+        'MEAN_THICKNESS_x',
+        'MEAN_THICKNESS_y',
+    ],axis=1)
+
+    df1['UPPER_BOUND'] = df1['UPPER_BOUND'].astype('float')
+    df1['LOWER_BOUND'] = df1['LOWER_BOUND'].astype('float')
+
+    TTT_full = (df1.conditional_join(
+        TTT,
+        ('UPPER_BOUND', 'ELEVATION', '>='), 
+        ('LOWER_BOUND', 'ELEVATION', '<='),
+        how = 'inner'))
+
+    TTT_full.columns = [
+        'GlaThiDa_ID',
+        'CENT_LAT',
+        'CENT_LON',
+        'T_AREA',
+        'T_MEAN_SLOPE',
+        'LOWER_BOUND',
+        'UPPER_BOUND',
+        'TT_AREA',
+        'TT_MEAN_SLOPE',
+        'GlaThiDa_ID_2',
+        'POINT_LAT',
+        'POINT_LON',
+        'ELEVATION',
+        'THICKNESS'
+    ]
+
+    TTT_full = TTT_full.drop([
+        'GlaThiDa_ID',
+        'GlaThiDa_ID_2'
+    ],axis=1)
+    
+    T = T.drop('GlaThiDa_ID',axis = 1)
+    TT = TT.drop('GlaThiDa_ID',axis = 1)
+    TTT = TTT.drop('GlaThiDa_ID',axis =1)
+    print('Import complete')
+    return T,TT,TTT,TTTx,TTT_full
 
 def thickness_renamer(T):
     T = T.rename(columns = {
@@ -91,11 +144,13 @@ def build_linear_model(normalizer, learning_rate = 0.1):
     
     return model
 
-def build_dnn_model(norm, learning_rate = 0.1):
+def build_dnn_model(norm, learning_rate = 0.01):
     model = keras.Sequential([
               norm,
               layers.Dense(64, activation='relu'),
-              layers.Dense(64, activation='relu'),
+#               layers.Dense(64, activation='relu'),
+#               layers.Dense(64, activation='relu'),
+
               layers.Dense(1) ])
 
     model.compile(loss='mean_absolute_error',
@@ -103,14 +158,7 @@ def build_dnn_model(norm, learning_rate = 0.1):
     
     return model
 
-def plot_single_model_variable(x, y,feature_name):
-    plt.scatter(train_features[feature_name], train_labels, label='Data')
-    plt.plot(x, y, color='k', label='Predictions')
-    plt.xlabel(feature_name)
-    plt.ylabel('Avg Thickness (m)')
-#     plt.xlim((0,20))
-    plt.legend()
-      
+
 def plot_loss(history):
 #     plt.subplots(figsize=(10,5))
     plt.plot(history['loss'], label='loss')
@@ -121,21 +169,20 @@ def plot_loss(history):
     plt.legend()
     plt.grid(True)
     
+
+     
+
+    
 def build_and_train_model(i):
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(i)
-        
-        
-        
         # define parameters for models
-        epochs_input = 1000
+        epochs_input = 500
 #         int(input())
         validation_split_input = 0.2
 #         float(input())
-        learning_rate = 0.1
-
-        
+        learning_rate = 0.01
         print(i.name)
         
     #     normalize data

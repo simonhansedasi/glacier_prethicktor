@@ -15,16 +15,18 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def main():
     #load and organize data
-    T,TT,TTT,TTTx = gl.data_loader()
+    T,TT,TTT,TTTx,TTT_full = gl.data_loader()
     gl.thickness_renamer(T)
     gl.thickness_renamer(TT)
-
-    glathida_list = T,TT,TTTx
+    T_t = T.head()
+    glathida_list = T,TT,TTTx,TTT_full
 
     T.name = 'T'
     TT.name = 'TT'
     TTT.name = 'TTT'
     TTTx.name = 'TTTx'
+    T_t.name = 'T_t'
+    TTT_full.name = 'TTT_full'
     for i in glathida_list:
         
         gl.build_and_train_model(i)
