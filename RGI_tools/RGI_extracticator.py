@@ -64,8 +64,11 @@ for subdir, root, files in tqdm(os.walk(rootdir, topdown = True, onerror = None,
         for file in files:
             if file.endswith(ext):
                 filepath = os.path.join(subdir,file)
-                filepath_left = filepath[37:]
+
+                filepath_left = filepath[32:]
                 RGI_name = filepath_left [:14]
+
+
                 shutil.copy(filepath, mapzen + RGI_name + '_' + 'dem.tif')
 
                 
@@ -94,7 +97,7 @@ for subdir, dirs, files in os.walk(rootdir, topdown = False, onerror = None, fol
         if file.endswith(desired_extension):
             if file.startswith(desired_file):
                 filepath = os.path.join(subdir,file)
-                filepath_left = filepath[37:]
+                filepath_left = filepath[32:]
                 filepath_reg = filepath_left [:14]
 #                 print(join(subdir,extracted_file))
 #                 print(destination + filepath_reg + '_' + extracted_file)
@@ -105,7 +108,5 @@ for subdir, dirs, files in os.walk(rootdir, topdown = False, onerror = None, fol
                
                 shutil.move(
                     join(subdir,extracted_file), destination + filepath_reg + '_' + extracted_file)
-#                 shutil.move(
-#                     destination + extracted_file, destination + filepath_reg + '_' + extracted_file)
-                
+
 
