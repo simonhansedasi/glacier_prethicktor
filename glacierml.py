@@ -144,7 +144,7 @@ def build_linear_model(normalizer, learning_rate = 0.1):
     
     return model
 
-def build_dnn_model(norm, learning_rate = 0.01):
+def build_dnn_model(norm, learning_rate = 0.1):
     model = keras.Sequential([
               norm,
               layers.Dense(64, activation='relu'),
@@ -173,20 +173,14 @@ def plot_loss(history):
      
 
     
-def build_and_train_model(i):
+def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, epochs = 100):
     #     split data
         (train_features,test_features,
-         train_labels,test_labels) = data_splitter(i)
-        # define parameters for models
-        epochs_input = 500
-#         int(input())
-        validation_split_input = 0.2
-#         float(input())
-        learning_rate = 0.01
-        print(i.name)
+         train_labels,test_labels) = data_splitter(dataset)
+        print(dataset.name)
         
     #     normalize data
-        print('Normalizing ' + str(i.name) + ' data')
+        print('Normalizing ' + str(dataset.name) + ' data')
         normalizer = {}
         variable_list = list(train_features)
         for variable_name in tqdm(variable_list):
@@ -195,10 +189,10 @@ def build_and_train_model(i):
 
         normalizer['ALL'] = preprocessing.Normalization(axis=-1)
         normalizer['ALL'].adapt(np.array(train_features))
-        print(i.name + ' data normalized')
+        print(dataset.name + ' data normalized')
         
     #       linear model
-        print('Running single-variable linear regression on ' + str(i.name) + ' dataset')
+        print('Running single-variable linear regression on ' + str(dataset.name) + ' dataset')
         linear_model = {}
         linear_history = {}
         linear_results = {}
@@ -208,61 +202,60 @@ def build_and_train_model(i):
             linear_model[variable_name] = build_linear_model(normalizer[variable_name],learning_rate)
             linear_history[variable_name] = linear_model[variable_name].fit(
                                                 train_features[variable_name], train_labels,        
-                                                epochs=epochs_input,
+                                                epochs,
                                                 verbose=0,
-                                                validation_split = validation_split_input)
+                                                validation_split)
             linear_model[variable_name].save(
                 'saved_models/' + str(i.name) + '_linear_' + str(variable_name))
 
-        print('Running multi-variable linear regression on ' + str(i.name) + ' dataset')
+        print('Running multi-variable linear regression on ' + str(dataset.name) + ' dataset')
         linear_model = build_linear_model(normalizer['ALL'],learning_rate)
         linear_history['MULTI'] = linear_model.fit(
         train_features, train_labels,        
-           epochs=epochs_input,
+           epochs,
            verbose=0,
-           validation_split = validation_split_input)
+           validation_split)
 
         print('Saving results')
         for variable_name in tqdm(list(linear_history)):
             df = pd.DataFrame(linear_history[variable_name].history)
             df.to_csv(
-                'saved_results/' + str(i.name) + '_linear_history_' + str(variable_name))
+                'saved_results/' + str(dataset.name) + '_linear_history_' + str(variable_name))
 
         df = pd.DataFrame(linear_history['MULTI'].history)
-        df.to_csv('saved_results/' + str(i.name) + '_linear_history_MULTI')
-        linear_model.save('saved_models/' + str(i.name) + '_linear_MULTI')
+        df.to_csv('saved_results/' + str(dataset.name) + '_linear_history_MULTI')
+        linear_model.save('saved_models/' + str(dataset.name) + '_linear_MULTI')
 
     #      DNN model
         dnn_model = {}
         dnn_history = {}
         dnn_results = {}
 
-        print('Running single-variable DNN regression on ' + str(i.name) + ' dataset')
+        print('Running single-variable DNN regression on ' + str(dataset.name) + ' dataset')
         variable_list = tqdm(list(train_features))
         for variable_name in variable_list:
             dnn_model[variable_name] = build_dnn_model(normalizer[variable_name],learning_rate)
             dnn_history[variable_name] = dnn_model[variable_name].fit(
                                                 train_features[variable_name], train_labels,        
-                                                epochs=epochs_input,
+                                                epochs,
                                                 verbose=0,
-                                                validation_split = validation_split_input)    
-            dnn_model[variable_name].save('saved_models/' + str(i.name) + '_dnn_' + str(variable_name))
+                                                validation_split)    
+            dnn_model[variable_name].save('saved_models/' + str(dataset.name) + '_dnn_' + str(variable_name))
 
-        print('Running multi-variable DNN regression on ' + str(i.name) + ' dataset')
+        print('Running multi-variable DNN regression on ' + str(dataset.name) + ' dataset')
         dnn_model = build_dnn_model(normalizer['ALL'],learning_rate)
         dnn_history['MULTI'] = dnn_model.fit(
             train_features, train_labels,
-            validation_split=validation_split_input,
-            verbose=0, epochs=epochs_input)
+            validation_split,
+            verbose=0, epochs)
 
-        dnn_model.save('saved_models/' + str(i.name) + '_dnn_MULTI')
+        dnn_model.save('saved_models/' + str(dataset.name) + '_dnn_MULTI')
 
         print('Saving results')
         for variable_name in tqdm(list(dnn_history)):
             df = pd.DataFrame(dnn_history[variable_name].history)
-            df.to_csv('saved_results/' + str(i.name) + '_dnn_history_'+str(variable_name))
+            df.to_csv('saved_results/' + str(dataset.name) + '_dnn_history_'+str(variable_name))
 
         df = pd.DataFrame(dnn_history['MULTI'].history)
-        df.to_csv('saved_results/' + str(i.name) + '_dnn_history_MULTI')
-        dnn_model.save('saved_models/' + str(i.name) + '_dnn_MULTI')
-    
+        df.to_csv('saved_results/' + str(dataset.name) + '_dnn_history_MULTI')
+        dnn_model.save('saved_models/' + str(dataset.name) + '_dnn_MULTI')
