@@ -289,8 +289,10 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
         print('Running multi-variable DNN regression on ' 
               + str(dataset.name) 
               + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) + ', Validation split = ' 
-              + str(validation_split) + ', Epochs = ' 
+              + str(learning_rate) 
+              + ', Validation split = ' 
+              + str(validation_split) 
+              + ', Epochs = ' 
               + str(epochs))
         dnn_model = build_dnn_model(normalizer['ALL'],learning_rate)
         dnn_history['MULTI'] = dnn_model.fit(
