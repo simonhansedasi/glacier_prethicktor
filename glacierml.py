@@ -6,11 +6,13 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from tqdm import tqdm
-import janitor
+# import janitor
 
-def data_loader(pth = '/data/fast1/glacierml/T_models/'):
+# /home/simonhans/data/
+# data/fast1/glacierml/T_models
+def data_loader(pth = '/home/sa42/data/'):
     print('Importing data...')
     print('Importing T database')
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
@@ -219,7 +221,13 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                                              + '_linear_' 
                                              + str(variable_name) 
                                              + '_' 
-                                             + str(learning_rate))
+                                             + str(learning_rate) 
+                                             + '_' 
+                                             + str(validation_split) 
+                                             + '_' 
+                                             + str(epochs))
+                                         
+            
 
         print('Running multi-variable linear regression on ' 
               + str(dataset.name) 
@@ -245,18 +253,30 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                       + '_linear_history_' 
                       + str(variable_name) 
                       + '_' 
-                      + str(learning_rate))
+                      + str(learning_rate)  
+                      + '_' 
+                      + str(validation_split) 
+                      + '_' 
+                      + str(epochs))
 
         df = pd.DataFrame(linear_history['MULTI'].history)
         df.to_csv('saved_results/' 
                   + str(dataset.name) 
                   + '_linear_history_MULTI_' 
-                  + str(learning_rate))
+                  + str(learning_rate) 
+                  + '_' 
+                  + str(validation_split) 
+                  + '_' 
+                  + str(epochs))
         
         linear_model.save('saved_models/' 
                           + str(dataset.name) 
                           + '_linear_MULTI_' 
-                          + str(learning_rate))
+                          + str(learning_rate) 
+                          + '_' 
+                          + str(validation_split) 
+                          + '_' 
+                          + str(epochs))
 
     #      DNN model
         dnn_model = {}
@@ -284,7 +304,11 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                                           + '_dnn_' 
                                           + str(variable_name) 
                                           + '_' 
-                                          + str(learning_rate))
+                                          + str(learning_rate) 
+                                          + '_' 
+                                          + str(validation_split) 
+                                          + '_' 
+                                          + str(epochs))
 
         print('Running multi-variable DNN regression on ' 
               + str(dataset.name) 
@@ -304,7 +328,11 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                        + str(dataset.name) 
                        + '_dnn_MULTI' 
                        + '_' 
-                       + str(learning_rate))
+                       + str(learning_rate)  
+                       + '_' 
+                       + str(validation_split) 
+                       + '_' 
+                       + str(epochs))
 
         print('Saving results')
         for variable_name in tqdm(list(dnn_history)):
@@ -314,15 +342,27 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                       + '_dnn_history_'
                       +str(variable_name) 
                       + '_' 
-                      + str(learning_rate))
+                      + str(learning_rate) 
+                      + '_' 
+                      + str(validation_split) 
+                      + '_' 
+                      + str(epochs))
 
         df = pd.DataFrame(dnn_history['MULTI'].history)
         df.to_csv('saved_results/' 
                   + str(dataset.name) 
                   + '_dnn_history_MULTI_' 
-                  + str(learning_rate))
+                  + str(learning_rate) 
+                  + '_' 
+                  + str(validation_split) 
+                  + '_' 
+                  + str(epochs))
         
         dnn_model.save('saved_models/' 
                        + str(dataset.name) 
                        + '_dnn_MULTI_' 
-                       + str(learning_rate))
+                       + str(learning_rate)  
+                       + '_' 
+                       + str(validation_split) 
+                       + '_' 
+                       + str(epochs))
