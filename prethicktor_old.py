@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import glacierml_old as gl
+import glacierml as gl
 from tqdm import tqdm
 import tensorflow as tf
 import warnings
@@ -19,11 +19,11 @@ def main():
     gl.thickness_renamer(T)
     gl.thickness_renamer(TT)
     T_t = T.head()
-    glathida_list = TTT,TT,T
+    glathida_list = T,TT,TTT
 
-    T.name = 'glacier'
-    TT.name = 'band'
-    TTT.name = 'point'
+    T.name = 'T'
+    TT.name = 'TT'
+    TTT.name = 'TTT'
 #     TTTx.name = 'TTTx'
     T_t.name = 'T_t'
 #     TTT_full.name = 'TTT_full'
@@ -32,7 +32,7 @@ def main():
     for dataset in glathida_list:
         for LR in np.logspace(-3,2,6):
             
-            gl.build_and_train_model(dataset,learning_rate=LR, validation_split=0.2, epochs=100)
+            gl.build_and_train_model(dataset,learning_rate=LR, validation_split=0.2, epochs=500)
 
         
 if __name__ == "__main__":
