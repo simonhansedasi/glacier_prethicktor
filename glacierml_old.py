@@ -17,35 +17,35 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing T database')
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
     T = T[[
-        'id',
-        'lat',
-        'lon',
-        'area',
-        'mean_slope',
-        'mean_thickness'
+        'GlaThiDa_ID',
+        'LAT',
+        'LON',
+        'AREA',
+        'MEAN_SLOPE',
+        'MEAN_THICKNESS'
     ]]
         
     T = T.dropna()
     print('Importing TT database')
     TT = pd.read_csv(pth + 'TT.csv', low_memory = False)
     TT = TT[[
-        'glacier_id',
-        'from_elevation',
-        'to_elevation',
-        'area',
-        'mean_slope',
-        'mean_thickness',
+        'GlaThiDa_ID',
+        'LOWER_BOUND',
+        'UPPER_BOUND',
+        'AREA',
+        'MEAN_SLOPE',
+        'MEAN_THICKNESS',
     ]]
     TT = TT.dropna()
     
     print('Importing TTT database')
     TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
     TTT = TTT[[
-        'glacier_id',
-        'lat',
-        'lon',
-        'elevation',
-        'thickness'
+        'GlaThiDa_ID',
+        'POINT_LAT',
+        'POINT_LON',
+        'ELEVATION',
+        'THICKNESS'
     ]]
     TTT = TTT.dropna()
     
@@ -116,7 +116,7 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
 
 def thickness_renamer(T):
     T = T.rename(columns = {
-        'mean_thickness':'thickness'
+        'MEAN_THICKNESS':'THICKNESS'
     },inplace = True)
     
     
@@ -128,8 +128,8 @@ def data_splitter(T):
     test_features = test_dataset.copy()
 
     #define label - attribute training to be picked
-    train_labels = train_features.pop('thickness')
-    test_labels = test_features.pop('thickness')
+    train_labels = train_features.pop('THICKNESS')
+    test_labels = test_features.pop('THICKNESS')
     
     return train_features, test_features, train_labels, test_labels
 
