@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import glacierml_old as gl
+import glacierml as gl
 from tqdm import tqdm
 import tensorflow as tf
 import warnings
@@ -15,24 +15,18 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def main():
     #load and organize data
-    T,TT,TTT = gl.data_loader()
-    gl.thickness_renamer(T)
-    gl.thickness_renamer(TT)
-    T_t = T.head()
-    glathida_list = TTT,TT,T
+    glacier = gl.data_loader(pth = '/home/prethicktor/data/')
+    gl.thickness_renamer(glacier)
 
-    T.name = 'glacier'
-    TT.name = 'band'
-    TTT.name = 'point'
-#     TTTx.name = 'TTTx'
-    T_t.name = 'T_t'
-#     TTT_full.name = 'TTT_full'
-    
-    
-    for dataset in glathida_list:
-        for LR in np.logspace(-3,2,6):
-            
-            gl.build_and_train_model(dataset,learning_rate=LR, validation_split=0.2, epochs=100)
+
+    glacier.name = 'glacier'
+#     LR = np.logspace(-3,2,6)
+    VS = 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
+#     RS = range(0,25,1)
+
+    for vs in VS:
+        gl.thickness_renamer(glacier)
+        gl.build_and_train_model(glacier,validation_split = vs)
 
         
 if __name__ == "__main__":
