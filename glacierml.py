@@ -6,7 +6,7 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 # import janitor
 
@@ -15,8 +15,8 @@ from tqdm import tqdm
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing data...')
     print('Importing T database')
-    T = pd.read_csv(pth + 'T.csv', low_memory = False)
-    T = T[[
+    glacier = pd.read_csv(pth + 'glacier.csv', low_memory = False)
+    glacier = glacier[[
         'id',
         'lat',
         'lon',
@@ -25,29 +25,29 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
         'mean_thickness'
     ]]
         
-    T = T.dropna()
-    print('Importing TT database')
-    TT = pd.read_csv(pth + 'TT.csv', low_memory = False)
-    TT = TT[[
-        'glacier_id',
-        'from_elevation',
-        'to_elevation',
-        'area',
-        'mean_slope',
-        'mean_thickness',
-    ]]
-    TT = TT.dropna()
+    glacier = glacier.dropna()
+#     print('Importing TT database')
+#     TT = pd.read_csv(pth + 'TT.csv', low_memory = False)
+#     TT = TT[[
+#         'glacier_id',
+#         'from_elevation',
+#         'to_elevation',
+#         'area',
+#         'mean_slope',
+#         'mean_thickness',
+#     ]]
+#     TT = TT.dropna()
     
-    print('Importing TTT database')
-    TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
-    TTT = TTT[[
-        'glacier_id',
-        'lat',
-        'lon',
-        'elevation',
-        'thickness'
-    ]]
-    TTT = TTT.dropna()
+#     print('Importing TTT database')
+#     TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
+#     TTT = TTT[[
+#         'glacier_id',
+#         'lat',
+#         'lon',
+#         'elevation',
+#         'thickness'
+#     ]]
+#     TTT = TTT.dropna()
     
 #     print('Building TTTx')
 #     TTTx = pd.merge(T,TTT, how = 'inner', on = 'GlaThiDa_ID')
@@ -107,11 +107,11 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
 #         'GlaThiDa_ID_2'
 #     ],axis=1)
     
-    T = T.drop('GlaThiDa_ID',axis = 1)
-    TT = TT.drop('GlaThiDa_ID',axis = 1)
-    TTT = TTT.drop('GlaThiDa_ID',axis =1)
+    glacier = glacier.drop('id',axis = 1)
+#     TT = TT.drop('GlaThiDa_ID',axis = 1)
+#     TTT = TTT.drop('GlaThiDa_ID',axis =1)
     print('Import complete')
-    return T,TT,TTT
+    return glacier
 
 
 def thickness_renamer(T):
@@ -120,8 +120,8 @@ def thickness_renamer(T):
     },inplace = True)
     
     
-def data_splitter(T):
-    train_dataset = T.sample(frac=0.8, random_state=0)
+def data_splitter(T, random_state = 0):
+    train_dataset = T.sample(frac=0.8, random_state=random_state)
     test_dataset = T.drop(train_dataset.index)
 
     train_features = train_dataset.copy()
@@ -151,7 +151,7 @@ def build_dnn_model(norm,learning_rate=0.1):
     model = keras.Sequential([
               norm,
               layers.Dense(64, activation='relu'),
-#               layers.Dense(64, activation='relu'),
+              layers.Dense(64, activation='relu'),
 #               layers.Dense(64, activation='relu'),
 
               layers.Dense(1) ])
@@ -176,7 +176,11 @@ def plot_loss(history):
      
 
     
-def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, epochs = 100):
+def build_and_train_model(dataset,
+                          learning_rate = 0.1,
+                          validation_split = 0.2,
+                          epochs = 300,
+                          random_state = 0):
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)
@@ -195,14 +199,16 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
         print(dataset.name + ' data normalized')
         
     #       linear model
-        print('Running single-variable linear regression on ' 
-              + str(dataset.name) 
-              + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) 
-              + ', Validation split = ' 
-              + str(validation_split) 
-              + ', Epochs = ' 
-              + str(epochs))
+#         print('Running single-variable linear regression on ' 
+#               + str(dataset.name) 
+#               + ' dataset with parameters: Learning Rate = ' 
+#               + str(learning_rate) 
+#               + ', Validation split = ' 
+#               + str(validation_split) 
+#               + ', Epochs = ' 
+#               + str(epochs)
+#               + ', Random state = '
+#               + str(random_state))
         linear_model = {}
         linear_history = {}
         linear_results = {}
@@ -226,17 +232,21 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                                              + str(validation_split) 
                                              + '_' 
                                              + str(epochs))
+#                                              + '_'
+#                                              + str(random_state))
                                          
             
 
-        print('Running multi-variable linear regression on ' 
-              + str(dataset.name) 
-              + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) 
-              + ', Validation split = ' 
-              + str(validation_split) 
-              + ', Epochs = ' 
-              + str(epochs))
+#         print('Running multi-variable linear regression on ' 
+#               + str(dataset.name) 
+#               + ' dataset with parameters: Learning Rate = ' 
+#               + str(learning_rate) 
+#               + ', Validation split = ' 
+#               + str(validation_split) 
+#               + ', Epochs = ' 
+#               + str(epochs)
+#               + ', Random state = '
+#               + str(random_state))
         
         linear_model = build_linear_model(normalizer['ALL'],learning_rate)
         linear_history['MULTI'] = linear_model.fit(
@@ -258,6 +268,8 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                       + str(validation_split) 
                       + '_' 
                       + str(epochs))
+#                       + '_'
+#                       + str(random_state))
 
         df = pd.DataFrame(linear_history['MULTI'].history)
         df.to_csv('saved_results/' 
@@ -268,6 +280,8 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                   + str(validation_split) 
                   + '_' 
                   + str(epochs))
+#                   + '_'
+#                   + str(random_state))
         
         linear_model.save('saved_models/' 
                           + str(dataset.name) 
@@ -277,20 +291,24 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                           + str(validation_split) 
                           + '_' 
                           + str(epochs))
+#                           + '_'
+#                           + str(random_state))
 
     #      DNN model
         dnn_model = {}
         dnn_history = {}
         dnn_results = {}
 
-        print('Running single-variable DNN regression on '
-              + str(dataset.name) 
-              + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) 
-              + ', Validation split = ' 
-              + str(validation_split) 
-              + ', Epochs = ' 
-              + str(epochs))
+#         print('Running single-variable DNN regression on '
+#               + str(dataset.name) 
+#               + ' dataset with parameters: Learning Rate = ' 
+#               + str(learning_rate) 
+#               + ', Validation split = ' 
+#               + str(validation_split) 
+#               + ', Epochs = ' 
+#               + str(epochs)
+#               + ', Random state = '
+#               + str(random_state))
         variable_list = tqdm(list(train_features))
         for variable_name in variable_list:
             dnn_model[variable_name] = build_dnn_model(normalizer[variable_name],learning_rate)
@@ -309,15 +327,18 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                                           + str(validation_split) 
                                           + '_' 
                                           + str(epochs))
+#                                           + '_'
+#                                           + str(random_state)
+#                                          )
 
-        print('Running multi-variable DNN regression on ' 
-              + str(dataset.name) 
-              + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) 
-              + ', Validation split = ' 
-              + str(validation_split) 
-              + ', Epochs = ' 
-              + str(epochs))
+#         print('Running multi-variable DNN regression on ' 
+#               + str(dataset.name) 
+#               + ' dataset with parameters: Learning Rate = ' 
+#               + str(learning_rate) 
+#               + ', Validation split = ' 
+#               + str(validation_split) 
+#               + ', Epochs = ' 
+#               + str(epochs))
         dnn_model = build_dnn_model(normalizer['ALL'],learning_rate)
         dnn_history['MULTI'] = dnn_model.fit(
             train_features, train_labels,
@@ -333,6 +354,8 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                        + str(validation_split) 
                        + '_' 
                        + str(epochs))
+#                        + '_'
+#                        + str(random_state))
 
         print('Saving results')
         for variable_name in tqdm(list(dnn_history)):
@@ -347,6 +370,8 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                       + str(validation_split) 
                       + '_' 
                       + str(epochs))
+#                       + '_'
+#                       + str(random_state))
 
         df = pd.DataFrame(dnn_history['MULTI'].history)
         df.to_csv('saved_results/' 
@@ -357,6 +382,8 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                   + str(validation_split) 
                   + '_' 
                   + str(epochs))
+#                   + '_'
+#                   + str(random_state))
         
         dnn_model.save('saved_models/' 
                        + str(dataset.name) 
@@ -366,3 +393,5 @@ def build_and_train_model(dataset, learning_rate = 0.1, validation_split = 0.2, 
                        + str(validation_split) 
                        + '_' 
                        + str(epochs))
+#                        + '_'
+#                        + str(random_state))
