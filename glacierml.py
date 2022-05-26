@@ -150,9 +150,9 @@ def build_linear_model(normalizer,learning_rate=0.1):
 def build_dnn_model(norm,learning_rate=0.1):
     model = keras.Sequential([
               norm,
-              layers.Dense(64, activation='relu'),
-              layers.Dense(64, activation='relu'),
-#               layers.Dense(64, activation='relu'),
+              layers.Dense(6, activation='relu'),
+              layers.Dense(3, activation='relu'),
+#               layers.Dense(2, activation='relu'),
 
               layers.Dense(1) ])
 
@@ -181,6 +181,10 @@ def build_and_train_model(dataset,
                           validation_split = 0.2,
                           epochs = 300,
                           random_state = 0):
+        # define paths
+        arch = '6-3'
+        svd_mod_pth = 'sm/sm_' + arch + '/'
+        svd_res_pth = 'sr/sr_' + arch + '/'
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)
@@ -198,17 +202,19 @@ def build_and_train_model(dataset,
         normalizer['ALL'].adapt(np.array(train_features))
         print(dataset.name + ' data normalized')
         
-    #       linear model
-#         print('Running single-variable linear regression on ' 
-#               + str(dataset.name) 
-#               + ' dataset with parameters: Learning Rate = ' 
-#               + str(learning_rate) 
-#               + ', Validation split = ' 
-#               + str(validation_split) 
-#               + ', Epochs = ' 
-#               + str(epochs)
-#               + ', Random state = '
-#               + str(random_state))
+         # linear model
+        print('Running single-variable linear regression on ' 
+              + str(dataset.name) 
+              + ' dataset with parameters: Learning Rate = ' 
+              + str(learning_rate) 
+              + ', Validation split = ' 
+              + str(validation_split) 
+              + ', Epochs = ' 
+              + str(epochs)
+              + ', Random state = '
+              + str(random_state)
+              + ', Layer Architechture = '
+              + arch)
         linear_model = {}
         linear_history = {}
         linear_results = {}
@@ -222,7 +228,7 @@ def build_and_train_model(dataset,
                                                 verbose=0,
                                                 validation_split=validation_split)
             
-            linear_model[variable_name].save('saved_models/' 
+            linear_model[variable_name].save(svd_mod_pth 
                                              + str(dataset.name) 
                                              + '_linear_' 
                                              + str(variable_name) 
@@ -231,22 +237,24 @@ def build_and_train_model(dataset,
                                              + '_' 
                                              + str(validation_split) 
                                              + '_' 
-                                             + str(epochs))
-#                                              + '_'
-#                                              + str(random_state))
+                                             + str(epochs)
+                                             + '_'
+                                             + str(random_state))
                                          
             
 
-#         print('Running multi-variable linear regression on ' 
-#               + str(dataset.name) 
-#               + ' dataset with parameters: Learning Rate = ' 
-#               + str(learning_rate) 
-#               + ', Validation split = ' 
-#               + str(validation_split) 
-#               + ', Epochs = ' 
-#               + str(epochs)
-#               + ', Random state = '
-#               + str(random_state))
+        print('Running multi-variable linear regression on ' 
+              + str(dataset.name) 
+              + ' dataset with parameters: Learning Rate = ' 
+              + str(learning_rate) 
+              + ', Validation split = ' 
+              + str(validation_split) 
+              + ', Epochs = ' 
+              + str(epochs)
+              + ', Random state = '
+              + str(random_state)
+              + ', Layer Architechture = '
+              + arch)
         
         linear_model = build_linear_model(normalizer['ALL'],learning_rate)
         linear_history['MULTI'] = linear_model.fit(
@@ -258,7 +266,7 @@ def build_and_train_model(dataset,
         print('Saving results')
         for variable_name in tqdm(list(linear_history)):
             df = pd.DataFrame(linear_history[variable_name].history)
-            df.to_csv('saved_results/' 
+            df.to_csv(svd_res_pth 
                       + str(dataset.name) 
                       + '_linear_history_' 
                       + str(variable_name) 
@@ -267,48 +275,50 @@ def build_and_train_model(dataset,
                       + '_' 
                       + str(validation_split) 
                       + '_' 
-                      + str(epochs))
-#                       + '_'
-#                       + str(random_state))
+                      + str(epochs)
+                      + '_'
+                      + str(random_state))
 
         df = pd.DataFrame(linear_history['MULTI'].history)
-        df.to_csv('saved_results/' 
+        df.to_csv(svd_res_pth 
                   + str(dataset.name) 
                   + '_linear_history_MULTI_' 
                   + str(learning_rate) 
                   + '_' 
                   + str(validation_split) 
                   + '_' 
-                  + str(epochs))
-#                   + '_'
-#                   + str(random_state))
+                  + str(epochs)
+                  + '_'
+                  + str(random_state))
         
-        linear_model.save('saved_models/' 
+        linear_model.save(svd_mod_pth 
                           + str(dataset.name) 
                           + '_linear_MULTI_' 
                           + str(learning_rate) 
                           + '_' 
                           + str(validation_split) 
                           + '_' 
-                          + str(epochs))
-#                           + '_'
-#                           + str(random_state))
+                          + str(epochs)
+                          + '_'
+                          + str(random_state))
 
     #      DNN model
         dnn_model = {}
         dnn_history = {}
         dnn_results = {}
 
-#         print('Running single-variable DNN regression on '
-#               + str(dataset.name) 
-#               + ' dataset with parameters: Learning Rate = ' 
-#               + str(learning_rate) 
-#               + ', Validation split = ' 
-#               + str(validation_split) 
-#               + ', Epochs = ' 
-#               + str(epochs)
-#               + ', Random state = '
-#               + str(random_state))
+        print('Running single-variable DNN regression on '
+              + str(dataset.name) 
+              + ' dataset with parameters: Learning Rate = ' 
+              + str(learning_rate) 
+              + ', Validation split = ' 
+              + str(validation_split) 
+              + ', Epochs = ' 
+              + str(epochs)
+              + ', Random state = '
+              + str(random_state)
+              + ', Layer Architechture = '
+              + arch)
         variable_list = tqdm(list(train_features))
         for variable_name in variable_list:
             dnn_model[variable_name] = build_dnn_model(normalizer[variable_name],learning_rate)
@@ -317,7 +327,7 @@ def build_and_train_model(dataset,
                                                 epochs=epochs,
                                                 verbose=0,
                                                 validation_split=validation_split)    
-            dnn_model[variable_name].save('saved_models/' 
+            dnn_model[variable_name].save(svd_mod_pth 
                                           + str(dataset.name) 
                                           + '_dnn_' 
                                           + str(variable_name) 
@@ -326,26 +336,30 @@ def build_and_train_model(dataset,
                                           + '_' 
                                           + str(validation_split) 
                                           + '_' 
-                                          + str(epochs))
-#                                           + '_'
-#                                           + str(random_state)
-#                                          )
+                                          + str(epochs)
+                                          + '_'
+                                          + str(random_state)
+                                         )
 
-#         print('Running multi-variable DNN regression on ' 
-#               + str(dataset.name) 
-#               + ' dataset with parameters: Learning Rate = ' 
-#               + str(learning_rate) 
-#               + ', Validation split = ' 
-#               + str(validation_split) 
-#               + ', Epochs = ' 
-#               + str(epochs))
+        print('Running multi-variable DNN regression on ' 
+              + str(dataset.name) 
+              + ' dataset with parameters: Learning Rate = ' 
+              + str(learning_rate) 
+              + ', Validation split = ' 
+              + str(validation_split) 
+              + ', Epochs = ' 
+              + str(epochs)
+              + ', Random state = '
+              + str(random_state)
+              + ', Layer Architechture = '
+              + arch)
         dnn_model = build_dnn_model(normalizer['ALL'],learning_rate)
         dnn_history['MULTI'] = dnn_model.fit(
             train_features, train_labels,
             validation_split=validation_split,
             verbose=0, epochs=epochs)
 
-        dnn_model.save('saved_models/' 
+        dnn_model.save(svd_mod_pth 
                        + str(dataset.name) 
                        + '_dnn_MULTI' 
                        + '_' 
@@ -353,14 +367,14 @@ def build_and_train_model(dataset,
                        + '_' 
                        + str(validation_split) 
                        + '_' 
-                       + str(epochs))
-#                        + '_'
-#                        + str(random_state))
+                       + str(epochs)
+                       + '_'
+                       + str(random_state))
 
         print('Saving results')
         for variable_name in tqdm(list(dnn_history)):
             df = pd.DataFrame(dnn_history[variable_name].history)
-            df.to_csv('saved_results/' 
+            df.to_csv(svd_res_pth 
                       + str(dataset.name) 
                       + '_dnn_history_'
                       +str(variable_name) 
@@ -369,29 +383,29 @@ def build_and_train_model(dataset,
                       + '_' 
                       + str(validation_split) 
                       + '_' 
-                      + str(epochs))
-#                       + '_'
-#                       + str(random_state))
+                      + str(epochs)
+                      + '_'
+                      + str(random_state))
 
         df = pd.DataFrame(dnn_history['MULTI'].history)
-        df.to_csv('saved_results/' 
+        df.to_csv(svd_res_pth 
                   + str(dataset.name) 
                   + '_dnn_history_MULTI_' 
                   + str(learning_rate) 
                   + '_' 
                   + str(validation_split) 
                   + '_' 
-                  + str(epochs))
-#                   + '_'
-#                   + str(random_state))
+                  + str(epochs)
+                  + '_'
+                  + str(random_state))
         
-        dnn_model.save('saved_models/' 
+        dnn_model.save(svd_mod_pth
                        + str(dataset.name) 
                        + '_dnn_MULTI_' 
                        + str(learning_rate)  
                        + '_' 
                        + str(validation_split) 
                        + '_' 
-                       + str(epochs))
-#                        + '_'
-#                        + str(random_state))
+                       + str(epochs)
+                       + '_'
+                       + str(random_state))
