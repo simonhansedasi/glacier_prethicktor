@@ -28,7 +28,7 @@ def data_loader_2():
         f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
         RGI_extra = RGI_extra.append(f, ignore_index = True)
 
-    comb = pd.read_csv('GlaThiDa&RGI_matched_indexes.csv')
+    comb = pd.read_csv('GlaThiDa_RGI_matched_indexes.csv')
     drops = comb.index[comb['0']!=0]
     comb = comb.drop(drops)
     comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
