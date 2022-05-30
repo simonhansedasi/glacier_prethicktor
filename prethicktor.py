@@ -13,20 +13,39 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+
+
 def main():
     #load and organize data
-    glacier = gl.data_loader(pth = '/home/prethicktor/data/')
-    gl.thickness_renamer(glacier)
+    Glam = gl.data_loader_2()
+    gl.thickness_renamer(Glam)
 
 
-    glacier.name = 'glacier'
-#     LR = np.logspace(-3,2,6)
-    VS = 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
+    Glam.name = 'Glam'
+    LR = 0.1, 0.01, 0.001
+#     VS = 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
+    RS = range(0,25,1)
+
+    for rs in RS:
+        for lr in LR:
+            gl.thickness_renamer(Glam)
+            gl.build_and_train_model(Glam,learning_rate = lr,random_state = rs)
+        
+        
+# def main():
+#     #load and organize data
+#     glacier = gl.data_loader(pth = '/home/prethicktor/data/')
+#     gl.thickness_renamer(glacier)
+
+
+#     glacier.name = 'glacier'
+# #     LR = np.logspace(-3,2,6)
+# #     VS = 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
 #     RS = range(0,25,1)
 
-    for vs in VS:
-        gl.thickness_renamer(glacier)
-        gl.build_and_train_model(glacier,validation_split = vs)
+#     for rs in RS:
+#         gl.thickness_renamer(glacier)
+#         gl.build_and_train_model(glacier,random_state = rs)
 
         
 if __name__ == "__main__":

@@ -8,10 +8,88 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import os
+import geopy.distance
+
 # import janitor
 
 # /home/sa42/data/
 # /data/fast1/glacierml/T_models/
+
+def data_loader_2():
+    pth = '/home/prethicktor/data/'
+    pth2 = '/data/fast1/glacierml/T_models/'
+#     TTT = pd.read_csv(pth2 + 'TTT.csv', low_memory = False)
+    T = pd.read_csv(pth2 + 'T.csv', low_memory = False)
+    rootdir = pth2 + 'attribs/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in os.listdir(rootdir):
+    #     print(file)
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
+
+    comb = pd.read_csv('GlaThiDa&RGI_matched_indexes.csv')
+    drops = comb.index[comb['0']!=0]
+    comb = comb.drop(drops)
+    comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
+    T = T.loc[comb['GlaThiDa_index']]
+    RGI = RGI_extra.loc[comb['RGI_index']]
+
+
+    RGI = RGI.reset_index()
+
+    T = T.reset_index()
+
+
+
+    RGI = RGI[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect'
+    ]]
+    T = T[[
+        'LAT',
+        'LON',
+        'AREA',
+        'MEAN_SLOPE',
+        'MEAN_THICKNESS'
+    ]]
+
+    Glam = pd.merge(T,RGI, left_index=True, right_index=True)
+
+
+    Glam = Glam[[
+#         'LAT',
+#         'LON',
+        'CenLon',
+        'CenLat',
+        'Area',
+        'MEAN_THICKNESS',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Aspect'
+    ]]
+    Glam = Glam.dropna(subset = ['MEAN_THICKNESS'])
+
+#     Glam['distance'] = 1
+#     for G_idx in Glam.index:
+#         GlaThiDa_coords = (Glam['LAT'].loc[G_idx],
+#                            Glam['LON'].loc[G_idx])
+#         RGI_coords = (Glam['CenLat'].loc[G_idx],
+#                            Glam['CenLon'].loc[G_idx])
+
+#         distance = geopy.distance.geodesic(GlaThiDa_coords,RGI_coords).km
+#         Glam['distance'].loc[G_idx] = distance
+
+    return Glam
+    
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing data...')
     print('Importing T database')
@@ -116,7 +194,7 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
 
 def thickness_renamer(T):
     T = T.rename(columns = {
-        'mean_thickness':'thickness'
+        'MEAN_THICKNESS':'thickness'
     },inplace = True)
     
     
@@ -150,9 +228,9 @@ def build_linear_model(normalizer,learning_rate=0.1):
 def build_dnn_model(norm,learning_rate=0.1):
     model = keras.Sequential([
               norm,
-              layers.Dense(6, activation='relu'),
-              layers.Dense(3, activation='relu'),
-#               layers.Dense(2, activation='relu'),
+#               layers.Dense(32, activation='relu'),
+              layers.Dense(8, activation='relu'),
+              layers.Dense(4, activation='relu'),
 
               layers.Dense(1) ])
 
@@ -177,18 +255,18 @@ def plot_loss(history):
 
     
 def build_and_train_model(dataset,
-                          learning_rate = 0.1,
+                          learning_rate = 0.001,
                           validation_split = 0.2,
                           epochs = 300,
                           random_state = 0):
         # define paths
-        arch = '6-3'
-        svd_mod_pth = 'sm/sm_' + arch + '/'
-        svd_res_pth = 'sr/sr_' + arch + '/'
+        arch = '8-4'
+        svd_mod_pth = 'sm2/sm_' + arch + '/'
+        svd_res_pth = 'sr2/sr_' + arch + '/'
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)
-        print(dataset.name)
+#         print(dataset.name)
         
     #     normalize data
         print('Normalizing ' + str(dataset.name) + ' data')
@@ -202,144 +280,144 @@ def build_and_train_model(dataset,
         normalizer['ALL'].adapt(np.array(train_features))
         print(dataset.name + ' data normalized')
         
-         # linear model
-        print('Running single-variable linear regression on ' 
-              + str(dataset.name) 
-              + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) 
-              + ', Validation split = ' 
-              + str(validation_split) 
-              + ', Epochs = ' 
-              + str(epochs)
-              + ', Random state = '
-              + str(random_state)
-              + ', Layer Architechture = '
-              + arch)
-        linear_model = {}
-        linear_history = {}
-        linear_results = {}
-        variable_list = list(train_features)
+#          # linear model
+#         print('Running single-variable linear regression on ' 
+#               + str(dataset.name) 
+#               + ' dataset with parameters: Learning Rate = ' 
+#               + str(learning_rate) 
+#               + ', Validation split = ' 
+#               + str(validation_split) 
+#               + ', Epochs = ' 
+#               + str(epochs)
+#               + ', Random state = '
+#               + str(random_state)
+#               + ', Layer Architechture = '
+#               + arch)
+#         linear_model = {}
+#         linear_history = {}
+#         linear_results = {}
+#         variable_list = list(train_features)
 
-        for variable_name in tqdm(variable_list):
-            linear_model[variable_name] = build_linear_model(normalizer[variable_name],learning_rate)
-            linear_history[variable_name] = linear_model[variable_name].fit(
-                                                train_features[variable_name], train_labels,        
-                                                epochs=epochs,
-                                                verbose=0,
-                                                validation_split=validation_split)
+#         for variable_name in tqdm(variable_list):
+#             linear_model[variable_name] = build_linear_model(normalizer[variable_name],learning_rate)
+#             linear_history[variable_name] = linear_model[variable_name].fit(
+#                                                 train_features[variable_name], train_labels,        
+#                                                 epochs=epochs,
+#                                                 verbose=0,
+#                                                 validation_split=validation_split)
             
-            linear_model[variable_name].save(svd_mod_pth 
-                                             + str(dataset.name) 
-                                             + '_linear_' 
-                                             + str(variable_name) 
-                                             + '_' 
-                                             + str(learning_rate) 
-                                             + '_' 
-                                             + str(validation_split) 
-                                             + '_' 
-                                             + str(epochs)
-                                             + '_'
-                                             + str(random_state))
+#             linear_model[variable_name].save(svd_mod_pth 
+#                                              + str(dataset.name) 
+#                                              + '_linear_' 
+#                                              + str(variable_name) 
+#                                              + '_' 
+#                                              + str(learning_rate) 
+#                                              + '_' 
+#                                              + str(validation_split) 
+#                                              + '_' 
+#                                              + str(epochs)
+#                                              + '_'
+#                                              + str(random_state))
                                          
             
 
-        print('Running multi-variable linear regression on ' 
-              + str(dataset.name) 
-              + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) 
-              + ', Validation split = ' 
-              + str(validation_split) 
-              + ', Epochs = ' 
-              + str(epochs)
-              + ', Random state = '
-              + str(random_state)
-              + ', Layer Architechture = '
-              + arch)
+#         print('Running multi-variable linear regression on ' 
+#               + str(dataset.name) 
+#               + ' dataset with parameters: Learning Rate = ' 
+#               + str(learning_rate) 
+#               + ', Validation split = ' 
+#               + str(validation_split) 
+#               + ', Epochs = ' 
+#               + str(epochs)
+#               + ', Random state = '
+#               + str(random_state)
+#               + ', Layer Architechture = '
+#               + arch)
         
-        linear_model = build_linear_model(normalizer['ALL'],learning_rate)
-        linear_history['MULTI'] = linear_model.fit(
-           train_features, train_labels,        
-           epochs=epochs,
-           verbose=0,
-           validation_split=validation_split)
+#         linear_model = build_linear_model(normalizer['ALL'],learning_rate)
+#         linear_history['MULTI'] = linear_model.fit(
+#            train_features, train_labels,        
+#            epochs=epochs,
+#            verbose=0,
+#            validation_split=validation_split)
 
-        print('Saving results')
-        for variable_name in tqdm(list(linear_history)):
-            df = pd.DataFrame(linear_history[variable_name].history)
-            df.to_csv(svd_res_pth 
-                      + str(dataset.name) 
-                      + '_linear_history_' 
-                      + str(variable_name) 
-                      + '_' 
-                      + str(learning_rate)  
-                      + '_' 
-                      + str(validation_split) 
-                      + '_' 
-                      + str(epochs)
-                      + '_'
-                      + str(random_state))
+#         print('Saving results')
+#         for variable_name in tqdm(list(linear_history)):
+#             df = pd.DataFrame(linear_history[variable_name].history)
+#             df.to_csv(svd_res_pth 
+#                       + str(dataset.name) 
+#                       + '_linear_history_' 
+#                       + str(variable_name) 
+#                       + '_' 
+#                       + str(learning_rate)  
+#                       + '_' 
+#                       + str(validation_split) 
+#                       + '_' 
+#                       + str(epochs)
+#                       + '_'
+#                       + str(random_state))
 
-        df = pd.DataFrame(linear_history['MULTI'].history)
-        df.to_csv(svd_res_pth 
-                  + str(dataset.name) 
-                  + '_linear_history_MULTI_' 
-                  + str(learning_rate) 
-                  + '_' 
-                  + str(validation_split) 
-                  + '_' 
-                  + str(epochs)
-                  + '_'
-                  + str(random_state))
+#         df = pd.DataFrame(linear_history['MULTI'].history)
+#         df.to_csv(svd_res_pth 
+#                   + str(dataset.name) 
+#                   + '_linear_history_MULTI_' 
+#                   + str(learning_rate) 
+#                   + '_' 
+#                   + str(validation_split) 
+#                   + '_' 
+#                   + str(epochs)
+#                   + '_'
+#                   + str(random_state))
         
-        linear_model.save(svd_mod_pth 
-                          + str(dataset.name) 
-                          + '_linear_MULTI_' 
-                          + str(learning_rate) 
-                          + '_' 
-                          + str(validation_split) 
-                          + '_' 
-                          + str(epochs)
-                          + '_'
-                          + str(random_state))
+#         linear_model.save(svd_mod_pth 
+#                           + str(dataset.name) 
+#                           + '_linear_MULTI_' 
+#                           + str(learning_rate) 
+#                           + '_' 
+#                           + str(validation_split) 
+#                           + '_' 
+#                           + str(epochs)
+#                           + '_'
+#                           + str(random_state))
 
     #      DNN model
         dnn_model = {}
         dnn_history = {}
         dnn_results = {}
 
-        print('Running single-variable DNN regression on '
-              + str(dataset.name) 
-              + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) 
-              + ', Validation split = ' 
-              + str(validation_split) 
-              + ', Epochs = ' 
-              + str(epochs)
-              + ', Random state = '
-              + str(random_state)
-              + ', Layer Architechture = '
-              + arch)
-        variable_list = tqdm(list(train_features))
-        for variable_name in variable_list:
-            dnn_model[variable_name] = build_dnn_model(normalizer[variable_name],learning_rate)
-            dnn_history[variable_name] = dnn_model[variable_name].fit(
-                                                train_features[variable_name], train_labels,        
-                                                epochs=epochs,
-                                                verbose=0,
-                                                validation_split=validation_split)    
-            dnn_model[variable_name].save(svd_mod_pth 
-                                          + str(dataset.name) 
-                                          + '_dnn_' 
-                                          + str(variable_name) 
-                                          + '_' 
-                                          + str(learning_rate) 
-                                          + '_' 
-                                          + str(validation_split) 
-                                          + '_' 
-                                          + str(epochs)
-                                          + '_'
-                                          + str(random_state)
-                                         )
+#         print('Running single-variable DNN regression on '
+#               + str(dataset.name) 
+#               + ' dataset with parameters: Learning Rate = ' 
+#               + str(learning_rate) 
+#               + ', Validation split = ' 
+#               + str(validation_split) 
+#               + ', Epochs = ' 
+#               + str(epochs)
+#               + ', Random state = '
+#               + str(random_state)
+#               + ', Layer Architechture = '
+#               + arch)
+#         variable_list = tqdm(list(train_features))
+#         for variable_name in variable_list:
+#             dnn_model[variable_name] = build_dnn_model(normalizer[variable_name],learning_rate)
+#             dnn_history[variable_name] = dnn_model[variable_name].fit(
+#                                                 train_features[variable_name], train_labels,        
+#                                                 epochs=epochs,
+#                                                 verbose=0,
+#                                                 validation_split=validation_split)    
+#             dnn_model[variable_name].save(svd_mod_pth 
+#                                           + str(dataset.name) 
+#                                           + '_dnn_' 
+#                                           + str(variable_name) 
+#                                           + '_' 
+#                                           + str(learning_rate) 
+#                                           + '_' 
+#                                           + str(validation_split) 
+#                                           + '_' 
+#                                           + str(epochs)
+#                                           + '_'
+#                                           + str(random_state)
+#                                          )
 
         print('Running multi-variable DNN regression on ' 
               + str(dataset.name) 
@@ -348,7 +426,7 @@ def build_and_train_model(dataset,
               + ', Validation split = ' 
               + str(validation_split) 
               + ', Epochs = ' 
-              + str(epochs)
+                  + str(epochs)
               + ', Random state = '
               + str(random_state)
               + ', Layer Architechture = '
@@ -358,7 +436,7 @@ def build_and_train_model(dataset,
             train_features, train_labels,
             validation_split=validation_split,
             verbose=0, epochs=epochs)
-
+        
         dnn_model.save(svd_mod_pth 
                        + str(dataset.name) 
                        + '_dnn_MULTI' 
