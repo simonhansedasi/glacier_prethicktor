@@ -313,7 +313,7 @@ deviations = deviations.dropna()
 # deviations = deviations.drop(too_low)
 
 deviations = deviations.sort_values('test mae avg')
-deviations.to_csv('deviations_' + dataset.name + '.csv')
+deviations.to_csv('zults/deviations_' + dataset.name + '.csv')
 
 
 print('loading RGI...')
@@ -406,6 +406,6 @@ for i in tqdm(dfs.index):
 
 RGI_prethicked['variance'] = (RGI_prethicked['predicted thickness std dev'])**2
 
-RGI_prethicked.to_csv('RGI_prethicked_' + dataset.name + '.csv')
+RGI_prethicked.to_csv('zults/RGI_prethicked_' + dataset.name + '.csv')
 
 
