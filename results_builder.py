@@ -53,7 +53,7 @@ Glam_phys = Glam[[
     'Lmax'
 ]]
 
-rootdir = 'sm4/'
+rootdir = '/saved_models/sm4/'
 dataset = Glam_phys
 
 
