@@ -24,20 +24,20 @@ pd.set_option('mode.chained_assignment', None)
 print('load Glam  data (RGI data connected with GlaThiDa thicknesses)')
 
 Glam = pd.read_csv('Glam.csv')
-Glam = Glam[[
-#         'LAT',
-#         'LON',
-    'CenLon',
-    'CenLat',
-    'Area',
-    'thickness',
-    'Slope',
-    'Zmin',
-    'Zmed',
-    'Zmax',
-    'Aspect',
-    'Lmax'
-]]
+# Glam = Glam[[
+# #         'LAT',
+# #         'LON',
+#     'CenLon',
+#     'CenLat',
+#     'Area',
+#     'thickness',
+#     'Slope',
+#     'Zmin',
+#     'Zmed',
+#     'Zmax',
+#     'Aspect',
+#     'Lmax'
+# ]]
 Glam_phys = Glam[[
 #         'LAT',
 #         'LON',
@@ -53,9 +53,9 @@ Glam_phys = Glam[[
     'Lmax'
 ]]
 
-rootdir = '/saved_models/sm4/'
+rootdir = 'saved_models/sm4/'
 dataset = Glam_phys
-
+dataset.name = 'Glam_phys'
 
 # split data for training and validation
 Glam.name = 'Glam'
@@ -209,7 +209,7 @@ predictions.rename(columns = {0:'avg train thickness'},inplace = True)
 # calculate statistics
 print('calculating statistics...')
 deviations = pd.DataFrame()
-for architecture in list(predictions['architecture'].unique()):
+for architecture in tqdm(list(predictions['architecture'].unique())):
     for learning_rate in list(predictions['learning rate'].unique()):
         df = predictions[
             (predictions['architecture'] == architecture) & 
@@ -322,6 +322,7 @@ RGI_extra = pd.DataFrame()
 for file in os.listdir(rootdir):
     f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
     RGI_extra = RGI_extra.append(f, ignore_index = True)
+    
 
 RGI = RGI_extra[[
     'CenLat',
@@ -334,7 +335,21 @@ RGI = RGI_extra[[
     'Aspect',
     'Lmax'
 ]]
-
+    
+if dataset.name == 'Glam_phys':
+    RGI = RGI_extra[[
+#         'CenLat',
+#         'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+    
+    
 bad_zmed = RGI.loc[RGI['Zmed']<0].index
 RGI = RGI.drop(bad_zmed)
 
@@ -354,7 +369,7 @@ arch = deviations['layer architecture'].iloc[0]
 lr = deviations['learning rate'].iloc[0]
 vs = deviations['validation split'].iloc[0]
 
-print('prethicking RGI using model trained on RGI data matched with GlaThiDa thicknesses...')
+print('predicting RGI thicknesses using model trained on RGI data matched with GlaThiDa thicknesses...')
 dfs = pd.DataFrame()
 for rs in tqdm(RS):
     s = pd.Series(
@@ -374,7 +389,7 @@ for rs in tqdm(RS):
 
 RGI_prethicked = RGI.copy() 
 RGI_prethicked['avg predicted thickness'] = 'NaN'
-RGI_prethicked.is_copy = False
+print('calculating average thickness across random state ensemble...')
 for i in tqdm(dfs.index):
     avg_predicted_thickness = np.sum(dfs.loc[i]) / len(dfs.loc[i])
     RGI_prethicked['avg predicted thickness'].loc[i] = avg_predicted_thickness
