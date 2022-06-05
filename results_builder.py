@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import pandas as pd
 import glacierml as gl
@@ -21,23 +20,23 @@ pd.set_option('mode.chained_assignment', None)
 
 
 
-print('load Glam  data (RGI data connected with GlaThiDa thicknesses)')
+print('load Glam  data (RGI data matched with GlaThiDa thicknesses)')
 
 Glam = pd.read_csv('Glam.csv')
-# Glam = Glam[[
-# #         'LAT',
-# #         'LON',
-#     'CenLon',
-#     'CenLat',
-#     'Area',
-#     'thickness',
-#     'Slope',
-#     'Zmin',
-#     'Zmed',
-#     'Zmax',
-#     'Aspect',
-#     'Lmax'
-# ]]
+Glam = Glam[[
+#         'LAT',
+#         'LON',
+    'CenLon',
+    'CenLat',
+    'Area',
+    'thickness',
+    'Slope',
+    'Zmin',
+    'Zmed',
+    'Zmax',
+    'Aspect',
+    'Lmax'
+]]
 Glam_phys = Glam[[
 #         'LAT',
 #         'LON',
@@ -319,7 +318,7 @@ deviations.to_csv('zults/deviations_' + dataset.name + '.csv')
 print('loading RGI...')
 rootdir = '/data/fast0/datasets/rgi60-attribs/'
 RGI_extra = pd.DataFrame()
-for file in os.listdir(rootdir):
+for file in tqdm(os.listdir(rootdir)):
     f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
     RGI_extra = RGI_extra.append(f, ignore_index = True)
     
