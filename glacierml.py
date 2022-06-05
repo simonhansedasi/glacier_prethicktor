@@ -10,18 +10,18 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 import geopy.distance
-
+# test for push
 # import janitor
 
 # /home/sa42/data/
 # /data/fast1/glacierml/T_models/
 
-def data_loader_2():
-    pth = '/home/prethicktor/data/'
+def data_loader_2(pth = '/home/prethicktor/data/'):
+    
     pth2 = '/data/fast1/glacierml/T_models/'
 #     TTT = pd.read_csv(pth2 + 'TTT.csv', low_memory = False)
-    T = pd.read_csv(pth2 + 'T.csv', low_memory = False)
-    rootdir = pth2 + 'attribs/rgi60-attribs/'
+    T = pd.read_csv(pth + 'T.csv', low_memory = False)
+    rootdir = pth + 'attribs/rgi60-attribs/'
     RGI_extra = pd.DataFrame()
     for file in os.listdir(rootdir):
     #     print(file)
@@ -50,7 +50,8 @@ def data_loader_2():
         'Zmed',
         'Zmax',
         'Area',
-        'Aspect'
+        'Aspect',
+        'Lmax'
     ]]
     T = T[[
         'LAT',
@@ -194,7 +195,7 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
 
 def thickness_renamer(T):
     T = T.rename(columns = {
-        'MEAN_THICKNESS':'thickness'
+        'mean_thickness':'thickness'
     },inplace = True)
     
     
@@ -228,9 +229,9 @@ def build_linear_model(normalizer,learning_rate=0.1):
 def build_dnn_model(norm,learning_rate=0.1):
     model = keras.Sequential([
               norm,
-#               layers.Dense(32, activation='relu'),
-              layers.Dense(8, activation='relu'),
-              layers.Dense(4, activation='relu'),
+              layers.Dense(24, activation='relu'),
+              layers.Dense(12, activation='relu'),
+              layers.Dense(6, activation='relu'),
 
               layers.Dense(1) ])
 
@@ -260,9 +261,9 @@ def build_and_train_model(dataset,
                           epochs = 300,
                           random_state = 0):
         # define paths
-        arch = '8-4'
-        svd_mod_pth = 'sm2/sm_' + arch + '/'
-        svd_res_pth = 'sr2/sr_' + arch + '/'
+        arch = '24-12-6'
+        svd_mod_pth = 'sm4/sm_' + arch + '/'
+        svd_res_pth = 'sr4/sr_' + arch + '/'
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)
@@ -487,3 +488,10 @@ def build_and_train_model(dataset,
                        + str(epochs)
                        + '_'
                        + str(random_state))
+        
+        
+        
+        
+
+
+    
