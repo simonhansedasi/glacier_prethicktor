@@ -262,8 +262,8 @@ def build_and_train_model(dataset,
                           random_state = 0):
         # define paths
         arch = '24-12-6'
-        svd_mod_pth = 'sm4/sm_' + arch + '/'
-        svd_res_pth = 'sr4/sr_' + arch + '/'
+        svd_mod_pth = 'saved_models/sm2/sm_' + arch + '/'
+        svd_res_pth = 'saved_results/sr2/sr_' + arch + '/'
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)
