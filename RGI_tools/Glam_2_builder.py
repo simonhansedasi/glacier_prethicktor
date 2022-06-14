@@ -6,7 +6,7 @@ import chardet
 from chardet import detect
 from tqdm import tqdm
 
-comb = pd.read_csv('RGI_tools/l.csv')
+comb = pd.read_csv('RGI_tools/GlaThiDa_RGI_live.csv')
 comb = comb.rename(columns = {'0':'distance'})
 
 glacier = pd.read_csv('/data/fast1/glacierml/T_models/glacier.csv')
