@@ -2,7 +2,7 @@
 A machine learning approach to predicting glacier thicknesses.
 
 The Glacier Thickness Predictor (GTP) is divided into four training approaches: sm, sm2, sm4, sm5.
-
+---
 **sm:**
 
 training data - glacier.csv
