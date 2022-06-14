@@ -229,9 +229,9 @@ def build_linear_model(normalizer,learning_rate=0.1):
 def build_dnn_model(norm,learning_rate=0.1):
     model = keras.Sequential([
               norm,
-              layers.Dense(24, activation='relu'),
-              layers.Dense(12, activation='relu'),
-              layers.Dense(6, activation='relu'),
+              layers.Dense(32, activation='relu'),
+              layers.Dense(16, activation='relu'),
+              layers.Dense(8, activation='relu'),
 
               layers.Dense(1) ])
 
@@ -261,9 +261,9 @@ def build_and_train_model(dataset,
                           epochs = 300,
                           random_state = 0):
         # define paths
-        arch = '24-12-6'
-        svd_mod_pth = 'saved_models/sm2/sm_' + arch + '/'
-        svd_res_pth = 'saved_results/sr2/sr_' + arch + '/'
+        arch = '32-16-8'
+        svd_mod_pth = 'saved_models/sm5/sm_' + arch + '/'
+        svd_res_pth = 'saved_results/sr5/sr_' + arch + '/'
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)

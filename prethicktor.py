@@ -17,10 +17,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def main():
 #     load and organize data
-    Glam = pd.read_csv('Glam.csv')
+    Glam_2 = pd.read_csv('Glam_2.csv')
     
     
-    Glam = Glam[[
+    Glam_2 = Glam_2[[
 #         'LAT',
 #         'LON',
         'CenLon',
@@ -34,7 +34,7 @@ def main():
         'Aspect',
         'Lmax'
     ]]   
-    Glam_phys = Glam[[
+    Glam_phys = Glam_2[[
     #         'LAT',
     #         'LON',
 #         'CenLon',
@@ -52,17 +52,17 @@ def main():
 
 
     Glam_phys.name = 'Glam_phys'
-    Glam.name = 'Glam'
-#     LR = 0.1, 0.01, 0.001
+    Glam_2.name = 'Glam_2'
+    LR = 0.1, 0.01, 0.001
 #     VS = 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
     RS = range(0,25,1)
 
     for rs in RS:
-#         for lr in LR:
+        for lr in LR:
 #             gl.thickness_renamer(Glam_phys)
-        gl.build_and_train_model(
-            Glam, learning_rate = 0.01, random_state = rs, epochs = 100
-        )
+            gl.build_and_train_model(
+                Glam_2, learning_rate = lr, random_state = rs, epochs = 300
+            )
         
         
 # def main():
