@@ -37,6 +37,22 @@ Glam = Glam[[
     'Aspect',
     'Lmax'
 ]]
+
+Glam_2 = pd.read_csv('Glam_2.csv')
+Glam_2 = Glam_2[[
+#         'LAT',
+#         'LON',
+    'CenLon',
+    'CenLat',
+    'Area',
+    'thickness',
+    'Slope',
+    'Zmin',
+    'Zmed',
+    'Zmax',
+    'Aspect',
+    'Lmax'
+]]
 Glam_phys = Glam[[
 #         'LAT',
 #         'LON',
@@ -55,7 +71,7 @@ glacier = gl.data_loader()
 gl.thickness_renamer(glacier)
 
 
-print('please select rootdir: sm, sm2, sm4')
+print('please select rootdir: sm, sm2, sm4, sm5')
 
 chosen_dir = input()
 rootdir = 'saved_models/' + chosen_dir + '/'
@@ -71,6 +87,10 @@ if chosen_dir == 'sm2':
 if chosen_dir == 'sm4':
     dataset = Glam_phys
     dataset.name = 'Glam_phys'
+    
+if chosen_dir == 'sm5':
+    dataset = Glam_2
+    dataset.name = 'Glam_2'
     
 # split data for training and validation
 Glam.name = 'Glam'
@@ -145,13 +165,18 @@ for arch in os.listdir(rootdir):
                 predictions.loc[predictions.index[-1], 'epochs']= '100'
             if '150' in folder:
                 predictions.loc[predictions.index[-1], 'epochs']= '150'
+            if '200' in folder:
+                predictions.loc[predictions.index[-1], 'epochs']= '200'       
+                
             if '300' in folder:
                 predictions.loc[predictions.index[-1], 'epochs']= '300'
+            if '400' in folder:
+                predictions.loc[predictions.index[-1], 'epochs']= '400'
             
 
                 
 predictions.rename(columns = {0:'avg train thickness'},inplace = True)
-predictions.to_csv('/zults/predictions_' + dataset.name + '.csv')
+predictions.to_csv('zults/predictions_' + dataset.name + '.csv')
 # calculate statistics
 print('calculating statistics...')
 deviations = pd.DataFrame()
@@ -314,7 +339,8 @@ RGI = RGI.drop('index', axis=1)
 arch = deviations['layer architecture'].iloc[0]
 lr = deviations['learning rate'].iloc[0]
 vs = deviations['validation split'].iloc[0]
-
+ep = deviations['epochs'].iloc[0]
+print('layer architecture: ' + arch + ' learning rate: ' + str(lr))
 print('predicting RGI thicknesses using model trained on RGI data matched with GlaThiDa thicknesses...')
 dfs = pd.DataFrame()
 for rs in tqdm(RS):
@@ -367,6 +393,8 @@ for i in tqdm(dfs.index):
 
 # RGI_prethicked['variance'] = (RGI_prethicked['predicted thickness std dev'])**2
 
-RGI_prethicked.to_csv('zults/RGI_prethicked_' + dataset.name + '.csv')
+RGI_prethicked.to_csv(
+    'zults/RGI_predicted_' + dataset.name + '_' + arch + '_' + str(lr) + '_' + str(ep) + '.csv'
+)
 
 
