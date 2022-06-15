@@ -22,37 +22,40 @@ pd.set_option('mode.chained_assignment', None)
 
 print('load Glam  data (RGI data matched with GlaThiDa thicknesses)')
 
-Glam = pd.read_csv('Glam.csv')
-Glam = Glam[[
-#         'LAT',
-#         'LON',
-    'CenLon',
-    'CenLat',
-    'Area',
-    'thickness',
-    'Slope',
-    'Zmin',
-    'Zmed',
-    'Zmax',
-    'Aspect',
-    'Lmax'
-]]
+Glam = gl.data_loader_2()
+Glam_2 = gl.data_loader_3()
 
-Glam_2 = pd.read_csv('Glam_2.csv')
-Glam_2 = Glam_2[[
-#         'LAT',
-#         'LON',
-    'CenLon',
-    'CenLat',
-    'Area',
-    'thickness',
-    'Slope',
-    'Zmin',
-    'Zmed',
-    'Zmax',
-    'Aspect',
-    'Lmax'
-]]
+# Glam = pd.read_csv('Glam.csv')
+# Glam = Glam[[
+# #         'LAT',
+# #         'LON',
+#     'CenLon',
+#     'CenLat',
+#     'Area',
+#     'thickness',
+#     'Slope',
+#     'Zmin',
+#     'Zmed',
+#     'Zmax',
+#     'Aspect',
+#     'Lmax'
+# ]]
+
+# Glam_2 = pd.read_csv('Glam_2.csv')
+# Glam_2 = Glam_2[[
+# #         'LAT',
+# #         'LON',
+#     'CenLon',
+#     'CenLat',
+#     'Area',
+#     'thickness',
+#     'Slope',
+#     'Zmin',
+#     'Zmed',
+#     'Zmax',
+#     'Aspect',
+#     'Lmax'
+# ]]
 Glam_phys = Glam[[
 #         'LAT',
 #         'LON',
@@ -69,7 +72,8 @@ Glam_phys = Glam[[
 ]]
 glacier = gl.data_loader()
 gl.thickness_renamer(glacier)
-
+gl.thickness_renamer(Glam)
+gl.thickness_renamer(Glam_2)
 
 print('please select rootdir: sm, sm2, sm4, sm5')
 
