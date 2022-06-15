@@ -5,8 +5,6 @@ import pandas as pd
 import numpy as np
 import os
 import geopy.distance
-import chardet
-from chardet import detect
 from tqdm import tqdm
 pth = '/data/fast1/glacierml/T_models/'
 T = pd.read_csv(pth + 'T.csv', low_memory = False)
@@ -35,7 +33,7 @@ for T_idx in tqdm(T.index):
 #         print(RGI_idx)
         RGI_coords = (RGI_coordinates['CenLat'].loc[RGI_idx],
                       RGI_coordinates['CenLon'].loc[RGI_idx])
-        distance = geopy.distance.geodesic(GlaThiDa_coords,RGI_coords).km
+        distance = geopy.distance.geodesic(GlaThiDa_coords, RGI_coords).km
         if distance < 1:
 #             print('DING!')
 #             print(T_idx)
