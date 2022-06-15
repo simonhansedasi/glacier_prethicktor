@@ -16,84 +16,11 @@ import geopy.distance
 # /home/sa42/data/
 # /data/fast1/glacierml/T_models/
 
-def data_loader_2(pth = '/home/prethicktor/data/'):
-    
-    pth2 = '/data/fast1/glacierml/T_models/'
-#     TTT = pd.read_csv(pth2 + 'TTT.csv', low_memory = False)
-    T = pd.read_csv(pth + 'T.csv', low_memory = False)
-    rootdir = pth + 'attribs/rgi60-attribs/'
-    RGI_extra = pd.DataFrame()
-    for file in os.listdir(rootdir):
-    #     print(file)
-        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = RGI_extra.append(f, ignore_index = True)
 
-    comb = pd.read_csv('GlaThiDa_RGI_matched_indexes.csv')
-    drops = comb.index[comb['0']!=0]
-    comb = comb.drop(drops)
-    comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
-    T = T.loc[comb['GlaThiDa_index']]
-    RGI = RGI_extra.loc[comb['RGI_index']]
-
-
-    RGI = RGI.reset_index()
-
-    T = T.reset_index()
-
-
-
-    RGI = RGI[[
-        'CenLat',
-        'CenLon',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Area',
-        'Aspect',
-        'Lmax'
-    ]]
-    T = T[[
-        'LAT',
-        'LON',
-        'AREA',
-        'MEAN_SLOPE',
-        'MEAN_THICKNESS'
-    ]]
-
-    Glam = pd.merge(T,RGI, left_index=True, right_index=True)
-
-
-    Glam = Glam[[
-#         'LAT',
-#         'LON',
-        'CenLon',
-        'CenLat',
-        'Area',
-        'MEAN_THICKNESS',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Aspect'
-    ]]
-    Glam = Glam.dropna(subset = ['MEAN_THICKNESS'])
-
-#     Glam['distance'] = 1
-#     for G_idx in Glam.index:
-#         GlaThiDa_coords = (Glam['LAT'].loc[G_idx],
-#                            Glam['LON'].loc[G_idx])
-#         RGI_coords = (Glam['CenLat'].loc[G_idx],
-#                            Glam['CenLon'].loc[G_idx])
-
-#         distance = geopy.distance.geodesic(GlaThiDa_coords,RGI_coords).km
-#         Glam['distance'].loc[G_idx] = distance
-
-    return Glam
     
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing data...')
-    print('Importing T database')
+    print('Importing glacier database')
     glacier = pd.read_csv(pth + 'glacier.csv', low_memory = False)
     glacier = glacier[[
         'id',
@@ -192,16 +119,160 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Import complete')
     return glacier
 
+def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
+    
+    
+#     TTT = pd.read_csv(pth2 + 'TTT.csv', low_memory = False)
+    T = pd.read_csv(pth + 'T.csv', low_memory = False)
+    rootdir = pth + 'attribs/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in os.listdir(rootdir):
+    #     print(file)
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
 
-def thickness_renamer(T):
-    T = T.rename(columns = {
-        'mean_thickness':'thickness'
-    },inplace = True)
+    comb = pd.read_csv('GlaThiDa_RGI_matched_indexes.csv')
+    drops = comb.index[comb['0']!=0]
+    comb = comb.drop(drops)
+    comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
+    T = T.loc[comb['GlaThiDa_index']]
+    RGI = RGI_extra.loc[comb['RGI_index']]
+
+    RGI = RGI.reset_index()
+
+    T = T.reset_index()
+
+    RGI = RGI[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+    T = T[[
+        'LAT',
+        'LON',
+        'AREA',
+        'MEAN_SLOPE',
+        'MEAN_THICKNESS'
+    ]]
+
+    Glam = pd.merge(T,RGI, left_index=True, right_index=True)
+
+
+    Glam = Glam[[
+#         'LAT',
+#         'LON',
+        'CenLon',
+        'CenLat',
+        'Area',
+        'MEAN_THICKNESS',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Aspect',
+        'Lmax'
+    ]]
+    Glam = Glam.dropna(subset = ['MEAN_THICKNESS'])
+    
+    return Glam
+
+
+def data_loader_3():
+    
+    comb = pd.read_csv('RGI_tools/GlaThiDa_RGI_live.csv')
+    comb = comb.rename(columns = {'0':'distance'})
+
+    glacier = pd.read_csv('/data/fast1/glacierml/T_models/glacier.csv')
+    glacier = glacier.dropna(subset = ['mean_thickness'])
+
+    comb = comb[[
+        'GlaThiDa_index',
+        'RGI_index',
+        'distance'
+    ]]
+
+    combined_indexes = pd.DataFrame()
+    for GlaThiDa_index in comb['GlaThiDa_index'].index:
+        df = comb[comb['GlaThiDa_index'] == GlaThiDa_index]
+        f = df.loc[df[df['distance'] == df['distance'].min()].index]
+        combined_indexes = combined_indexes.append(f)
+    combined_indexes
+    
+    combined_indexes = combined_indexes.drop_duplicates(subset = ['GlaThiDa_index'])
+    combined_indexes = combined_indexes.reset_index()
+    combined_indexes = combined_indexes[[
+        'GlaThiDa_index',
+        'RGI_index',
+        'distance'
+    ]]
+
     
     
-def data_splitter(T, random_state = 0):
-    train_dataset = T.sample(frac=0.8, random_state=random_state)
-    test_dataset = T.drop(train_dataset.index)
+    
+    
+    RGI_extra = pd.DataFrame()
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    for file in os.listdir(rootdir):
+#     print(file)
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
+    
+    data = pd.DataFrame(columns = ['GlaThiDa_index', 'thickness'])
+    for GlaThiDa in combined_indexes['GlaThiDa_index'].index:
+        glathida_thickness = glacier['mean_thickness'].iloc[GlaThiDa] 
+        rgi_index = combined_indexes['RGI_index'].loc[GlaThiDa]  
+        rgi = RGI_extra.iloc[[rgi_index]]
+
+        data = data.append(rgi)
+        data['GlaThiDa_index'].iloc[-1] = combined_indexes['GlaThiDa_index'].loc[GlaThiDa]
+        data['thickness'].iloc[-1] = glathida_thickness
+
+    data = data.drop_duplicates(subset = ['RGIId'])
+    data = data.reset_index()
+    
+    Glam_2 = data[[
+    #     'RGIId',
+#         'GlaThiDa_index',
+        'CenLon',
+        'CenLat',
+        'Area',
+        'thickness',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Slope',
+        'Aspect',
+        'Lmax'
+    ]]
+    
+    return Glam_2
+
+
+
+
+
+def thickness_renamer(df):
+    if 'MEAN_THICKNESS' in df.columns:
+        
+        df = df.rename(columns = {
+            'MEAN_THICKNESS':'thickness'
+        },inplace = True)
+        
+    else:
+        df = df.rename(columns = {
+            'mean_thickness':'thickness'
+        },inplace = True)
+        
+    
+def data_splitter(df, random_state = 0):
+    train_dataset = df.sample(frac=0.8, random_state=random_state)
+    test_dataset = df.drop(train_dataset.index)
 
     train_features = train_dataset.copy()
     test_features = test_dataset.copy()
@@ -229,9 +300,9 @@ def build_linear_model(normalizer,learning_rate=0.1):
 def build_dnn_model(norm,learning_rate=0.1):
     model = keras.Sequential([
               norm,
-              layers.Dense(32, activation='relu'),
-              layers.Dense(16, activation='relu'),
-              layers.Dense(8, activation='relu'),
+#               layers.Dense(10, activation='relu'),
+              layers.Dense(10, activation='relu'),
+              layers.Dense(5, activation='relu'),
 
               layers.Dense(1) ])
 
@@ -261,9 +332,9 @@ def build_and_train_model(dataset,
                           epochs = 300,
                           random_state = 0):
         # define paths
-        arch = '32-16-8'
-        svd_mod_pth = 'saved_models/sm5/sm_' + arch + '/'
-        svd_res_pth = 'saved_results/sr5/sr_' + arch + '/'
+        arch = '10-5'
+        svd_mod_pth = 'saved_models/sm2/sm_' + arch + '/'
+        svd_res_pth = 'saved_results/sr2/sr_' + arch + '/'
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)
