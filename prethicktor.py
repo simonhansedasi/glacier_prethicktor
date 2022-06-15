@@ -16,27 +16,14 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def main():
-#     load and organize data
-    Glam_2 = pd.read_csv('Glam_2.csv')
+    glacier = gl.data_loader(pth = '/home/prethicktor/data/')
+    Glam = gl.data_loader_2(pth = '/home/prethicktor/data/')
+    Glam_2 = gl.data_loader_3(pth = '/home/prethicktor/data/')
+    gl.thickness_renamer(glacier)
+    gl.thickness_renamer(Glam)
+    gl.thickness_renamer(Glam_2)
     
-    
-    Glam_2 = Glam_2[[
-#         'LAT',
-#         'LON',
-        'CenLon',
-        'CenLat',
-        'Area',
-        'thickness',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Aspect',
-        'Lmax'
-    ]]   
-    Glam_phys = Glam_2[[
-    #         'LAT',
-    #         'LON',
+    Glam_phys = Glam[[
 #         'CenLon',
 #         'CenLat',
         'Area',
@@ -47,27 +34,26 @@ def main():
         'Zmax',
         'Aspect',
         'Lmax'
-    ]]    
-#     gl.thickness_renamer(Glam)
-
-
-    Glam_phys.name = 'Glam_phys'
+    ]]
+    
+    Glam.name = 'Glam'
     Glam_2.name = 'Glam_2'
+    Glam_phys.name = 'Glam_phys'
+    glacier.name = 'glacier'
     LR = 0.1, 0.01, 0.001
 #     VS = 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
     RS = range(0,25,1)
 
     for rs in RS:
         for lr in LR:
-#             gl.thickness_renamer(Glam_phys)
             gl.build_and_train_model(
-                Glam_2, learning_rate = lr, random_state = rs, epochs = 300
+                Glam, learning_rate = lr, random_state = rs, epochs = 300
             )
         
         
 # def main():
 #     #load and organize data
-#     glacier = gl.data_loader(pth = '/home/prethicktor/data/')
+#     
 #     gl.thickness_renamer(glacier)
 
 
