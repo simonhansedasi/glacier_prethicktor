@@ -198,7 +198,6 @@ Another key difference in Glam_2 index matching is that each GlaThiDa entry is c
         distance = geopy.distance.geodesic(GlaThiDa_coords,RGI_coords).km
         if 0 <= distance < 1:
             f = pd.Series(distance, name='distance')
-            L = L.copy()
             L = L.append(f, ignore_index=True)
             L['GlaThiDa_index'].iloc[-1] = T_idx
             L['RGI_index'].iloc[-1] = RGI_idx
