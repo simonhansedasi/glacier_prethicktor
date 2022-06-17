@@ -19,8 +19,7 @@ import geopy.distance
 
     
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
-    print('Importing data...')
-    print('Importing glacier database')
+    print('Importing glacier data')
     glacier = pd.read_csv(pth + 'glacier.csv', low_memory = False)
     glacier = glacier[[
         'id',
@@ -116,11 +115,10 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     glacier = glacier.drop('id',axis = 1)
 #     TT = TT.drop('GlaThiDa_ID',axis = 1)
 #     TTT = TTT.drop('GlaThiDa_ID',axis =1)
-    print('Import complete')
     return glacier
 
 def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
-    
+    print('importing Glam data')
     
 #     TTT = pd.read_csv(pth2 + 'TTT.csv', low_memory = False)
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
@@ -131,7 +129,7 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
         f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
         RGI_extra = RGI_extra.append(f, ignore_index = True)
 
-    comb = pd.read_csv('GlaThiDa_RGI_matched_indexes.csv')
+    comb = pd.read_csv(pth + 'GlaThiDa_RGI_matched_indexes.csv')
     drops = comb.index[comb['0']!=0]
     comb = comb.drop(drops)
     comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
@@ -161,7 +159,7 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
         'MEAN_THICKNESS'
     ]]
 
-    Glam = pd.merge(T,RGI, left_index=True, right_index=True)
+    Glam = pd.merge(T, RGI, left_index=True, right_index=True)
 
 
     Glam = Glam[[
@@ -183,12 +181,12 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
     return Glam
 
 
-def data_loader_3():
-    
-    comb = pd.read_csv('RGI_tools/GlaThiDa_RGI_live.csv')
+def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
+    print('importing Glam_2 data')
+    comb = pd.read_csv(pth + 'GlaThiDa_RGI_live.csv')
     comb = comb.rename(columns = {'0':'distance'})
 
-    glacier = pd.read_csv('/data/fast1/glacierml/T_models/glacier.csv')
+    glacier = pd.read_csv(pth + 'glacier.csv')
     glacier = glacier.dropna(subset = ['mean_thickness'])
 
     comb = comb[[
@@ -212,12 +210,8 @@ def data_loader_3():
         'distance'
     ]]
 
-    
-    
-    
-    
     RGI_extra = pd.DataFrame()
-    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    rootdir = pth + 'attribs/rgi60-attribs/'
     for file in os.listdir(rootdir):
 #     print(file)
         f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
@@ -230,6 +224,7 @@ def data_loader_3():
         rgi = RGI_extra.iloc[[rgi_index]]
 
         data = data.append(rgi)
+        
         data['GlaThiDa_index'].iloc[-1] = combined_indexes['GlaThiDa_index'].loc[GlaThiDa]
         data['thickness'].iloc[-1] = glathida_thickness
 
@@ -250,10 +245,38 @@ def data_loader_3():
         'Aspect',
         'Lmax'
     ]]
+    Glam_2['thickness'] = pd.to_numeric(Glam_2['thickness'])
     
     return Glam_2
 
+def data_loader_4():
+    rootdir = 'regional_data_2/training_data/'
+    df = pd.DataFrame()
+    for file in os.listdir(rootdir):
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        df = df.append(f, ignore_index = True)
 
+        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
+        df = df[[
+        #     'GlaThiDa_index',
+        #     'RGI_index',
+        #     'RGIId',
+            'region',
+        #     'geographic region',
+            'CenLon',
+            'CenLat',
+            'Area',
+            'Zmin',
+            'Zmed',
+            'Zmax',
+            'Slope',
+            'Aspect',
+            'Lmax',
+            'thickness'
+        ]]
+    print('please select region')
+    regional_data = df[df['region'] == float(input())]    
+    return regional_data
 
 
 
@@ -300,9 +323,9 @@ def build_linear_model(normalizer,learning_rate=0.1):
 def build_dnn_model(norm,learning_rate=0.1):
     model = keras.Sequential([
               norm,
-#               layers.Dense(10, activation='relu'),
-              layers.Dense(10, activation='relu'),
-              layers.Dense(5, activation='relu'),
+#               layers.Dense(32, activation='relu'),
+              layers.Dense(16, activation='relu'),
+              layers.Dense(8, activation='relu'),
 
               layers.Dense(1) ])
 
@@ -330,11 +353,14 @@ def build_and_train_model(dataset,
                           learning_rate = 0.001,
                           validation_split = 0.2,
                           epochs = 300,
-                          random_state = 0):
+                          random_state = 0,
+                          module = 'sm2',
+                          res = 'sr2'
+                         ):
         # define paths
-        arch = '10-5'
-        svd_mod_pth = 'saved_models/sm2/sm_' + arch + '/'
-        svd_res_pth = 'saved_results/sr2/sr_' + arch + '/'
+        arch = '16-8'
+        svd_mod_pth = 'saved_models/' + module + '/sm_' + arch + '/'
+        svd_res_pth = 'saved_results/' + res + '/sr_' + arch + '/'
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)
