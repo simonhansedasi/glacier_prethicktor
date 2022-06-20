@@ -17,168 +17,67 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
-
-
-
-print('load Glam  data (RGI data matched with GlaThiDa thicknesses)')
-
-Glam = gl.data_loader_2()
-Glam_2 = gl.data_loader_3()
-
-# Glam = pd.read_csv('Glam.csv')
-# Glam = Glam[[
-# #         'LAT',
-# #         'LON',
-#     'CenLon',
-#     'CenLat',
-#     'Area',
-#     'thickness',
-#     'Slope',
-#     'Zmin',
-#     'Zmed',
-#     'Zmax',
-#     'Aspect',
-#     'Lmax'
-# ]]
-
-# Glam_2 = pd.read_csv('Glam_2.csv')
-# Glam_2 = Glam_2[[
-# #         'LAT',
-# #         'LON',
-#     'CenLon',
-#     'CenLat',
-#     'Area',
-#     'thickness',
-#     'Slope',
-#     'Zmin',
-#     'Zmed',
-#     'Zmax',
-#     'Aspect',
-#     'Lmax'
-# ]]
-Glam_phys = Glam[[
-#         'LAT',
-#         'LON',
-#     'CenLon',
-#     'CenLat',
-    'Area',
-    'thickness',
-    'Slope',
-    'Zmin',
-    'Zmed',
-    'Zmax',
-    'Aspect',
-    'Lmax'
-]]
-glacier = gl.data_loader()
-gl.thickness_renamer(glacier)
-gl.thickness_renamer(Glam)
-gl.thickness_renamer(Glam_2)
-
-print('please select rootdir: sm, sm2, sm4, sm5')
+print('please select rootdir: sm, sm2, sm4, sm5, sm6, sm7')
 
 chosen_dir = input()
 rootdir = 'saved_models/' + chosen_dir + '/'
 
 if chosen_dir == 'sm':
+    glacier = gl.data_loader()
+    gl.thickness_renamer(glacier)
     dataset = glacier
     dataset.name = 'glacier'
     
 if chosen_dir == 'sm2':
+    Glam = gl.data_loader_2()
+    gl.thickness_renamer(Glam)
     dataset = Glam
     dataset.name = 'Glam'
     
 if chosen_dir == 'sm4':
+    Glam_phys = Glam[[
+        'Area',
+        'thickness',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Aspect',
+        'Lmax'
+    ]]
     dataset = Glam_phys
     dataset.name = 'Glam_phys'
     
 if chosen_dir == 'sm5':
+    Glam_2 = gl.data_loader_3()
+    gl.thickness_renamer(Glam_2)
     dataset = Glam_2
     dataset.name = 'Glam_2'
     
-# split data for training and validation
-Glam.name = 'Glam'
-Glam_phys.name = 'Glam_phys'
+#     if module == 'sm6':
+    # regional_data_1
+
+if chosen_dir == 'sm7':
+    regional_data = gl.data_loader_4()
+    reg = regional_data['region'].iloc[-1]
+    regional_data = regional_data.drop('region', axis=1)
+    dataset = regional_data
+    dataset.name = str('regional_data_' + str(reg))
+
+
 
 # (train_features, test_features, train_labels, test_labels) = gl.data_splitter(Glam_phys)
 (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
 
 
-# define model hyperparameters
+# define default model hyperparameters
 RS = range(0,25,1)
 ep = 300
 
-# name databases
 
 
-
-# print(rootdir)
+# load and evaluate models
 dnn_model = {}
-predictions = pd.DataFrame()
-
-print('loading and evaluating models...')
-for arch in os.listdir(rootdir):
-    print('layer architecture: ' + arch[3:])
-    for folder in tqdm(os.listdir(rootdir + arch)):
-#         print(folder)
-        if 'MULTI' in folder and 'dnn' in folder:
-        
-            dnn_model[arch[3:] + '_' + folder] = tf.keras.models.load_model(
-                rootdir + 
-                arch + 
-                '/' + 
-                folder
-            )
-
-            mae_test = dnn_model[arch[3:] + '_' + folder].evaluate(
-                test_features, test_labels, verbose=0
-            )
-
-            mae_train = dnn_model[arch[3:] + '_' + folder].evaluate(
-                train_features, train_labels, verbose=0
-            )
-
-            pred_train = dnn_model[arch[3:] + '_' + folder].predict(train_features, verbose=0)
-            pred_test = dnn_model[arch[3:] + '_' + folder].predict(test_features, verbose=0)
-            avg_thickness = pd.Series(
-                (np.sum(pred_train) / len(pred_train)), name = 'avg train thickness'
-            )
-
-            avg_test_thickness = pd.Series(
-                (np.sum(pred_test) / len(pred_test)),  name = 'avg test thickness'
-            )
-
-            temp_df = pd.merge(
-                avg_thickness, avg_test_thickness, right_index=True, left_index=True
-            )
-
-            predictions = predictions.append(temp_df, ignore_index = True)
-            predictions.loc[predictions.index[-1], 'model'] = folder
-            predictions.loc[predictions.index[-1], 'test mae'] = mae_test
-            predictions.loc[predictions.index[-1], 'train mae'] = mae_train
-            predictions.loc[predictions.index[-1], 'architecture'] = arch[3:]
-            predictions.loc[predictions.index[-1], 'validation split'] = '0.2'
-
-            if '0.1' in folder:
-                predictions.loc[predictions.index[-1], 'learning rate'] = '0.1'
-            if '0.01' in folder:
-                predictions.loc[predictions.index[-1], 'learning rate'] = '0.01'
-            if '0.001' in folder:
-                predictions.loc[predictions.index[-1], 'learning rate']= '0.001'
-            if '100' in folder:
-                predictions.loc[predictions.index[-1], 'epochs']= '100'
-            if '150' in folder:
-                predictions.loc[predictions.index[-1], 'epochs']= '150'
-            if '200' in folder:
-                predictions.loc[predictions.index[-1], 'epochs']= '200'       
-                
-            if '300' in folder:
-                predictions.loc[predictions.index[-1], 'epochs']= '300'
-            if '400' in folder:
-                predictions.loc[predictions.index[-1], 'epochs']= '400'
-            
-
-                
 predictions.rename(columns = {0:'avg train thickness'},inplace = True)
 predictions.to_csv('zults/predictions_' + dataset.name + '.csv')
 # calculate statistics
@@ -193,64 +92,24 @@ for architecture in tqdm(list(predictions['architecture'].unique())):
                 (predictions['epochs' ]== epochs)
             ]
 
-            # step 1: calculate mean of numbers
-            test_mae_mean = np.sum(df['test mae']) / len(df) 
-
-            diff_sq = pd.Series()
-
-            for test_mae in df['test mae']:
-                # step 2: subtract the mean from each, then square the result
-                step_2 = pd.Series((test_mae - test_mae_mean)**2)
-                diff_sq = diff_sq.append(step_2, ignore_index = True)
-
-            # step 3: work out the mean of the squared differences    
-            mean_diff_sq = (np.sum(diff_sq) / len(diff_sq))
-
-            # step 4: take the square root
-            test_mae_std_dev = np.sqrt(mean_diff_sq)
 
 
-           # repeat for train mae 
+            test_mae_mean = np.mean(df['test mae'])
+            test_mae_std_dev = np.std(df['test mae'])
 
-            # step 1: calculate mean of numbers
-            train_mae_mean = np.sum(df['train mae']) / len(df) 
+            train_mae_mean = np.mean(df['train mae'])
+            train_mae_std_dev = np.std(df['train mae'])
 
-            diff_sq = pd.Series()
+            
+            train_thickness_mean = np.mean(df['avg train thickness']) 
+            train_thickness_std_dev = np.std(df['avg train thickness'])
 
-            for train_mae in df['train mae']:
-                # step 2: subtract the mean from each, then square the result
-                step_2 = pd.Series((train_mae - train_mae_mean)**2)
-                diff_sq = diff_sq.append(step_2, ignore_index=True)
+            test_thickness_mean = np.mean(df['avg test thickness']) 
+            test_thickness_std_dev = np.std(df['avg test thickness'])
+            
+            s = pd.Series(train_thickness_mean)
 
-            # step 3: work out the mean of the squared differences    
-            mean_diff_sq = (np.sum(diff_sq) / len(diff_sq))
-
-            # step 4: take the square root
-            train_mae_std_dev = np.sqrt(mean_diff_sq)
-
-            # repeat process for train thicknesses
-            thickness_train_mean = np.sum(df['avg train thickness']) / len(df) 
-
-            for thickness in df['avg train thickness']:
-                step_2 = pd.Series((thickness - thickness_train_mean)**2)
-                diff_sq = diff_sq.append(step_2, ignore_index=True)
-            mean_diff_sq = (np.sum(diff_sq) / len(diff_sq))
-            train_thickness_std_dev = np.sqrt(mean_diff_sq)
-
-
-            # repeat process for test thicknesses
-            thickness_test_mean = np.sum(df['avg test thickness']) / len(df)   
-            for thickness in df['avg test thickness']:
-                step_2 = pd.Series((thickness - thickness_test_mean)**2)
-                diff_sq = diff_sq.append(step_2, ignore_index=True)
-            mean_diff_sq = (np.sum(diff_sq) / len(diff_sq))
-            test_thickness_std_dev = np.sqrt(mean_diff_sq)
-
-            # turn the last number computed into a series so it may be appended to build the table.
-            # it will be dropped later, no worries.
-            test_thick_std_dev = pd.Series(test_thickness_std_dev)
-
-            deviations = deviations.append(test_thick_std_dev, ignore_index=True)   
+            deviations = deviations.append(s, ignore_index=True)   
 
             deviations.loc[deviations.index[-1], 'layer architecture']= architecture    
 
@@ -265,7 +124,7 @@ for architecture in tqdm(list(predictions['architecture'].unique())):
             deviations.loc[deviations.index[-1], 'learning rate'] = learning_rate
 
             deviations.loc[deviations.index[-1], 'validation split']= 0.2
-            
+
             deviations.loc[deviations.index[-1], 'epochs'] = epochs
 
             deviations.loc[deviations.index[-1], 'test mae avg'] = test_mae_mean
@@ -284,43 +143,104 @@ for architecture in tqdm(list(predictions['architecture'].unique())):
                 deviations.index[-1], 'train predicted thickness std dev'
             ] = train_thickness_std_dev
 
+            deviations.drop(columns = {0},inplace = True)    
+            deviations = deviations.dropna()
 
-# bootstrapped ensembles for predicted column    
-#drop that appended line from earlier. Probably a better way to go about it
 
-deviations.drop(columns = {0},inplace = True)    
-deviations = deviations.dropna()
-
-# deviations['training split'] = deviations['test mae avg'] - deviations['train mae avg']
-# too_low = deviations.index[deviations['training split'] < 0]
-# deviations = deviations.drop(too_low)
-
-deviations = deviations.sort_values('test mae avg')
+            deviations = deviations.sort_values('test mae avg')
+            
 deviations.to_csv('zults/deviations_' + dataset.name + '.csv')
 
 
-print('loading RGI...')
-rootdir = '/data/fast0/datasets/rgi60-attribs/'
-RGI_extra = pd.DataFrame()
-for file in tqdm(os.listdir(rootdir)):
-    f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-    RGI_extra = RGI_extra.append(f, ignore_index = True)
+
+#build RGI specific to modules chosen
+
+
+if chosen_dir == 'sm':
+    print('loading RGI...')
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in tqdm(os.listdir(rootdir)):
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
     
 
-RGI = RGI_extra[[
-    'CenLat',
-    'CenLon',
-    'Slope',
-    'Zmin',
-    'Zmed',
-    'Zmax',
-    'Area',
-    'Aspect',
-    'Lmax'
-]]
+    RGI = RGI_extra[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Area',
+    ]]
+    
+    RGI = RGI.rename(columns = {
+    'CenLon':'LON',
+    'CenLat':'LAT',
+    'Area':'AREA',
+    'Slope':'MEAN_SLOPE'
+    })
+
+    
+    
+if chosen_dir == 'sm6' or chosen_dir == 'sm7':
+    print('loading RGI...')
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in tqdm(os.listdir(rootdir)):
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        region_1 = f['RGIId'].iloc[-1][6:]
+        region = region_1[:2]
+        if str(region) == str(reg):
+            RGI_extra = RGI_extra.append(f, ignore_index = True)
+    
+    RGI = RGI_extra[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+    RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
+    RGI = RGI.reset_index()
+    RGI = RGI.drop('index', axis=1)
+    
+    
+    
+else:
+    print('loading RGI...')
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in tqdm(os.listdir(rootdir)):
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
+    
+
+    RGI = RGI_extra[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+    RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
+    RGI = RGI.reset_index()
+    RGI = RGI.drop('index', axis=1)
     
 if dataset.name == 'Glam_phys':
-    RGI = RGI_extra[[
+    RGI = RGI[[
 #         'CenLat',
 #         'CenLon',
         'Slope',
@@ -332,13 +252,10 @@ if dataset.name == 'Glam_phys':
         'Lmax'
     ]]
     
+
     
-RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
-RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
-RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
-RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
-RGI = RGI.reset_index()
-RGI = RGI.drop('index', axis=1)
+    
+
 
 arch = deviations['layer architecture'].iloc[0]
 lr = deviations['learning rate'].iloc[0]
@@ -363,39 +280,24 @@ for rs in tqdm(RS):
     )
     dfs[rs] = s
 
+    
+    
 RGI_prethicked = RGI.copy() 
 RGI_prethicked['avg predicted thickness'] = 'NaN'
+RGI_prethicked['predicted thickness std dev'] = 'NaN'
+
 print('calculating average thickness across random state ensemble...')
 for i in tqdm(dfs.index):
-    avg_predicted_thickness = np.sum(dfs.loc[i]) / len(dfs.loc[i])
+    avg_predicted_thickness = np.mean(dfs.loc[i])
     RGI_prethicked['avg predicted thickness'].loc[i] = avg_predicted_thickness
 
-RGI_prethicked['predicted thickness std dev'] = 'NaN'
 
 print('computing standard deviations and variances for RGI predicted thicknesses')
 
 for i in tqdm(dfs.index):
-    # step 1: calculate mean of numbers
-    avg_predicted_thickness = np.sum(dfs.loc[i]) / len(dfs.loc[i])
+    predicted_thickness_std_dev = np.std(dfs.loc[i])
     
-    # step 2: subtract the mean from each, then square the result
-    
-    diff_sq = pd.Series()
-
-    for q in dfs:
-        
-        avg_predicted_thickness - dfs[q].loc[i]
-        step_2 = pd.Series((avg_predicted_thickness - dfs[q].loc[i])**2)
-        diff_sq = diff_sq.append(step_2, ignore_index=True)
-    
-    # step 3: work out the mean of the squared differences    
-    mean_diff_sq = (np.sum(diff_sq) / len(diff_sq))
-    # step 4: take the square root
-    prethick_std_dev = np.sqrt(mean_diff_sq)
-    RGI_prethicked['predicted thickness std dev'].loc[i] = prethick_std_dev
-#     RGI_prethicked['variance'].loc[i] = mean_diff_sq
-
-# RGI_prethicked['variance'] = (RGI_prethicked['predicted thickness std dev'])**2
+    RGI_prethicked['predicted thickness std dev'].loc[i] = predicted_thickness_std_dev
 
 RGI_prethicked.to_csv(
     'zults/RGI_predicted_' + dataset.name + '_' + arch + '_' + str(lr) + '_' + str(ep) + '.csv'
