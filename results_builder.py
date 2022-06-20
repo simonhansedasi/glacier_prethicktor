@@ -78,8 +78,73 @@ ep = 300
 
 # load and evaluate models
 dnn_model = {}
+predictions = pd.DataFrame()
+
+print('loading and evaluating models...')
+for arch in os.listdir(rootdir):
+    print('layer architecture: ' + arch[3:])
+    for folder in tqdm(os.listdir(rootdir + arch)):
+#         print(folder)
+        if 'MULTI' in folder and 'dnn' in folder:
+        
+            dnn_model[arch[3:] + '_' + folder] = tf.keras.models.load_model(
+                rootdir + 
+                arch + 
+                '/' + 
+                folder
+            )
+
+            mae_test = dnn_model[arch[3:] + '_' + folder].evaluate(
+                test_features, test_labels, verbose=0
+            )
+
+            mae_train = dnn_model[arch[3:] + '_' + folder].evaluate(
+                train_features, train_labels, verbose=0
+            )
+
+            pred_train = dnn_model[arch[3:] + '_' + folder].predict(train_features, verbose=0)
+            pred_test = dnn_model[arch[3:] + '_' + folder].predict(test_features, verbose=0)
+            avg_thickness = pd.Series(
+                (np.sum(pred_train) / len(pred_train)), name = 'avg train thickness'
+            )
+
+            avg_test_thickness = pd.Series(
+                (np.sum(pred_test) / len(pred_test)),  name = 'avg test thickness'
+            )
+
+            temp_df = pd.merge(
+                avg_thickness, avg_test_thickness, right_index=True, left_index=True
+            )
+
+            predictions = predictions.append(temp_df, ignore_index = True)
+            predictions.loc[predictions.index[-1], 'model'] = folder
+            predictions.loc[predictions.index[-1], 'test mae'] = mae_test
+            predictions.loc[predictions.index[-1], 'train mae'] = mae_train
+            predictions.loc[predictions.index[-1], 'architecture'] = arch[3:]
+            predictions.loc[predictions.index[-1], 'validation split'] = '0.2'
+
+            if '0.1' in folder:
+                predictions.loc[predictions.index[-1], 'learning rate'] = '0.1'
+            if '0.01' in folder:
+                predictions.loc[predictions.index[-1], 'learning rate'] = '0.01'
+            if '0.001' in folder:
+                predictions.loc[predictions.index[-1], 'learning rate']= '0.001'
+            if '100' in folder:
+                predictions.loc[predictions.index[-1], 'epochs']= '100'
+            if '150' in folder:
+                predictions.loc[predictions.index[-1], 'epochs']= '150'
+            if '200' in folder:
+                predictions.loc[predictions.index[-1], 'epochs']= '200'       
+                
+            if '300' in folder:
+                predictions.loc[predictions.index[-1], 'epochs']= '300'
+            if '400' in folder:
+                predictions.loc[predictions.index[-1], 'epochs']= '400'
+                
 predictions.rename(columns = {0:'avg train thickness'},inplace = True)
 predictions.to_csv('zults/predictions_' + dataset.name + '.csv')
+
+
 # calculate statistics
 print('calculating statistics...')
 deviations = pd.DataFrame()
