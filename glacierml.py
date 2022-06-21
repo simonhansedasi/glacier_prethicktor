@@ -18,6 +18,7 @@ import geopy.distance
 
 
 '''
+data_loader
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped.
 '''
@@ -121,6 +122,7 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     return df1
 
 '''
+data_loader_2
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes.
 '''
@@ -193,6 +195,7 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
 
 
 '''
+data_loader_4
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes. GlaThiDa and RGI are matched using a different, more rigorous technique than data_loader_2()
 '''
@@ -268,6 +271,7 @@ def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
     return df4
 
 '''
+data_loader_5
 input = path to GlaThiDa data. Default coded in. will also request regional data when run
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_2(). 
 '''
@@ -306,6 +310,7 @@ def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training
 
 
 '''
+data_loader_6
 input = path to GlaThiDa data. Default coded in. will also request regional data when run
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_4(). 
 '''
@@ -346,6 +351,7 @@ def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training
 
 
 '''
+thickness_renamer
 input = name of dataframe containing column named either 'MEAN_THICKNESS' or 'mean_thickness'
 output = dataframe returned withe name changed to 'thickness'
 '''
@@ -362,6 +368,7 @@ def thickness_renamer(df):
         },inplace = True)
         
 '''
+data_splitter
 input = name of dataframe and selected random state.
 output = dataframe and series randomly selected and populated as either training or test features or labels
 '''
@@ -381,6 +388,7 @@ def data_splitter(df, random_state = 0):
 
 
 '''
+build_linear_model
 input = normalized data and desired learning rate
 output = linear regression model
 No longer really used.
@@ -401,6 +409,7 @@ def build_linear_model(normalizer,learning_rate=0.1):
 
 
 '''
+build_dnn_model
 input = normalized data and selected learning rate
 output = dnn model with desired layer architecture, ready to be trained.
 '''
@@ -421,6 +430,7 @@ def build_dnn_model(norm,learning_rate=0.1):
 
 
 '''
+plot_loss
 input = desired test results
 output = loss plots for desired model
 '''
@@ -436,8 +446,12 @@ def plot_loss(history):
     
 
      
+'''
+build_and_train_model
+input = dataset, desired: learning rate, validation split, epochs, random state. module and res are defined as inputs when run and determine where data is saved.
+output = saved weights for trained model and model results saved as a csv
+'''
 
-    
 def build_and_train_model(dataset,
                           learning_rate = 0.001,
                           validation_split = 0.2,
