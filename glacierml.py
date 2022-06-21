@@ -1,5 +1,5 @@
 # import sys
-# !{sys.executable} -m pip install pyjanitor
+# !{sys.executable} -m pip install 
 import tensorflow as tf
 import pandas as pd
 import numpy as np
@@ -10,11 +10,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 import geopy.distance
-# test for push
-# import janitor
 
-# /home/sa42/data/
-# /data/fast1/glacierml/T_models/
 
 
 '''
@@ -121,14 +117,18 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
 #     TTT = TTT.drop('GlaThiDa_ID',axis =1)
     return df1
 
+
+
+
+
+
 '''
 data_loader_2
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes.
 '''
-
 def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
-    print('importing Glam data')
+    print('matching GlaThiDa and RGI data...')
     
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
     rootdir = pth + 'attribs/rgi60-attribs/'
@@ -199,10 +199,8 @@ data_loader_4
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes. GlaThiDa and RGI are matched using a different, more rigorous technique than data_loader_2()
 '''
-
-
 def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
-    print('importing Glam_2 data')
+    print('matching GlaThiDa and RGI data...')
     comb = pd.read_csv(pth + 'GlaThiDa_RGI_live.csv')
     comb = comb.rename(columns = {'0':'distance'})
 
@@ -270,13 +268,16 @@ def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
     
     return df4
 
+
+
+
 '''
 data_loader_5
 input = path to GlaThiDa data. Default coded in. will also request regional data when run
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_2(). 
 '''
-
 def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training_data/'):
+    print('matching GlaThiDa and RGI data...')
     df = pd.DataFrame()
     for file in os.listdir(pth):
         f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
@@ -309,13 +310,15 @@ def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training
     return df5
 
 
+
+
 '''
 data_loader_6
 input = path to GlaThiDa data. Default coded in. will also request regional data when run
 output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_4(). 
 '''
-
 def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training_data/'):
+    print('matching GlaThiDa and RGI data...')
     df = pd.DataFrame()
     for file in os.listdir(pth):
         f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
@@ -450,6 +453,9 @@ def plot_loss(history):
 build_and_train_model
 input = dataset, desired: learning rate, validation split, epochs, random state. module and res are defined as inputs when run and determine where data is saved.
 output = saved weights for trained model and model results saved as a csv
+
+
+***NOTE*** in order to change layer architecture: update variable "arch" and modify layer architecutre in function "build_dnn_model()" to match. You may have to create folders in the saved_models and saved_results folder before model fully runs
 '''
 
 def build_and_train_model(dataset,
