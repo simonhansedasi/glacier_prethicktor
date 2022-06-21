@@ -17,7 +17,8 @@ import geopy.distance
 # /data/fast1/glacierml/T_models/
 
 
-    
+'''
+'''
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing glacier data')
     glacier = pd.read_csv(pth + 'glacier.csv', low_memory = False)
