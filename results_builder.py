@@ -17,25 +17,28 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
-print('please select rootdir: sm, sm2, sm4, sm5, sm6, sm7')
+print('please select rootdir: sm, sm2, sm3, sm4, sm5, sm6')
 
 chosen_dir = input()
 rootdir = 'saved_models/' + chosen_dir + '/'
 
 if chosen_dir == 'sm':
-    glacier = gl.data_loader()
-    gl.thickness_renamer(glacier)
-    dataset = glacier
-    dataset.name = 'glacier'
+    df1 = gl.data_loader()
+    gl.thickness_renamer(df1)
+    dataset = df1
+    dataset.name = 'df1'
     
 if chosen_dir == 'sm2':
-    Glam = gl.data_loader_2()
-    gl.thickness_renamer(Glam)
-    dataset = Glam
-    dataset.name = 'Glam'
+    df2 = gl.data_loader_2()
+    gl.thickness_renamer(df2)
+    dataset = df2
+    dataset.name = 'df2'
     
-if chosen_dir == 'sm4':
-    Glam_phys = Glam[[
+if chosen_dir == 'sm3':
+    
+    df2 = gl.data_loader_2()
+    gl.thickness_renamer(df2)
+    df3 = df2[[
         'Area',
         'thickness',
         'Slope',
@@ -45,24 +48,29 @@ if chosen_dir == 'sm4':
         'Aspect',
         'Lmax'
     ]]
-    dataset = Glam_phys
-    dataset.name = 'Glam_phys'
+    dataset = df3
+    dataset.name = 'df3'
+    
+if chosen_dir == 'sm4':
+    df4 = gl.data_loader_4()
+    gl.thickness_renamer(df4)
+    dataset = df4
+    dataset.name = 'df4'
     
 if chosen_dir == 'sm5':
-    Glam_2 = gl.data_loader_3()
-    gl.thickness_renamer(Glam_2)
-    dataset = Glam_2
-    dataset.name = 'Glam_2'
-    
-#     if module == 'sm6':
-    # regional_data_1
-
-if chosen_dir == 'sm7':
-    regional_data = gl.data_loader_4()
-    reg = regional_data['region'].iloc[-1]
+    df5 = gl.data_loader_5()
+    reg = df6['region'].iloc[-1]
     regional_data = regional_data.drop('region', axis=1)
-    dataset = regional_data
-    dataset.name = str('regional_data_' + str(reg))
+    dataset = df5
+    dataset.name = str('df5' + str(reg))
+    
+
+if chosen_dir == 'sm6':
+    df6 = gl.data_loader_6()
+    reg = df6['region'].iloc[-1]
+    regional_data = regional_data.drop('region', axis=1)
+    dataset = df6
+    dataset.name = str('df6' + str(reg))
 
 
 
