@@ -18,10 +18,7 @@ import geopy.distance
 
 
 '''
-<<<<<<< HEAD
-=======
-comment
->>>>>>> 6f99a00244ca3d5257e19d166d8d61c7de017edf
+
 '''
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing glacier data')
