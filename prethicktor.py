@@ -25,19 +25,25 @@ def main():
     module = input()
     
     if module == 'sm':
-        glacier = gl.data_loader(pth = '/home/prethicktor/data/')
-        gl.thickness_renamer(glacier)
-        dataset = glacier
-        dataset.name = 'glacier'
+        df1 = gl.data_loader(pth = '/home/prethicktor/data/')
+        gl.thickness_renamer(df1)
+        dataset = df1
+        dataset.name = 'df1'
         res = 'sr'
+        
+        
     if module == 'sm2':
-        Glam = gl.data_loader_2(pth = '/home/prethicktor/data/')
-        gl.thickness_renamer(Glam)
-        dataset = Glam
-        dataset.name = 'Glam'
+        df2 = gl.data_loader_2(pth = '/home/prethicktor/data/')
+        gl.thickness_renamer(df2)
+        dataset = df2
+        dataset.name = 'df2'
         res = 'sr2'
-    if module == 'sm4':
-        Glam_phys = Glam[[
+        
+        
+    if module == 'sm3':
+        df2 = gl.data_loader_2(pth = '/home/prethicktor/data/')
+        gl.thickness_renamer(df2)
+        df3 = df2[[
             'Area',
             'thickness',
             'Slope',
@@ -47,26 +53,33 @@ def main():
             'Aspect',
             'Lmax'
         ]]
-        dataset = Glam_phys
-        dataset.name = 'Glam_phys'
+        dataset = df3
+        dataset.name = 'df3'
+        res = 'sr3'
+        
+        
+    if module == 'sm4':
+        df4 = gl.data_loader_4(pth = '/home/prethicktor/data/')
+        gl.thickness_renamer(df4)
+        dataset = df4
+        dataset.name = 'df4'
         res = 'sr4'
+        
     if module == 'sm5':
-        Glam_2 = gl.data_loader_3(pth = '/home/prethicktor/data/')
-        gl.thickness_renamer(Glam_2)
-        dataset = Glam_2
-        dataset.name = 'Glam_2'
+        df5 = gl.data_loader_5(pth = '/home/prethicktor/data/')
+        reg = df5['region'].iloc[-1]
+        df5 = df5.drop('region', axis=1)
+        dataset = df5
+        dataset.name = str('df5_' + str(reg))
         res = 'sr5'
         
-#     if module == 'sm6':
-        # regional_data_1
-        
-    if module == 'sm7':
-        regional_data = gl.data_loader_4()
-        reg = regional_data['region'].iloc[-1]
-        regional_data = regional_data.drop('region', axis=1)
-        dataset = regional_data
-        dataset.name = str('regional_data_' + str(reg))
-        res = 'sr7'
+    if module == 'sm6':
+        df6 = gl.data_loader_6(pth = '/home/prethicktor/data/')
+        reg = df6['region'].iloc[-1]
+        df6 = df6.drop('region', axis=1)
+        dataset = df6
+        dataset.name = str('df6_' + str(reg))
+        res = 'sr6'
         
     for rs in RS:
         for lr in LR:
