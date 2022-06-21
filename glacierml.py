@@ -17,7 +17,9 @@ import geopy.distance
 # /data/fast1/glacierml/T_models/
 
 
-    
+'''
+comment
+'''
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing glacier data')
     glacier = pd.read_csv(pth + 'glacier.csv', low_memory = False)
@@ -245,7 +247,7 @@ def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
         'Aspect',
         'Lmax'
     ]]
-    df5['thickness'] = pd.to_numeric(Glam_2['thickness'])
+    df5['thickness'] = pd.to_numeric(df5['thickness'])
     
     return df5
 
