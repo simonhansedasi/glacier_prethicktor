@@ -18,7 +18,8 @@ import geopy.distance
 
 
 '''
-
+input = path to GlaThiDa data. Default coded in.
+output = dataframe containing glacier scale GlaThiDa information with null entries dropped.
 '''
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing glacier data')
@@ -119,6 +120,11 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
 #     TTT = TTT.drop('GlaThiDa_ID',axis =1)
     return df1
 
+'''
+input = path to GlaThiDa data. Default coded in.
+output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes.
+'''
+
 def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
     print('importing Glam data')
     
@@ -182,7 +188,17 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
     return df2
 
 
-def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
+
+# data_loader_3 was skipped in favor of df3 = df2 without lat and lon
+
+
+'''
+input = path to GlaThiDa data. Default coded in.
+output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes. GlaThiDa and RGI are matched using a different, more rigorous technique than data_loader_2()
+'''
+
+
+def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
     print('importing Glam_2 data')
     comb = pd.read_csv(pth + 'GlaThiDa_RGI_live.csv')
     comb = comb.rename(columns = {'0':'distance'})
@@ -233,7 +249,7 @@ def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
     data = data.drop_duplicates(subset = ['RGIId'])
     data = data.reset_index()
     
-    df5 = data[[
+    df4 = data[[
     #     'RGIId',
 #         'GlaThiDa_index',
         'CenLon',
@@ -247,12 +263,54 @@ def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
         'Aspect',
         'Lmax'
     ]]
-    df5['thickness'] = pd.to_numeric(df5['thickness'])
+    df4['thickness'] = pd.to_numeric(df4['thickness'])
     
+    return df4
+
+'''
+input = path to GlaThiDa data. Default coded in. will also request regional data when run
+output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_2(). 
+'''
+
+def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training_data/'):
+    df = pd.DataFrame()
+    for file in os.listdir(pth):
+        f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        df = df.append(f, ignore_index = True)
+
+        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
+        df = df[[
+        #     'GlaThiDa_index',
+        #     'RGI_index',
+        #     'RGIId',
+            'region',
+        #     'geographic region',
+            'CenLon',
+            'CenLat',
+            'Area',
+            'Zmin',
+            'Zmed',
+            'Zmax',
+            'Slope',
+            'Aspect',
+            'Lmax',
+            'thickness'
+        ]]
+    print(
+        'please select region: ' + str(list(
+            df['region'].unique()
+        ) )
+    )
+    df5 = df[df['region'] == float(input())]    
     return df5
 
 
-def data_loader_4(pth = '/data/fast1/glacierml/T_models/regional_data_1/training_data/'):
+'''
+input = path to GlaThiDa data. Default coded in. will also request regional data when run
+output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_4(). 
+'''
+
+def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training_data/'):
     df = pd.DataFrame()
     for file in os.listdir(pth):
         f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
@@ -281,44 +339,16 @@ def data_loader_4(pth = '/data/fast1/glacierml/T_models/regional_data_1/training
             df['region'].unique()
         ) )
     )
-    rdf1 = df[df['region'] == float(input())]    
-    return rdf1
-
-
-def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_2/training_data/'):
-    df = pd.DataFrame()
-    for file in os.listdir(pth):
-        f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        df = df.append(f, ignore_index = True)
-
-        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
-        df = df[[
-        #     'GlaThiDa_index',
-        #     'RGI_index',
-        #     'RGIId',
-            'region',
-        #     'geographic region',
-            'CenLon',
-            'CenLat',
-            'Area',
-            'Zmin',
-            'Zmed',
-            'Zmax',
-            'Slope',
-            'Aspect',
-            'Lmax',
-            'thickness'
-        ]]
-    print(
-        'please select region: ' + str(list(
-            df['region'].unique()
-        ) )
-    )
-    rdf2 = df[df['region'] == float(input())]    
-    return rdf2
+    df6 = df[df['region'] == float(input())]    
+    return df6
 
 
 
+
+'''
+input = name of dataframe containing column named either 'MEAN_THICKNESS' or 'mean_thickness'
+output = dataframe returned withe name changed to 'thickness'
+'''
 def thickness_renamer(df):
     if 'MEAN_THICKNESS' in df.columns:
         
@@ -331,7 +361,10 @@ def thickness_renamer(df):
             'mean_thickness':'thickness'
         },inplace = True)
         
-    
+'''
+input = name of dataframe and selected random state.
+output = dataframe and series randomly selected and populated as either training or test features or labels
+'''
 def data_splitter(df, random_state = 0):
     train_dataset = df.sample(frac=0.8, random_state=random_state)
     test_dataset = df.drop(train_dataset.index)
@@ -347,6 +380,12 @@ def data_splitter(df, random_state = 0):
 
 
 
+'''
+input = normalized data and desired learning rate
+output = linear regression model
+No longer really used.
+'''
+
 def build_linear_model(normalizer,learning_rate=0.1):
     model = tf.keras.Sequential([
         normalizer,
@@ -359,6 +398,12 @@ def build_linear_model(normalizer,learning_rate=0.1):
     
     return model
 
+
+
+'''
+input = normalized data and selected learning rate
+output = dnn model with desired layer architecture, ready to be trained.
+'''
 def build_dnn_model(norm,learning_rate=0.1):
     model = keras.Sequential([
               norm,
@@ -374,6 +419,11 @@ def build_dnn_model(norm,learning_rate=0.1):
     return model
 
 
+
+'''
+input = desired test results
+output = loss plots for desired model
+'''
 def plot_loss(history):
 #     plt.subplots(figsize=(10,5))
     plt.plot(history['loss'], label='loss')
