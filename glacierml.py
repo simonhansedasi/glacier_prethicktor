@@ -30,7 +30,7 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
         'mean_thickness'
     ]]
         
-    glacier = glacier.dropna()
+    df1 = glacier.dropna()
 #     print('Importing TT database')
 #     TT = pd.read_csv(pth + 'TT.csv', low_memory = False)
 #     TT = TT[[
@@ -112,15 +112,14 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
 #         'GlaThiDa_ID_2'
 #     ],axis=1)
     
-    glacier = glacier.drop('id',axis = 1)
+    df1 = df1.drop('id',axis = 1)
 #     TT = TT.drop('GlaThiDa_ID',axis = 1)
 #     TTT = TTT.drop('GlaThiDa_ID',axis =1)
-    return glacier
+    return df1
 
 def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
     print('importing Glam data')
     
-#     TTT = pd.read_csv(pth2 + 'TTT.csv', low_memory = False)
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
     rootdir = pth + 'attribs/rgi60-attribs/'
     RGI_extra = pd.DataFrame()
@@ -130,8 +129,8 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
         RGI_extra = RGI_extra.append(f, ignore_index = True)
 
     comb = pd.read_csv(pth + 'GlaThiDa_RGI_matched_indexes.csv')
-    drops = comb.index[comb['0']!=0]
-    comb = comb.drop(drops)
+#     drops = comb.index[comb['0']!=0]
+#     comb = comb.drop(drops)
     comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
     T = T.loc[comb['GlaThiDa_index']]
     RGI = RGI_extra.loc[comb['RGI_index']]
@@ -159,10 +158,10 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
         'MEAN_THICKNESS'
     ]]
 
-    Glam = pd.merge(T, RGI, left_index=True, right_index=True)
+    df2 = pd.merge(T, RGI, left_index=True, right_index=True)
 
 
-    Glam = Glam[[
+    df2 = df2[[
 #         'LAT',
 #         'LON',
         'CenLon',
@@ -176,9 +175,9 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
         'Aspect',
         'Lmax'
     ]]
-    Glam = Glam.dropna(subset = ['MEAN_THICKNESS'])
+    df2 = df2.dropna(subset = ['MEAN_THICKNESS'])
     
-    return Glam
+    return df2
 
 
 def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
@@ -196,6 +195,7 @@ def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
     ]]
 
     combined_indexes = pd.DataFrame()
+    
     for GlaThiDa_index in comb['GlaThiDa_index'].index:
         df = comb[comb['GlaThiDa_index'] == GlaThiDa_index]
         f = df.loc[df[df['distance'] == df['distance'].min()].index]
@@ -231,7 +231,7 @@ def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
     data = data.drop_duplicates(subset = ['RGIId'])
     data = data.reset_index()
     
-    Glam_2 = data[[
+    df5 = data[[
     #     'RGIId',
 #         'GlaThiDa_index',
         'CenLon',
@@ -245,15 +245,15 @@ def data_loader_3(pth = '/data/fast1/glacierml/T_models/'):
         'Aspect',
         'Lmax'
     ]]
-    Glam_2['thickness'] = pd.to_numeric(Glam_2['thickness'])
+    df5['thickness'] = pd.to_numeric(Glam_2['thickness'])
     
-    return Glam_2
+    return df5
 
-def data_loader_4():
-    rootdir = 'regional_data_2/training_data/'
+
+def data_loader_4(pth = '/data/fast1/glacierml/T_models/regional_data_1/training_data/'):
     df = pd.DataFrame()
-    for file in os.listdir(rootdir):
-        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+    for file in os.listdir(pth):
+        f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
         df = df.append(f, ignore_index = True)
 
         df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
@@ -274,9 +274,46 @@ def data_loader_4():
             'Lmax',
             'thickness'
         ]]
-    print('please select region')
-    regional_data = df[df['region'] == float(input())]    
-    return regional_data
+    print(
+        'please select region: ' + str(list(
+            df['region'].unique()
+        ) )
+    )
+    rdf1 = df[df['region'] == float(input())]    
+    return rdf1
+
+
+def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_2/training_data/'):
+    df = pd.DataFrame()
+    for file in os.listdir(pth):
+        f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        df = df.append(f, ignore_index = True)
+
+        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
+        df = df[[
+        #     'GlaThiDa_index',
+        #     'RGI_index',
+        #     'RGIId',
+            'region',
+        #     'geographic region',
+            'CenLon',
+            'CenLat',
+            'Area',
+            'Zmin',
+            'Zmed',
+            'Zmax',
+            'Slope',
+            'Aspect',
+            'Lmax',
+            'thickness'
+        ]]
+    print(
+        'please select region: ' + str(list(
+            df['region'].unique()
+        ) )
+    )
+    rdf2 = df[df['region'] == float(input())]    
+    return rdf2
 
 
 
