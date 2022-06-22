@@ -14,6 +14,8 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
+
+
 def main():
     
     LR = 0.1, 0.01, 0.001
@@ -29,10 +31,9 @@ def main():
         print('please select module: sm1, sm2, sm3, sm4, all')
         module = input()
         if module == 'all':
-            print('This model currently supports two layer architecture. Please define first layer')
-            layer_1_input = input()
-            print('Please define second layer')
-            layer_2_input = input()
+            
+            layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
+
             for i in range(1,5,1):
                 module_sim = 'sm'+str(i)
 
@@ -42,7 +43,7 @@ def main():
                     dataset = df1
                     dataset.name = 'df1'
                     res = 'sr1'
-                    print(module)
+                    print(module_sim)
                     print(dataset)
 
                 if module_sim == 'sm2':
@@ -51,7 +52,7 @@ def main():
                     dataset = df2
                     dataset.name = 'df2'
                     res = 'sr2'
-                    print(module)
+                    print(module_sim)
                     print(dataset)
 
                 if module_sim == 'sm3':
@@ -70,7 +71,7 @@ def main():
                     dataset = df3
                     dataset.name = 'df3'
                     res = 'sr3'
-                    print(module)
+                    print(module_sim)
                     print(dataset)
 
                 if module_sim == 'sm4':
@@ -79,24 +80,25 @@ def main():
                     dataset = df4
                     dataset.name = 'df4'
                     res = 'sr4'
-                    print(module)
+                    print(module_sim)
                     print(dataset)
                     
-                    
+                layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
+                
                 for rs in RS:
-                    for lr in LR:
-                        gl.build_and_train_model(
-                            dataset, 
-                            learning_rate = lr, 
-                            random_state = rs, 
-                            epochs = 300, 
-                            module = module, 
-                            res = res,
-                            layer_1 = layer_1_input,
-                            layer_2 = layer_2_input
-                        )
+#                     for lr in LR:
+                    gl.build_and_train_model(
+                        dataset, 
+                        learning_rate = float(lr_input), 
+                        random_state = rs, 
+                        epochs = int(ep_input), 
+                        module = module, 
+                        res = res,
+                        layer_1 = layer_1_input,
+                        layer_2 = layer_2_input
+                    )
         
-        elif module == 'sm1':
+        if module == 'sm1':
             df1 = gl.data_loader(pth = '/home/prethicktor/data/')
             gl.thickness_renamer(df1)
             dataset = df1
@@ -105,7 +107,7 @@ def main():
             print(module)
             print(dataset)
 
-        elif module == 'sm2':
+        if module == 'sm2':
             df2 = gl.data_loader_2(pth = '/home/prethicktor/data/')
             gl.thickness_renamer(df2)
             dataset = df2
@@ -114,7 +116,7 @@ def main():
             print(module)
             print(dataset)
 
-        elif module == 'sm3':
+        if module == 'sm3':
             df2 = gl.data_loader_2(pth = '/home/prethicktor/data/')
             gl.thickness_renamer(df2)
             df3 = df2[[
@@ -133,7 +135,7 @@ def main():
             print(module)
             print(dataset)
 
-        elif module == 'sm4':
+        if module == 'sm4':
             df4 = gl.data_loader_4(pth = '/home/prethicktor/data/')
             gl.thickness_renamer(df4)
             dataset = df4
@@ -142,22 +144,20 @@ def main():
             print(module)
             print(dataset)
             
-        print('This model currently supports two layer architecture. Please define first layer')
-        layer_1_input = input()
-        print('Please define second layer')
-        layer_2_input = input()
+        layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
+        
         for rs in RS:
-            for lr in LR:
-                gl.build_and_train_model(
-                    dataset, 
-                    learning_rate = lr, 
-                    random_state = rs, 
-                    epochs = 300, 
-                    module = module, 
-                    res = res,
-                    layer_1 = layer_1_input,
-                    layer_2 = layer_2_input
-                )
+#             for lr in LR:
+            gl.build_and_train_model(
+                dataset, 
+                learning_rate = float(lr_input), 
+                random_state = rs, 
+                epochs = int(ep_input), 
+                module = module, 
+                res = res,
+                layer_1 = layer_1_input,
+                layer_2 = layer_2_input
+            )
 
 
                 
@@ -186,22 +186,20 @@ def main():
             print(dataset)
             
             
-        print('This model currently supports two layer architecture. Please define first layer')
-        layer_1_input = input()
-        print('Please define second layer')
-        layer_2_input = input()
+        layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
+        
         for rs in RS:
-            for lr in LR:
-                gl.build_and_train_model(
-                    dataset, 
-                    learning_rate = lr, 
-                    random_state = rs, 
-                    epochs = 300, 
-                    module = module, 
-                    res = res,
-                    layer_1 = layer_1_input,
-                    layer_2 = layer_2_input
-                )
+#             for lr in LR:
+            gl.build_and_train_model(
+                dataset, 
+                learning_rate = float(lr_input), 
+                random_state = rs, 
+                epochs = int(ep_input), 
+                module = module, 
+                res = res,
+                layer_1 = layer_1_input,
+                layer_2 = layer_2_input
+            )
 
 if __name__ == "__main__":
     main()

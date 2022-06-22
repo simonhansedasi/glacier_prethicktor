@@ -16,7 +16,7 @@ import geopy.distance
 '''
 data_loader
 input = path to GlaThiDa data. Default coded in.
-output = dataframe containing glacier scale GlaThiDa information with null entries dropped.
+output = dataframe containing glacier-scale GlaThiDa information with null entries dropped.
 '''
 def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     print('Importing glacier data')
@@ -125,7 +125,7 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
 '''
 data_loader_2
 input = path to GlaThiDa data. Default coded in.
-output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes.
+output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes.
 '''
 def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
     print('matching GlaThiDa and RGI data...')
@@ -197,7 +197,7 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
 '''
 data_loader_4
 input = path to GlaThiDa data. Default coded in.
-output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes. GlaThiDa and RGI are matched using a different, more rigorous technique than data_loader_2()
+output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes. GlaThiDa and RGI are matched using a different, more rigorous technique than data_loader_2()
 '''
 def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
     print('matching GlaThiDa and RGI data...')
@@ -274,7 +274,7 @@ def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
 '''
 data_loader_5
 input = path to GlaThiDa data. Default coded in. will also request regional data when run
-output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_2(). 
+output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_2(). 
 '''
 def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training_data/'):
     print('matching GlaThiDa and RGI data...')
@@ -314,7 +314,7 @@ def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training
 '''
 data_loader_6
 input = path to GlaThiDa data. Default coded in. will also request regional data when run
-output = dataframe containing glacier scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_4(). 
+output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_4(). 
 '''
 def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training_data/'):
     print('matching GlaThiDa and RGI data...')
@@ -386,6 +386,26 @@ def data_splitter(df, random_state = 0):
     test_labels = test_features.pop('thickness')
     
     return train_features, test_features, train_labels, test_labels
+
+
+'''
+prethicktor_inputs
+input = layer architecture, learning rate, and epochs
+output = hyperparameters and layer architecture for DNN model
+This function is designed and integrated into prethicktor to allow for hyperparameters to be input via CLI rather than hard coding for each training sesh
+'''
+def prethicktor_inputs():
+    print('This model currently supports two layer architecture. Please define first layer')
+    layer_1_input = input()
+    print('Please define second layer')
+    layer_2_input = input()
+    print('Please define learning rate: 0.1, 0.01, 0.001')
+    lr_input = input()
+    print('Please define epochs')
+    ep_input = input()
+    
+    return layer_1_input, layer_2_input, lr_input, ep_input
+
 
 
 
