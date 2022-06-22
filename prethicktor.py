@@ -33,7 +33,7 @@ def main():
         print('please select module: sm1, sm2, sm3, sm4')
         module_list = ('sm1', 'sm2', 'sm3', 'sm4')
         module = input()
-        while module not in module_list
+        while module not in module_list:
             print('please select valid module: sm1, sm2, sm3, sm4')
             module = input()
         
@@ -96,7 +96,7 @@ def main():
         print('please select module: sm5, sm6')
         module_list = ('sm5', 'sm6')
         module = input()
-        while module not in module_list
+        while module not in module_list:
             print('please select valid module: sm5, sm6')
             module = input()
         module = input()
