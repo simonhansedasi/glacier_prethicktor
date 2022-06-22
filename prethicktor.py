@@ -15,89 +15,24 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
 
-
 def main():
-    
     LR = 0.1, 0.01, 0.001
-#     VS = 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
     RS = range(0,25,1)
     
-    
+    # select either to train on all available data, or break up training by regions
     print('select data type: global / regional')
     
     data_type = input()
     if data_type == 'global':
         # call these something other than module, it screws with the dataset later on
-        print('please select module: sm1, sm2, sm3, sm4, all')
+        print('please select module: sm1, sm2, sm3, sm4')
         module = input()
-        if module == 'all':
-            
-            layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
-
-            for i in range(1,5,1):
-                module_sim = 'sm'+str(i)
-
-                if module_sim == 'sm1':
-                    df1 = gl.data_loader(pth = '/home/prethicktor/data/')
-                    gl.thickness_renamer(df1)
-                    dataset = df1
-                    dataset.name = 'df1'
-                    res = 'sr1'
-                    print(module_sim)
-                    print(dataset)
-
-                if module_sim == 'sm2':
-                    df2 = gl.data_loader_2(pth = '/home/prethicktor/data/')
-                    gl.thickness_renamer(df2)
-                    dataset = df2
-                    dataset.name = 'df2'
-                    res = 'sr2'
-                    print(module_sim)
-                    print(dataset)
-
-                if module_sim == 'sm3':
-                    df2 = gl.data_loader_2(pth = '/home/prethicktor/data/')
-                    gl.thickness_renamer(df2)
-                    df3 = df2[[
-                        'Area',
-                        'thickness',
-                        'Slope',
-                        'Zmin',
-                        'Zmed',
-                        'Zmax',
-                        'Aspect',
-                        'Lmax'
-                    ]]
-                    dataset = df3
-                    dataset.name = 'df3'
-                    res = 'sr3'
-                    print(module_sim)
-                    print(dataset)
-
-                if module_sim == 'sm4':
-                    df4 = gl.data_loader_4(pth = '/home/prethicktor/data/')
-                    gl.thickness_renamer(df4)
-                    dataset = df4
-                    dataset.name = 'df4'
-                    res = 'sr4'
-                    print(module_sim)
-                    print(dataset)
-                    
-                layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
-                
-                for rs in RS:
-#                     for lr in LR:
-                    gl.build_and_train_model(
-                        dataset, 
-                        learning_rate = float(lr_input), 
-                        random_state = rs, 
-                        epochs = int(ep_input), 
-                        module = module, 
-                        res = res,
-                        layer_1 = layer_1_input,
-                        layer_2 = layer_2_input
-                    )
         
+        # here we can select between databases
+        # sm1 = original GlaThiDa information
+        # sm2 = GlaThiDa matched with RGI using technique 1 defined in glacierml.py
+        # sm3 = sm2 w/o lat and lon
+        # sm4 = GlaThiDa matched with RGI using technique 2 defined in glacierml.py
         if module == 'sm1':
             df1 = gl.data_loader(pth = '/home/prethicktor/data/')
             gl.thickness_renamer(df1)
@@ -144,23 +79,9 @@ def main():
             print(module)
             print(dataset)
             
-        layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
-        
-        for rs in RS:
-#             for lr in LR:
-            gl.build_and_train_model(
-                dataset, 
-                learning_rate = float(lr_input), 
-                random_state = rs, 
-                epochs = int(ep_input), 
-                module = module, 
-                res = res,
-                layer_1 = layer_1_input,
-                layer_2 = layer_2_input
-            )
-
-
-                
+    # here we can select between two regional datasets. 
+    # sm5 uses matching technique 1, same to build sm2
+    # sm6 uses matching technique 2, same to build sm4
     if data_type == 'regional':
         print('please select module: sm5, sm6')
         module = input()
@@ -186,20 +107,20 @@ def main():
             print(dataset)
             
             
-        layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
-        
-        for rs in RS:
+    layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
+
+    for rs in RS:
 #             for lr in LR:
-            gl.build_and_train_model(
-                dataset, 
-                learning_rate = float(lr_input), 
-                random_state = rs, 
-                epochs = int(ep_input), 
-                module = module, 
-                res = res,
-                layer_1 = layer_1_input,
-                layer_2 = layer_2_input
-            )
+        gl.build_and_train_model(
+            dataset, 
+            learning_rate = float(lr_input), 
+            random_state = rs, 
+            epochs = int(ep_input), 
+            module = module, 
+            res = res,
+            layer_1 = layer_1_input,
+            layer_2 = layer_2_input
+        )
 
 if __name__ == "__main__":
     main()
