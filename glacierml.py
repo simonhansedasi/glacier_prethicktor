@@ -31,95 +31,8 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/'):
     ]]
         
     df1 = glacier.dropna()
-#     print('Importing TT database')
-#     TT = pd.read_csv(pth + 'TT.csv', low_memory = False)
-#     TT = TT[[
-#         'glacier_id',
-#         'from_elevation',
-#         'to_elevation',
-#         'area',
-#         'mean_slope',
-#         'mean_thickness',
-#     ]]
-#     TT = TT.dropna()
-    
-#     print('Importing TTT database')
-#     TTT = pd.read_csv(pth + 'TTT.csv', low_memory = False)
-#     TTT = TTT[[
-#         'glacier_id',
-#         'lat',
-#         'lon',
-#         'elevation',
-#         'thickness'
-#     ]]
-#     TTT = TTT.dropna()
-    
-#     print('Building TTTx')
-#     TTTx = pd.merge(T,TTT, how = 'inner', on = 'GlaThiDa_ID')
-#     TTTx.rename(columns = {
-#         'LAT':'CENT_LAT',
-#         'LON':'CENT_LON'
-#     },inplace = True)
-    
-#     TTTx = TTTx.drop([
-#         'GlaThiDa_ID',
-#         'MEAN_THICKNESS'
-#     ],axis = 1)
-#     TTTx = TTTx.dropna()
-    
-#     print('Building TTT_full')
-#     df1 = pd.merge(T,TT, how = 'inner', on = 'GlaThiDa_ID')
-#     df1 = df1.rename(columns = {
-#         'AREA_x':'T_AREA',
-#         'MEAN_SLOPE_x':'T_MEAN_SLOPE',
-#         'AREA_y':'TT_AREA',
-#         'MEAN_SLOPE_y':'TT_MEAN_SLOPE'
-#     })
-    
-#     df1 = df1.drop([
-#         'MEAN_THICKNESS_x',
-#         'MEAN_THICKNESS_y',
-#     ],axis=1)
-
-#     df1['UPPER_BOUND'] = df1['UPPER_BOUND'].astype('float')
-#     df1['LOWER_BOUND'] = df1['LOWER_BOUND'].astype('float')
-
-#     TTT_full = (df1.conditional_join(
-#         TTT,
-#         ('UPPER_BOUND', 'ELEVATION', '>='), 
-#         ('LOWER_BOUND', 'ELEVATION', '<='),
-#         how = 'inner'))
-
-#     TTT_full.columns = [
-#         'GlaThiDa_ID',
-#         'CENT_LAT',
-#         'CENT_LON',
-#         'T_AREA',
-#         'T_MEAN_SLOPE',
-#         'LOWER_BOUND',
-#         'UPPER_BOUND',
-#         'TT_AREA',
-#         'TT_MEAN_SLOPE',
-#         'GlaThiDa_ID_2',
-#         'POINT_LAT',
-#         'POINT_LON',
-#         'ELEVATION',
-#         'THICKNESS'
-#     ]
-
-#     TTT_full = TTT_full.drop([
-#         'GlaThiDa_ID',
-#         'GlaThiDa_ID_2'
-#     ],axis=1)
-    
     df1 = df1.drop('id',axis = 1)
-#     TT = TT.drop('GlaThiDa_ID',axis = 1)
-#     TTT = TTT.drop('GlaThiDa_ID',axis =1)
     return df1
-
-
-
-
 
 
 '''
@@ -129,26 +42,33 @@ output = dataframe containing glacier-scale GlaThiDa information with null entri
 '''
 def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
     print('matching GlaThiDa and RGI data method 1...')
-    
+    # load GlaThiDa T.csv -- older version than glacier.csv
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
     rootdir = pth + 'attribs/rgi60-attribs/'
+    
+    # RGI is separated by region. This loop reads each one in order and appends it to a df
     RGI_extra = pd.DataFrame()
     for file in os.listdir(rootdir):
-    #     print(file)
-        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = RGI_extra.append(f, ignore_index = True)
-
+        file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
+    
+    
+    # read csv of combined indexes
     comb = pd.read_csv(pth + 'GlaThiDa_RGI_matched_indexes.csv')
 #     drops = comb.index[comb['0']!=0]
 #     comb = comb.drop(drops)
     comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
+    
+    # isloate T and RGI data to only what GlaThiDa indexes are matched 
     T = T.loc[comb['GlaThiDa_index']]
     RGI = RGI_extra.loc[comb['RGI_index']]
-
+    
+    # reset indexes for clean df, will crash otherwise.
+    # RGI and T data are lined up, indexes are not needed
     RGI = RGI.reset_index()
-
     T = T.reset_index()
-
+    
+    # take only what we want from RGI and T
     RGI = RGI[[
         'CenLat',
         'CenLon',
@@ -168,6 +88,7 @@ def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
         'MEAN_THICKNESS'
     ]]
 
+    # merge and select data
     df2 = pd.merge(T, RGI, left_index=True, right_index=True)
 
 
@@ -201,6 +122,8 @@ output = dataframe containing glacier-scale GlaThiDa information with null entri
 '''
 def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
     print('matching GlaThiDa and RGI data method 2...')
+    
+    # read csv of combined indexes and GlaThiDa glacier.csv data
     comb = pd.read_csv(pth + 'GlaThiDa_RGI_live.csv')
     comb = comb.rename(columns = {'0':'distance'})
 
@@ -212,15 +135,16 @@ def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
         'RGI_index',
         'distance'
     ]]
-
-    combined_indexes = pd.DataFrame()
     
+    # create combined indexes, a df cleaned to have only one selection of GlaThiDa and RGI
+    combined_indexes = pd.DataFrame()    
+    
+    # This loop goes through comb and picks glaciers with minimum distance between RGI and GlaTHiDa
     for GlaThiDa_index in comb['GlaThiDa_index'].index:
         df = comb[comb['GlaThiDa_index'] == GlaThiDa_index]
         f = df.loc[df[df['distance'] == df['distance'].min()].index]
         combined_indexes = combined_indexes.append(f)
-    combined_indexes
-    
+    # drop any duplicates that may have had equal distance to RGI
     combined_indexes = combined_indexes.drop_duplicates(subset = ['GlaThiDa_index'])
     combined_indexes = combined_indexes.reset_index()
     combined_indexes = combined_indexes[[
@@ -228,28 +152,44 @@ def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
         'RGI_index',
         'distance'
     ]]
-
+    
+    # build RGI
     RGI_extra = pd.DataFrame()
     rootdir = pth + 'attribs/rgi60-attribs/'
-    for file in os.listdir(rootdir):
-#     print(file)
-        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = RGI_extra.append(f, ignore_index = True)
     
+    
+    # RGI is separated by region. This loop reads each one in order and appends it to a df
+    for file in os.listdir(rootdir):
+        file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
+    
+    # data is a df to combine GlaThiDa thicknesses with RGI attributes
     data = pd.DataFrame(columns = ['GlaThiDa_index', 'thickness'])
+    
+    # iterate over each GlaThiDa index in combined_indexes, the df combining GlaThiDa and RGI indexes
     for GlaThiDa in combined_indexes['GlaThiDa_index'].index:
+        
+        # find GlaThiDa thickness from glacier df using GlaThiDa index from combined indexes
         glathida_thickness = glacier['mean_thickness'].iloc[GlaThiDa] 
-        rgi_index = combined_indexes['RGI_index'].loc[GlaThiDa]  
+        
+        # find what RGI is lined up with that GlaThiDa glacier
+        rgi_index = combined_indexes['RGI_index'].loc[GlaThiDa]
+        
+        # locate RGI data from RGI_extra via RGI index matched with GlaThiDa index
         rgi = RGI_extra.iloc[[rgi_index]]
-
+        
+        # append RGI attributes to GlaThiDa index and thickness
         data = data.append(rgi)
         
+        # locate most recently appended row to df and populate GlaThiDa_index and thickness
         data['GlaThiDa_index'].iloc[-1] = combined_indexes['GlaThiDa_index'].loc[GlaThiDa]
         data['thickness'].iloc[-1] = glathida_thickness
-
+    
+    # drop any extra RGI that may have made their way in and reset index
     data = data.drop_duplicates(subset = ['RGIId'])
     data = data.reset_index()
     
+    # load what data we need for training
     df4 = data[[
     #     'RGIId',
 #         'GlaThiDa_index',
@@ -264,6 +204,7 @@ def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
         'Aspect',
         'Lmax'
     ]]
+    # for some reason thickness was an object after selected from df. Here we make it a number
     df4['thickness'] = pd.to_numeric(df4['thickness'])
     
     return df4
@@ -279,9 +220,11 @@ output = dataframe containing glacier-scale GlaThiDa information with null entri
 def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training_data/'):
     print('matching GlaThiDa and RGI data...')
     df = pd.DataFrame()
+    # data has already been matched and cleaned using python files earlier.
+    # this data is broken up by region and this function allows for region selection
     for file in os.listdir(pth):
-        f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        df = df.append(f, ignore_index = True)
+        file_reader = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        df = df.append(file_reader, ignore_index = True)
         df = df.drop_duplicates(subset = ['CenLat','CenLon'], keep = 'last')
         df = df[[
         #     'GlaThiDa_index',
@@ -300,6 +243,10 @@ def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training
             'Lmax',
             'thickness'
         ]]
+        
+    # this prints a message that lists available regions to select.
+    # entering anything other than a region that matches will cause it to creash.
+    # need input verification?
     print(
         'please select region: ' + str(list(
             df['region'].unique()
@@ -319,11 +266,14 @@ output = dataframe containing glacier-scale GlaThiDa information with null entri
 def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training_data/'):
     print('matching GlaThiDa and RGI data...')
     df = pd.DataFrame()
+    
+    # data has already been matched and cleaned using python files earlier.
+    # this data is broken up by region and this function allows for region selection
     for file in tqdm(os.listdir(pth)):
         f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
         df = df.append(f, ignore_index = True)
 
-#         df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
+        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
         df = df[[
         #     'GlaThiDa_index',
         #     'RGI_index',
@@ -341,6 +291,10 @@ def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training
             'Lmax',
             'thickness'
         ]]
+    
+    # this prints a message that lists available regions to select.
+    # entering anything other than a region that matches will cause it to creash.
+    # need input verification?
     print(
         'please select region: ' + str(list(
             df['region'].unique()
@@ -374,6 +328,8 @@ data_splitter
 input = name of dataframe and selected random state.
 output = dataframe and series randomly selected and populated as either training or test features or labels
 '''
+# Randomly selects data from a df for a given random state (usually iterated over a range of 25)
+# Necessary variables for training and predictions
 def data_splitter(df, random_state = 0):
     train_dataset = df.sample(frac=0.8, random_state=random_state)
     test_dataset = df.drop(train_dataset.index)
@@ -392,8 +348,8 @@ def data_splitter(df, random_state = 0):
 prethicktor_inputs
 input = none
 output = hyperparameters and layer architecture for DNN model
-This function is designed and integrated into prethicktor to allow for hyperparameters to be input via CLI rather than hard coding for each run
 '''
+# designed to provide a CLI to the model for each run rather modifying code
 def prethicktor_inputs():
     print('This model currently supports two layer architecture. Please define first layer')
     layer_1_input = input()
@@ -413,9 +369,8 @@ def prethicktor_inputs():
 build_linear_model
 input = normalized data and desired learning rate
 output = linear regression model
-No longer really used.
 '''
-
+# No longer used
 def build_linear_model(normalizer,learning_rate=0.1):
     model = tf.keras.Sequential([
         normalizer,
