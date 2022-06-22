@@ -99,7 +99,6 @@ def main():
         while module not in module_list:
             print('please select valid module: sm5, sm6')
             module = input()
-        module = input()
         if module == 'sm5':
             df5 = gl.data_loader_5(pth = '/home/prethicktor/data/regional_data_1/training_data/')
             reg = df5['region'].iloc[-1]
@@ -115,7 +114,7 @@ def main():
             df6 = gl.data_loader_6(pth = '/home/prethicktor/data/regional_data_2/training_data/')
             reg = df6['region'].iloc[-1]
             df6 = df6.drop('region', axis=1)
-                dataset = df6 
+            dataset = df6 
             dataset.name = str('df6_' + str(reg))
             res = 'sr6'
             print(module)
