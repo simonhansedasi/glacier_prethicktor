@@ -390,9 +390,9 @@ def data_splitter(df, random_state = 0):
 
 '''
 prethicktor_inputs
-input = layer architecture, learning rate, and epochs
+input = none
 output = hyperparameters and layer architecture for DNN model
-This function is designed and integrated into prethicktor to allow for hyperparameters to be input via CLI rather than hard coding for each training sesh
+This function is designed and integrated into prethicktor to allow for hyperparameters to be input via CLI rather than hard coding for each run
 '''
 def prethicktor_inputs():
     print('This model currently supports two layer architecture. Please define first layer')
@@ -472,9 +472,6 @@ def plot_loss(history):
 build_and_train_model
 input = dataset, desired: learning rate, validation split, epochs, random state. module and res are defined as inputs when run and determine where data is saved.
 output = saved weights for trained model and model results saved as a csv
-
-
-***NOTE*** in order to change layer architecture: update variable "arch" and modify layer architecutre in function "build_dnn_model()" to match. 
 '''
 
 def build_and_train_model(dataset,
@@ -492,7 +489,7 @@ def build_and_train_model(dataset,
         svd_mod_pth = 'saved_models/' + module + '/sm_' + arch + '/'
         svd_res_pth = 'saved_results/' + res + '/sr_' + arch + '/'
         
-        
+        # code snippet to make folders for saved models and results if they do not already exist
         isdir = os.path.isdir(svd_mod_pth)
         
         if isdir == False:
@@ -542,44 +539,23 @@ def build_and_train_model(dataset,
             ', Layer Architechture = ' + 
             arch
         )
+        
+        # set up model with  normalized data and defined layer architecture
         dnn_model = build_dnn_model(normalizer['ALL'],learning_rate, layer_1, layer_2)
+        
+        # train model on previously selected and splitdata
         dnn_history['MULTI'] = dnn_model.fit(
-            train_features, train_labels,
+            train_features,
+            train_labels,
             validation_split=validation_split,
-            verbose=0, epochs=epochs)
-        
-        dnn_model.save(
-            svd_mod_pth +
-            str(dataset.name) +
-            '_dnn_MULTI' +
-            '_' +
-            str(learning_rate) + 
-            '_' +
-            str(validation_split) +
-            '_' +
-            str(epochs) + 
-            '_' + 
-            str(random_state)
-        
+            verbose=0, 
+            epochs=epochs
         )
-
+        
+        #save model, results, and history
+        
         print('Saving results')
-        for variable_name in tqdm(list(dnn_history)):
-            df = pd.DataFrame(dnn_history[variable_name].history)
-            df.to_csv(
-                svd_res_pth + 
-                str(dataset.name) + 
-                '_dnn_history_' +
-                str(variable_name) + 
-                '_' 
-                str(learning_rate) 
-                '_' 
-                str(validation_split) 
-                '_' 
-                str(epochs)
-                '_'
-                str(random_state)
-             )
+
 
         df = pd.DataFrame(dnn_history['MULTI'].history)
         df.to_csv(            
@@ -746,4 +722,22 @@ def build_and_train_model(dataset,
 #                                           + '_'
 #                                           + str(random_state)
 #                                          )
-    
+
+
+
+#         for variable_name in tqdm(list(dnn_history)):
+#             df = pd.DataFrame(dnn_history[variable_name].history)
+#             df.to_csv(
+#                 svd_res_pth + 
+#                 str(dataset.name) + 
+#                 '_dnn_history_' +
+#                 str(variable_name) + 
+#                 '_' +
+#                 str(learning_rate) +
+#                 '_' +
+#                 str(validation_split) +
+#                 '_' +
+#                 str(epochs) +
+#                 '_' +
+#                 str(random_state) 
+#             )
