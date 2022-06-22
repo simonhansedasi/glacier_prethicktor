@@ -16,7 +16,9 @@ pd.set_option('mode.chained_assignment', None)
 
 
 def main():
-    LR = 0.1, 0.01, 0.001
+    # define range for learning rate and random state. 
+    # learning rate no longer varied 
+#     LR = 0.1, 0.01, 0.001
     RS = range(0,25,1)
     
     # select either to train on all available data, or break up training by regions
@@ -24,7 +26,6 @@ def main():
     
     data_type = input()
     if data_type == 'global':
-        # call these something other than module, it screws with the dataset later on
         print('please select module: sm1, sm2, sm3, sm4')
         module = input()
         
@@ -33,6 +34,7 @@ def main():
         # sm2 = GlaThiDa matched with RGI using technique 1 defined in glacierml.py
         # sm3 = sm2 w/o lat and lon
         # sm4 = GlaThiDa matched with RGI using technique 2 defined in glacierml.py
+        # res = variable to construct directory to save results
         if module == 'sm1':
             df1 = gl.data_loader(pth = '/home/prethicktor/data/')
             gl.thickness_renamer(df1)
@@ -106,9 +108,10 @@ def main():
             print(module)
             print(dataset)
             
-            
+    # define hyperparameters
     layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
-
+    
+    # run the model
     for rs in RS:
 #             for lr in LR:
         gl.build_and_train_model(
