@@ -23,11 +23,19 @@ def main():
     
     # select either to train on all available data, or break up training by regions
     print('select data type: global / regional')
-    
+    data_type_list = ('global', 'regional')
     data_type = input()
+    while data_type not in data_type_list:
+        print('Please select valid data type: global / regional')
+        data_type = input()
+        
     if data_type == 'global':
         print('please select module: sm1, sm2, sm3, sm4')
+        module_list = ('sm1', 'sm2', 'sm3', 'sm4')
         module = input()
+        while module not in module_list
+            print('please select valid module: sm1, sm2, sm3, sm4')
+            module = input()
         
         # here we can select between databases
         # sm1 = original GlaThiDa information
@@ -86,6 +94,11 @@ def main():
     # sm6 uses matching technique 2, same to build sm4
     if data_type == 'regional':
         print('please select module: sm5, sm6')
+        module_list = ('sm5', 'sm6')
+        module = input()
+        while module not in module_list
+            print('please select valid module: sm5, sm6')
+            module = input()
         module = input()
         if module == 'sm5':
             df5 = gl.data_loader_5(pth = '/home/prethicktor/data/regional_data_1/training_data/')
@@ -102,7 +115,7 @@ def main():
             df6 = gl.data_loader_6(pth = '/home/prethicktor/data/regional_data_2/training_data/')
             reg = df6['region'].iloc[-1]
             df6 = df6.drop('region', axis=1)
-            dataset = df6
+                dataset = df6 
             dataset.name = str('df6_' + str(reg))
             res = 'sr6'
             print(module)

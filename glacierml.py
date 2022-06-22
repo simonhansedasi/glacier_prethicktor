@@ -356,7 +356,11 @@ def prethicktor_inputs():
     print('Please define second layer')
     layer_2_input = input()
     print('Please define learning rate: 0.1, 0.01, 0.001')
+    lr_list = ('0.1, 0.01, 0.001')
     lr_input = input()
+    while lr_input not in lr_list:
+        print('Please select valid learning rate: 0.1, 0.01, 0.001')
+        lr_input = input()
     print('Please define epochs')
     ep_input = input()
     

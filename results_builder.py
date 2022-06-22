@@ -18,8 +18,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
 # CLI to select which module is loaded and run
-print('please select rootdir: sm1, sm2, sm3, sm4, sm5, sm6')
+print('please select module: sm1, sm2, sm3, sm4, sm5, sm6')
+dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6')
+
 chosen_dir = input()
+
+while chosen_dir not in dir_list:
+    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6')
+    chosen_dir = input()
+
+
 rootdir = 'saved_models/' + chosen_dir + '/'
 
 print(chosen_dir)
