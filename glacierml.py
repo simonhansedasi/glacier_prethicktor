@@ -282,8 +282,7 @@ def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training
     for file in os.listdir(pth):
         f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
         df = df.append(f, ignore_index = True)
-
-        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
+        df = df.drop_duplicates(subset = ['CenLat','CenLon'], keep = 'last')
         df = df[[
         #     'GlaThiDa_index',
         #     'RGI_index',
@@ -320,11 +319,11 @@ output = dataframe containing glacier scale GlaThiDa information with null entri
 def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training_data/'):
     print('matching GlaThiDa and RGI data...')
     df = pd.DataFrame()
-    for file in os.listdir(pth):
+    for file in tqdm(os.listdir(pth)):
         f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
         df = df.append(f, ignore_index = True)
 
-        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
+#         df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
         df = df[[
         #     'GlaThiDa_index',
         #     'RGI_index',
@@ -416,12 +415,12 @@ build_dnn_model
 input = normalized data and selected learning rate
 output = dnn model with desired layer architecture, ready to be trained.
 '''
-def build_dnn_model(norm,learning_rate=0.1):
+def build_dnn_model(norm, learning_rate=0.1, layer_1 = 10, layer_2 = 5):
     model = keras.Sequential([
               norm,
 #               layers.Dense(32, activation='relu'),
-              layers.Dense(16, activation='relu'),
-              layers.Dense(8, activation='relu'),
+              layers.Dense(layer_1, activation='relu'),
+              layers.Dense(layer_2, activation='relu'),
 
               layers.Dense(1) ])
 
@@ -455,7 +454,7 @@ input = dataset, desired: learning rate, validation split, epochs, random state.
 output = saved weights for trained model and model results saved as a csv
 
 
-***NOTE*** in order to change layer architecture: update variable "arch" and modify layer architecutre in function "build_dnn_model()" to match. You may have to create folders in the saved_models and saved_results folder before model fully runs
+***NOTE*** in order to change layer architecture: update variable "arch" and modify layer architecutre in function "build_dnn_model()" to match. 
 '''
 
 def build_and_train_model(dataset,
@@ -464,12 +463,29 @@ def build_and_train_model(dataset,
                           epochs = 300,
                           random_state = 0,
                           module = 'sm2',
-                          res = 'sr2'
+                          res = 'sr2',
+                          layer_1 = 10,
+                          layer_2 = 5
                          ):
         # define paths
-        arch = '16-8'
+        arch = str(layer_1) + '-' + str(layer_2)
         svd_mod_pth = 'saved_models/' + module + '/sm_' + arch + '/'
         svd_res_pth = 'saved_results/' + res + '/sr_' + arch + '/'
+        
+        
+        isdir = os.path.isdir(svd_mod_pth)
+        
+        if isdir == False:
+            os.makedirs(svd_mod_pth)
+        
+        isdir = os.path.isdir(svd_res_pth)
+        if isdir == False:
+            os.makedirs(svd_res_pth)
+        
+        
+        
+        
+        
     #     split data
         (train_features,test_features,
          train_labels,test_labels) = data_splitter(dataset)
@@ -638,7 +654,7 @@ def build_and_train_model(dataset,
               + str(random_state)
               + ', Layer Architechture = '
               + arch)
-        dnn_model = build_dnn_model(normalizer['ALL'],learning_rate)
+        dnn_model = build_dnn_model(normalizer['ALL'],learning_rate, layer_1, layer_2)
         dnn_history['MULTI'] = dnn_model.fit(
             train_features, train_labels,
             validation_split=validation_split,
