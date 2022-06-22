@@ -64,19 +64,28 @@ elif chosen_dir == 'sm4':
 
 elif chosen_dir == 'sm5':
     df5 = gl.data_loader_5()
-    reg = df6['region'].iloc[-1]
-    regional_data = regional_data.drop('region', axis=1)
+    reg = df5['region'].iloc[-1]
+    df5 = df5.drop('region', axis=1)
     dataset = df5
-    dataset.name = str('df5' + str(reg))
-
+    dataset.name = str('df5_' + str(reg))
+    if len(str(reg)) ==1:
+        N = 1
+        reg = str(reg).zfill(N + len(str(reg)))
+    else:
+        reg = reg
 
 elif chosen_dir == 'sm6':
     df6 = gl.data_loader_6()
     reg = df6['region'].iloc[-1]
-    regional_data = regional_data.drop('region', axis=1)
+    df6 = df6.drop('region', axis=1)
     dataset = df6
-    dataset.name = str('df6' + str(reg))
-
+    dataset.name = str('df6_' + str(reg))
+    
+    if len(str(reg)) ==1:
+        N = 1
+        reg = str(reg).zfill(N + len(str(reg)))
+    else:
+        reg = reg
 
 (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
 
@@ -194,8 +203,15 @@ for architecture in tqdm(list(predictions['architecture'].unique())):
             deviations.loc[
                 deviations.index[-1], 'model parameters'
             ] = dnn_model[
-                architecture + '_' + dataset.name + '_dnn_MULTI_0.1_0.2_300_0'
-                ].count_params() 
+                architecture + 
+                '_' + 
+                dataset.name + 
+                '_dnn_MULTI_' +
+                str(learning_rate) +
+                '_0.2_' +
+                str(epochs) +
+                '_0'
+            ].count_params() 
 
             deviations.loc[deviations.index[-1], 'learning rate'] = learning_rate
 
@@ -232,150 +248,155 @@ deviations.to_csv('zults/deviations_' + dataset.name + '.csv')
     #build RGI specific to modules chosen
 
 
-#     if chosen_dir == 'sm1':
-#         print('loading RGI...')
-#         rootdir = '/data/fast0/datasets/rgi60-attribs/'
-#         RGI_extra = pd.DataFrame()
-#         for file in tqdm(os.listdir(rootdir)):
-#             f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-#             RGI_extra = RGI_extra.append(f, ignore_index = True)
+if chosen_dir == 'sm1':
+    print('loading RGI...')
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in tqdm(os.listdir(rootdir)):
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
 
 
-#         RGI = RGI_extra[[
-#             'CenLat',
-#             'CenLon',
-#             'Slope',
-#             'Area',
-#         ]]
+    RGI = RGI_extra[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Area',
+    ]]
 
-#         RGI = RGI.rename(columns = {
-#         'CenLon':'lon',
-#         'CenLat':'lat',
-#         'Area':'area',
-#         'Slope':'mean_slope'
-#         })
-
-
-
-#     elif chosen_dir == 'sm5' or chosen_dir == 'sm6':
-#         print('loading RGI...')
-#         rootdir = '/data/fast0/datasets/rgi60-attribs/'
-#         RGI_extra = pd.DataFrame()
-#         for file in tqdm(os.listdir(rootdir)):
-#             f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-#             region_1 = f['RGIId'].iloc[-1][6:]
-#             region = region_1[:2]
-#             if str(region) == str(reg):
-#                 RGI_extra = RGI_extra.append(f, ignore_index = True)
-#         RGI = RGI_extra[[
-#             'CenLat',
-#             'CenLon',
-#             'Slope',
-#             'Zmin',
-#             'Zmed',
-#             'Zmax',
-#             'Area',
-#             'Aspect',
-#             'Lmax'
-#         ]]
-#         RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
-#         RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
-#         RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
-#         RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
-#         RGI = RGI.reset_index()
-#         RGI = RGI.drop('index', axis=1)
+    RGI = RGI.rename(columns = {
+    'CenLon':'lon',
+    'CenLat':'lat',
+    'Area':'area',
+    'Slope':'mean_slope'
+    })
 
 
 
-#     else:
-#         print('loading RGI...')
-#         rootdir = '/data/fast0/datasets/rgi60-attribs/'
-#         RGI_extra = pd.DataFrame()
-#         for file in tqdm(os.listdir(rootdir)):
-#             f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-#             RGI_extra = RGI_extra.append(f, ignore_index = True)
-
-
-#         RGI = RGI_extra[[
-#             'CenLat',
-#             'CenLon',
-#             'Slope',
-#             'Zmin',
-#             'Zmed',
-#             'Zmax',
-#             'Area',
-#             'Aspect',
-#             'Lmax'
-#         ]]
-#         RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
-#         RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
-#         RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
-#         RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
-#         RGI = RGI.reset_index()
-#         RGI = RGI.drop('index', axis=1)
-
-#     if dataset.name == 'df3':
-#         RGI = RGI[[
-#     #         'CenLat',
-#     #         'CenLon',
-#             'Slope',
-#             'Zmin',
-#             'Zmed',
-#             'Zmax',
-#             'Area',
-#             'Aspect',
-#             'Lmax'
-#         ]]
+elif chosen_dir == 'sm5' or chosen_dir == 'sm6':
+    print('loading RGI...')
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in tqdm(os.listdir(rootdir)):
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        region_1 = f['RGIId'].iloc[-1][6:]
+        region = region_1[:2]
+        if str(region) == str(reg):
+            RGI_extra = RGI_extra.append(f, ignore_index = True)
+            
+    RGI = RGI_extra[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+    RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
+    RGI = RGI.reset_index()
+    RGI = RGI.drop('index', axis=1)
 
 
 
+else:
+    print('loading RGI...')
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in tqdm(os.listdir(rootdir)):
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
+
+
+    RGI = RGI_extra[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+    RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
+    RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
+    RGI = RGI.reset_index()
+    RGI = RGI.drop('index', axis=1)
+
+if dataset.name == 'df3':
+    RGI = RGI[[
+#         'CenLat',
+#         'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
 
 
 
-#     arch = deviations['layer architecture'].iloc[0]
-#     lr = deviations['learning rate'].iloc[0]
-#     vs = deviations['validation split'].iloc[0]
-#     ep = deviations['epochs'].iloc[0]
-#     print('layer architecture: ' + arch + ' learning rate: ' + str(lr))
-#     print('predicting RGI thicknesses using model trained on RGI data matched with GlaThiDa thicknesses...')
-#     dfs = pd.DataFrame()
-#     for rs in tqdm(RS):
-#         s = pd.Series(
-#             dnn_model[
-#             str(arch) +
-#             '_' +
-#             dataset.name +
-#             '_dnn_MULTI_'+
-#             str(lr)+
-#             '_'+
-#             str(vs)+
-#             '_300_'+ 
-#             str(rs)
-#         ].predict(RGI, verbose=0).flatten(), name = rs
-#         )
-#         dfs[rs] = s
 
 
 
-#     RGI_prethicked = RGI.copy() 
-#     RGI_prethicked['avg predicted thickness'] = 'NaN'
-#     RGI_prethicked['predicted thickness std dev'] = 'NaN'
+arch = deviations['layer architecture'].iloc[0]#     VS = 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4
 
-#     print('calculating average thickness across random state ensemble...')
-#     for i in tqdm(dfs.index):
-#         avg_predicted_thickness = np.mean(dfs.loc[i])
-#         RGI_prethicked['avg predicted thickness'].loc[i] = avg_predicted_thickness
+lr = deviations['learning rate'].iloc[0]
+vs = deviations['validation split'].iloc[0]
+ep = deviations['epochs'].iloc[0]
+print('layer architecture: ' + arch + ' learning rate: ' + str(lr))
+print('predicting RGI thicknesses using model trained on RGI data matched with GlaThiDa thicknesses...')
+dfs = pd.DataFrame()
+for rs in tqdm(RS):
+    s = pd.Series(
+        dnn_model[
+            str(arch) +
+            '_' +
+            dataset.name +
+            '_dnn_MULTI_' +
+            str(lr) +
+            '_' +
+            str(vs) +
+            '_' +
+            str(epochs) + 
+            '_' + 
+            str(rs)
+        ].predict(RGI, verbose=0).flatten(), 
+        name = rs
+    )
+    dfs[rs] = s
 
 
-#     print('computing standard deviations and variances for RGI predicted thicknesses')
 
-#     for i in tqdm(dfs.index):
-#         predicted_thickness_std_dev = np.std(dfs.loc[i])
+RGI_prethicked = RGI.copy() 
+RGI_prethicked['avg predicted thickness'] = 'NaN'
+RGI_prethicked['predicted thickness std dev'] = 'NaN'
 
-#         RGI_prethicked['predicted thickness std dev'].loc[i] = predicted_thickness_std_dev
+print('calculating average thickness across random state ensemble...')
+for i in tqdm(dfs.index):
+    avg_predicted_thickness = np.mean(dfs.loc[i])
+    RGI_prethicked['avg predicted thickness'].loc[i] = avg_predicted_thickness
 
-#     RGI_prethicked.to_csv(
-#         'zults/RGI_predicted_' + dataset.name + '_' + arch + '_' + str(lr) + '_' + str(ep) + '.csv'
-#     )
+
+print('computing standard deviations and variances for RGI predicted thicknesses')
+
+for i in tqdm(dfs.index):
+    predicted_thickness_std_dev = np.std(dfs.loc[i])
+
+    RGI_prethicked['predicted thickness std dev'].loc[i] = predicted_thickness_std_dev
+
+RGI_prethicked.to_csv(
+    'zults/RGI_predicted_' + dataset.name + '_' + arch + '_' + str(lr) + '_' + str(ep) + '.csv'
+)
 
 
