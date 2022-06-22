@@ -128,7 +128,7 @@ input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes.
 '''
 def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
-    print('matching GlaThiDa and RGI data...')
+    print('matching GlaThiDa and RGI data method 1...')
     
     T = pd.read_csv(pth + 'T.csv', low_memory = False)
     rootdir = pth + 'attribs/rgi60-attribs/'
@@ -200,7 +200,7 @@ input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes. GlaThiDa and RGI are matched using a different, more rigorous technique than data_loader_2()
 '''
 def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
-    print('matching GlaThiDa and RGI data...')
+    print('matching GlaThiDa and RGI data method 2...')
     comb = pd.read_csv(pth + 'GlaThiDa_RGI_live.csv')
     comb = comb.rename(columns = {'0':'distance'})
 
@@ -523,6 +523,96 @@ def build_and_train_model(dataset,
         normalizer['ALL'].adapt(np.array(train_features))
         print(dataset.name + ' data normalized')
         
+    #      DNN model
+        dnn_model = {}
+        dnn_history = {}
+        dnn_results = {}
+
+        print(
+            'Running multi-variable DNN regression on ' + 
+            str(dataset.name) + 
+            ' dataset with parameters: Learning Rate = ' + 
+            str(learning_rate) + 
+            ', Validation split = ' + 
+            str(validation_split) + 
+            ', Epochs = ' + 
+            str(epochs) + 
+            ', Random state = ' + 
+            str(random_state) + 
+            ', Layer Architechture = ' + 
+            arch
+        )
+        dnn_model = build_dnn_model(normalizer['ALL'],learning_rate, layer_1, layer_2)
+        dnn_history['MULTI'] = dnn_model.fit(
+            train_features, train_labels,
+            validation_split=validation_split,
+            verbose=0, epochs=epochs)
+        
+        dnn_model.save(
+            svd_mod_pth +
+            str(dataset.name) +
+            '_dnn_MULTI' +
+            '_' +
+            str(learning_rate) + 
+            '_' +
+            str(validation_split) +
+            '_' +
+            str(epochs) + 
+            '_' + 
+            str(random_state)
+        
+        )
+
+        print('Saving results')
+        for variable_name in tqdm(list(dnn_history)):
+            df = pd.DataFrame(dnn_history[variable_name].history)
+            df.to_csv(
+                svd_res_pth + 
+                str(dataset.name) + 
+                '_dnn_history_' +
+                str(variable_name) + 
+                '_' 
+                str(learning_rate) 
+                '_' 
+                str(validation_split) 
+                '_' 
+                str(epochs)
+                '_'
+                str(random_state)
+             )
+
+        df = pd.DataFrame(dnn_history['MULTI'].history)
+        df.to_csv(            
+           svd_res_pth +
+           str(dataset.name) +
+           '_dnn_history_MULTI_' +
+           str(learning_rate) +
+           '_' +
+           str(validation_split) +
+           '_' +
+           str(epochs) +
+           '_' +
+           str(random_state)
+        
+        )
+        
+        dnn_model.save(
+            svd_mod_pth + 
+            str(dataset.name) + 
+            '_dnn_MULTI_' + 
+            str(learning_rate) + 
+            '_' + 
+            str(validation_split) + 
+            '_' + 
+            str(epochs) + 
+            '_' + 
+            str(random_state)
+        )
+        print('model training complete')
+        print('')
+        
+        
+        
 #          # linear model
 #         print('Running single-variable linear regression on ' 
 #               + str(dataset.name) 
@@ -623,11 +713,6 @@ def build_and_train_model(dataset,
 #                           + '_'
 #                           + str(random_state))
 
-    #      DNN model
-        dnn_model = {}
-        dnn_history = {}
-        dnn_results = {}
-
 #         print('Running single-variable DNN regression on '
 #               + str(dataset.name) 
 #               + ' dataset with parameters: Learning Rate = ' 
@@ -661,79 +746,4 @@ def build_and_train_model(dataset,
 #                                           + '_'
 #                                           + str(random_state)
 #                                          )
-
-        print('Running multi-variable DNN regression on ' 
-              + str(dataset.name) 
-              + ' dataset with parameters: Learning Rate = ' 
-              + str(learning_rate) 
-              + ', Validation split = ' 
-              + str(validation_split) 
-              + ', Epochs = ' 
-                  + str(epochs)
-              + ', Random state = '
-              + str(random_state)
-              + ', Layer Architechture = '
-              + arch)
-        dnn_model = build_dnn_model(normalizer['ALL'],learning_rate, layer_1, layer_2)
-        dnn_history['MULTI'] = dnn_model.fit(
-            train_features, train_labels,
-            validation_split=validation_split,
-            verbose=0, epochs=epochs)
-        
-        dnn_model.save(svd_mod_pth 
-                       + str(dataset.name) 
-                       + '_dnn_MULTI' 
-                       + '_' 
-                       + str(learning_rate)  
-                       + '_' 
-                       + str(validation_split) 
-                       + '_' 
-                       + str(epochs)
-                       + '_'
-                       + str(random_state))
-
-        print('Saving results')
-        for variable_name in tqdm(list(dnn_history)):
-            df = pd.DataFrame(dnn_history[variable_name].history)
-            df.to_csv(svd_res_pth 
-                      + str(dataset.name) 
-                      + '_dnn_history_'
-                      +str(variable_name) 
-                      + '_' 
-                      + str(learning_rate) 
-                      + '_' 
-                      + str(validation_split) 
-                      + '_' 
-                      + str(epochs)
-                      + '_'
-                      + str(random_state))
-
-        df = pd.DataFrame(dnn_history['MULTI'].history)
-        df.to_csv(svd_res_pth 
-                  + str(dataset.name) 
-                  + '_dnn_history_MULTI_' 
-                  + str(learning_rate) 
-                  + '_' 
-                  + str(validation_split) 
-                  + '_' 
-                  + str(epochs)
-                  + '_'
-                  + str(random_state))
-        
-        dnn_model.save(svd_mod_pth
-                       + str(dataset.name) 
-                       + '_dnn_MULTI_' 
-                       + str(learning_rate)  
-                       + '_' 
-                       + str(validation_split) 
-                       + '_' 
-                       + str(epochs)
-                       + '_'
-                       + str(random_state))
-        
-        
-        
-        
-
-
     
