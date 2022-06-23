@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 import geopy.distance
+pd.set_option('mode.chained_assignment',None)
 
 
 
@@ -18,7 +19,7 @@ data_loader
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier-scale GlaThiDa information with null entries dropped.
 '''
-def data_loader(pth = '/data/fast1/glacierml/T_models/'):
+def data_loader(pth = '/data/fast1/glacierml/T_models/T_data/'):
     print('Importing glacier data')
     glacier = pd.read_csv(pth + 'glacier.csv', low_memory = False)
     glacier = glacier[[
@@ -40,21 +41,24 @@ data_loader_2
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes.
 '''
-def data_loader_2(pth = '/data/fast1/glacierml/T_models/'):
+def data_loader_2(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
     print('matching GlaThiDa and RGI data method 1...')
     # load GlaThiDa T.csv -- older version than glacier.csv
-    T = pd.read_csv(pth + 'T.csv', low_memory = False)
-    rootdir = pth + 'attribs/rgi60-attribs/'
+    T = pd.read_csv(pth_1 + 'T.csv', low_memory = False)
     
     # RGI is separated by region. This loop reads each one in order and appends it to a df
     RGI_extra = pd.DataFrame()
-    for file in os.listdir(rootdir):
-        file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+    for file in os.listdir(pth_2):
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
         RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
     
     
     # read csv of combined indexes
-    comb = pd.read_csv(pth + 'GlaThiDa_RGI_matched_indexes.csv')
+    comb = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_1_live.csv')
 #     drops = comb.index[comb['0']!=0]
 #     comb = comb.drop(drops)
     comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
@@ -120,14 +124,18 @@ data_loader_4
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes. GlaThiDa and RGI are matched using a different, more rigorous technique than data_loader_2()
 '''
-def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
+def data_loader_4(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
     print('matching GlaThiDa and RGI data method 2...')
     
     # read csv of combined indexes and GlaThiDa glacier.csv data
-    comb = pd.read_csv(pth + 'GlaThiDa_RGI_live.csv')
+    comb = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_2_live.csv')
     comb = comb.rename(columns = {'0':'distance'})
 
-    glacier = pd.read_csv(pth + 'glacier.csv')
+    glacier = pd.read_csv(pth_1 + 'glacier.csv')
     glacier = glacier.dropna(subset = ['mean_thickness'])
 
     comb = comb[[
@@ -155,12 +163,11 @@ def data_loader_4(pth = '/data/fast1/glacierml/T_models/'):
     
     # build RGI
     RGI_extra = pd.DataFrame()
-    rootdir = pth + 'attribs/rgi60-attribs/'
     
     
     # RGI is separated by region. This loop reads each one in order and appends it to a df
-    for file in os.listdir(rootdir):
-        file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+    for file in os.listdir(pth_2):
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
         RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
     
     # data is a df to combine GlaThiDa thicknesses with RGI attributes
@@ -304,17 +311,23 @@ def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training
     return df6
 
 
-def GlaThiDa_RGI_index_matcher_1():
-    pth = '/data/fast1/glacierml/T_models/'
-    T = pd.read_csv(pth + 'T.csv', low_memory = False)
+'''
+
+
+'''
+def GlaThiDa_RGI_index_matcher_1(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):    
+    T = pd.read_csv(pth_1 + 'T.csv', low_memory = False)
     T = T.dropna(subset = ['MEAN_THICKNESS'])
 
-    rootdir = '/data/fast0/datasets/rgi60-attribs/'
     RGI_extra = pd.DataFrame()
-    for file in os.listdir(rootdir):
+    for file in os.listdir(pth_2):
         print(file)
-        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = RGI_extra.append(f, ignore_index = True)
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
 
     RGI_coordinates = RGI_extra[[
         'CenLat',
@@ -322,8 +335,7 @@ def GlaThiDa_RGI_index_matcher_1():
     ]]
     RGI_coordinates
 
-    L = pd.DataFrame()
-    glac = pd.DataFrame()
+    df = pd.DataFrame(columns = ['GlaThiDa_index','RGI_index'])
     for T_idx in tqdm(T.index):
         GlaThiDa_coords = (T['LAT'].loc[T_idx],
                            T['LON'].loc[T_idx])
@@ -334,41 +346,45 @@ def GlaThiDa_RGI_index_matcher_1():
                           RGI_coordinates['CenLon'].loc[RGI_idx])
             distance = geopy.distance.geodesic(GlaThiDa_coords, RGI_coords).km
             if distance < 1:
-    #             print('DING!')
-    #             print(T_idx)
-    #             print(RGI_idx)
-    #             print(RGI_coords)
+#                 print('DING!')
+#                 print(T_idx)
+#                 print(RGI_idx)
+#                 print(RGI_coords)
                 f = pd.Series(distance, name='distance')
-                L = L.append(f, ignore_index=True)
-                L['GlaThiDa_index'] = T_idx
-                L['RGI_index'] = RGI_idx
-                glac = glac.append(L, ignore_index=True)
-
+                df = df.append(f, ignore_index=True)
+                df['GlaThiDa_index'].iloc[-1] = T_idx
+                df['RGI_index'].iloc[-1] = RGI_idx
+                    
+                df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_1_live.csv')
 
                 break
             
-    glac.to_csv('GlaThiDa_RGI_matched_indexes.csv')
+                
+
     
-    
-def GlaThiDa_RGI_index_matcher_2():
-    pth = '/data/fast1/glacierml/T_models/'
-    T = pd.read_csv(pth + 'glacier.csv', low_memory = False)
+'''
+
+'''    
+def GlaThiDa_RGI_index_matcher_2(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
+    T = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)
     T = T.dropna(subset = ['mean_thickness'])
 
-    rootdir = '/data/fast0/datasets/rgi60-attribs/'
     RGI_extra = pd.DataFrame()
-    for file in os.listdir(rootdir):
+    for file in os.listdir(pth_2):
         print(file)
-        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = RGI_extra.append(f, ignore_index = True)
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
 
     RGI_coordinates = RGI_extra[[
         'CenLat',
         'CenLon'
     ]]
 
-    L = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
-    glac = pd.DataFrame()
+    df = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
     for T_idx in tqdm(T.index):
         GlaThiDa_coords = (T['lat'].loc[T_idx],
                            T['lon'].loc[T_idx])
@@ -382,14 +398,53 @@ def GlaThiDa_RGI_index_matcher_2():
             if 0 <= distance < 1:
     #             print(RGI_coords)
                 f = pd.Series(distance, name='distance')
-                L = L.copy()
-                L = L.append(f, ignore_index=True)
-                L['GlaThiDa_index'].iloc[-1] = T_idx
-                L['RGI_index'].iloc[-1] = RGI_idx
-                L.to_csv('l.csv')
+                df = df.append(f, ignore_index=True)
+                df['GlaThiDa_index'].iloc[-1] = T_idx
+                df['RGI_index'].iloc[-1] = RGI_idx
+                df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_2_live.csv')
                 
-                
-# def GlaThiDa_RGI_index_matcher_3():
+'''
+
+'''
+def GlaThiDa_RGI_index_matcher_3(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
+    glathida = pd.read_csv(pth_1 + 'glacier.csv')
+    glathida = glathida.dropna(subset = ['mean_thickness'])
+
+    RGI = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        print(file)
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI = RGI.append(file_reader, ignore_index = True)
+
+    df = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
+    #iterate over each glathida index
+    for i in tqdm(glathida.index):
+        #obtain lat and lon from glathida 
+        glathida_ll = (glathida.loc[i].lat,glathida.loc[i].lon)
+        
+        # find distance between selected glathida glacier and all RGI
+        distances = RGI.apply(
+            lambda row: geopy.distance.geodesic((row.CenLat,row.CenLon),glathida_ll),
+            axis = 1
+        )
+        
+        # find index of minimum distance between glathida and RGI glacier
+        RGI_index = np.argmin(distances)
+        RGI_match = RGI.loc[RGI_index]
+        
+        # concatonate two rows and append to dataframe with indexes for both glathida and RGI
+        temp_df = pd.concat([RGI_match, glathida.loc[i]], axis = 0)
+        df = df.append(temp_df, ignore_index = True)
+    #     df = df.append(GlaThiDa_and_RGI, ignore_index = True)
+        df['GlaThiDa_index'].iloc[-1] = i
+        df['RGI_index'].iloc[-1] = RGI_index
+
+
+        df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_3_live.csv')
     
                 
                 
