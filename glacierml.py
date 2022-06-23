@@ -304,6 +304,101 @@ def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training
     return df6
 
 
+def GlaThiDa_RGI_index_matcher_1():
+    pth = '/data/fast1/glacierml/T_models/'
+    T = pd.read_csv(pth + 'T.csv', low_memory = False)
+    T = T.dropna(subset = ['MEAN_THICKNESS'])
+
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in os.listdir(rootdir):
+        print(file)
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
+
+    RGI_coordinates = RGI_extra[[
+        'CenLat',
+        'CenLon'
+    ]]
+    RGI_coordinates
+
+    L = pd.DataFrame()
+    glac = pd.DataFrame()
+    for T_idx in tqdm(T.index):
+        GlaThiDa_coords = (T['LAT'].loc[T_idx],
+                           T['LON'].loc[T_idx])
+    #     print(GlaThiDa_coords)
+        for RGI_idx in RGI_coordinates.index:
+    #         print(RGI_idx)
+            RGI_coords = (RGI_coordinates['CenLat'].loc[RGI_idx],
+                          RGI_coordinates['CenLon'].loc[RGI_idx])
+            distance = geopy.distance.geodesic(GlaThiDa_coords, RGI_coords).km
+            if distance < 1:
+    #             print('DING!')
+    #             print(T_idx)
+    #             print(RGI_idx)
+    #             print(RGI_coords)
+                f = pd.Series(distance, name='distance')
+                L = L.append(f, ignore_index=True)
+                L['GlaThiDa_index'] = T_idx
+                L['RGI_index'] = RGI_idx
+                glac = glac.append(L, ignore_index=True)
+
+
+                break
+            
+    glac.to_csv('GlaThiDa_RGI_matched_indexes.csv')
+    
+    
+def GlaThiDa_RGI_index_matcher_2():
+    pth = '/data/fast1/glacierml/T_models/'
+    T = pd.read_csv(pth + 'glacier.csv', low_memory = False)
+    T = T.dropna(subset = ['mean_thickness'])
+
+    rootdir = '/data/fast0/datasets/rgi60-attribs/'
+    RGI_extra = pd.DataFrame()
+    for file in os.listdir(rootdir):
+        print(file)
+        f = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(f, ignore_index = True)
+
+    RGI_coordinates = RGI_extra[[
+        'CenLat',
+        'CenLon'
+    ]]
+
+    L = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
+    glac = pd.DataFrame()
+    for T_idx in tqdm(T.index):
+        GlaThiDa_coords = (T['lat'].loc[T_idx],
+                           T['lon'].loc[T_idx])
+    #     print(GlaThiDa_coords)
+        for RGI_idx in RGI_coordinates.index:
+    #         print(RGI_idx)
+            RGI_coords = (RGI_coordinates['CenLat'].loc[RGI_idx],
+                          RGI_coordinates['CenLon'].loc[RGI_idx])
+
+            distance = geopy.distance.geodesic(GlaThiDa_coords,RGI_coords).km
+            if 0 <= distance < 1:
+    #             print(RGI_coords)
+                f = pd.Series(distance, name='distance')
+                L = L.copy()
+                L = L.append(f, ignore_index=True)
+                L['GlaThiDa_index'].iloc[-1] = T_idx
+                L['RGI_index'].iloc[-1] = RGI_idx
+                L.to_csv('l.csv')
+                
+                
+# def GlaThiDa_RGI_index_matcher_3():
+    
+                
+                
+
+
+
+
+
+
 
 
 '''
