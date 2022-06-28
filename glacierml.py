@@ -12,6 +12,28 @@ import os
 import geopy.distance
 pd.set_option('mode.chained_assignment',None)
 
+'''
+RGI_loader
+
+
+'''
+def RGI_loader(pth = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'):
+    RGI_extra = pd.DataFrame()
+    for file in tqdm(os.listdir(pth)):
+        file_reader = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(file_reader)
+    RGI = RGI_extra[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+    return RGI
 
 
 '''
@@ -19,10 +41,10 @@ data_loader
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier-scale GlaThiDa information with null entries dropped.
 '''
-def data_loader(pth = '/data/fast1/glacierml/T_models/T_data/'):
+def data_loader_01(pth_1 = '/data/fast1/glacierml/T_models/T_data/'):
     print('Importing glacier data')
-    glacier = pd.read_csv(pth + 'glacier.csv', low_memory = False)
-    glacier = glacier[[
+    glacier = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)
+    df = glacier[[
         'id',
         'lat',
         'lon',
@@ -31,17 +53,153 @@ def data_loader(pth = '/data/fast1/glacierml/T_models/T_data/'):
         'mean_thickness'
     ]]
         
-    df1 = glacier.dropna()
-    df1 = df1.drop('id',axis = 1)
-    return df1
+    df = df.dropna()
+    df = df.drop('id',axis = 1)
+    return df
+
+def data_loader_02(pth_1 = '/data/fast1/glacierml/T_models/T_data/'):
+    print('Importing glacier data')
+    T = pd.read_csv(pth_1 + 'T.csv', low_memory = False)
+    df = T[[
+#         'id',
+        'LAT',
+        'LON',
+        'AREA',
+        'MEAN_SLOPE',
+        'MEAN_THICKNESS'
+    ]]
+        
+    df = df.dropna(subset = ['MEAN_SLOPE'])
+    df = df.dropna(subset = ['MEAN_THICKNESS'])
+#     df = df.drop('id',axis = 1)
+    return df
+
+
+
+
+def data_loader_031(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
+    print('matching GlaThiDa and RGI data method 4...')
+    RGI = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI = RGI.append(file_reader, ignore_index = True)
+
+    glathida = pd.read_csv(pth_1 + 'glacier.csv')
+    indexes = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_4.csv')
+    indexes = indexes.rename(columns = {
+        'name':'name_g',
+        'Name':'name_r',
+        'area':'area_g',
+        'Area':'area_r',
+        'BgnDate':'date_r',
+        'date':'date_g'
+
+
+    })
+    df = indexes[[
+        'CenLat',
+        'CenLon',
+    #     'LAT',
+    #     'LON',
+        'Lmax',
+#         'Zmin',
+        'Zmed',
+#         'Zmax',
+        'mean_thickness',
+    #     'GlaThiDa_index',
+    #     'RGI_index',
+        'area_g',
+        'area_r',
+#         'Aspect',
+        'Slope',
+    #     'name_r',
+    #     'name_g',
+    #     'date_r',
+    #     'date_g'
+    ]]
+
+    df['size_anomaly'] = abs(df['area_g'] - df['area_r'])
+    df = df[df['size_anomaly'] < 1]
+    df = df.drop([
+        'size_anomaly',
+        'area_g'
+#         'area_r'
+    ], axis = 1)
+    
+    df = df.rename(columns = {
+        'area_r':'Area'
+    })
+    
+    df = df.drop(df.loc[df['Zmed']<0].index)
+    df = df.drop(df.loc[df['Lmax']<0].index)
+    df = df.drop(df.loc[df['Slope']<0].index)
+#     df = df.drop(df.loc[df['Aspect']<0].index)
+    df = df.reset_index()
+    df = df.drop('index', axis=1)
+    
+    
+    
+    
+    
+    return df
+
+'''
 
 
 '''
-data_loader_2
+def GlaThiDa_RGI_index_matcher_1(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):    
+    T = pd.read_csv(pth_1 + 'T.csv', low_memory = False)
+    T = T.dropna(subset = ['MEAN_THICKNESS'])
+
+    RGI_extra = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        print(file)
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
+
+    RGI_coordinates = RGI_extra[[
+        'CenLat',
+        'CenLon'
+    ]]
+    RGI_coordinates
+
+    df = pd.DataFrame(columns = ['GlaThiDa_index','RGI_index'])
+    for T_idx in tqdm(T.index):
+        GlaThiDa_coords = (T['LAT'].loc[T_idx],
+                           T['LON'].loc[T_idx])
+    #     print(GlaThiDa_coords)
+        for RGI_idx in RGI_coordinates.index:
+    #         print(RGI_idx)
+            RGI_coords = (RGI_coordinates['CenLat'].loc[RGI_idx],
+                          RGI_coordinates['CenLon'].loc[RGI_idx])
+            distance = geopy.distance.geodesic(GlaThiDa_coords, RGI_coords).km
+            if distance < 1:
+#                 print('DING!')
+#                 print(T_idx)
+#                 print(RGI_idx)
+#                 print(RGI_coords)
+                f = pd.Series(distance, name='distance')
+                df = df.append(f, ignore_index=True)
+                df['GlaThiDa_index'].iloc[-1] = T_idx
+                df['RGI_index'].iloc[-1] = RGI_idx
+                    
+                df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_1_live.csv')
+
+                break
+'''
+data_loader_1
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes.
 '''
-def data_loader_2(
+def data_loader_1(
     pth_1 = '/data/fast1/glacierml/T_models/T_data/',
     pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
     pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
@@ -58,7 +216,7 @@ def data_loader_2(
     
     
     # read csv of combined indexes
-    comb = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_1_live.csv')
+    comb = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_1.csv')
 #     drops = comb.index[comb['0']!=0]
 #     comb = comb.drop(drops)
     comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
@@ -72,33 +230,14 @@ def data_loader_2(
     RGI = RGI.reset_index()
     T = T.reset_index()
     
-    # take only what we want from RGI and T
-    RGI = RGI[[
-        'CenLat',
-        'CenLon',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Area',
-        'Aspect',
-        'Lmax'
-    ]]
-    T = T[[
-        'LAT',
-        'LON',
-        'AREA',
-        'MEAN_SLOPE',
-        'MEAN_THICKNESS'
-    ]]
-
     # merge and select data
-    df2 = pd.merge(T, RGI, left_index=True, right_index=True)
+    df1 = pd.merge(T, RGI, left_index=True, right_index=True)
 
 
-    df2 = df2[[
+    df1 = df1[[
 #         'LAT',
 #         'LON',
+#         'AREA',
         'CenLon',
         'CenLat',
         'Area',
@@ -110,21 +249,59 @@ def data_loader_2(
         'Aspect',
         'Lmax'
     ]]
-    df2 = df2.dropna(subset = ['MEAN_THICKNESS'])
+    df1 = df1.dropna(subset = ['MEAN_THICKNESS'])
     
-    return df2
-
-
-
-# data_loader_3 was skipped in favor of df3 = df2 without lat and lon
+    return df1
 
 
 '''
-data_loader_4
+
+'''    
+def GlaThiDa_RGI_index_matcher_2(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
+    T = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)
+    T = T.dropna(subset = ['mean_thickness'])
+
+    RGI_extra = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        print(file)
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
+
+    RGI_coordinates = RGI_extra[[
+        'CenLat',
+        'CenLon'
+    ]]
+
+    df = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
+    for T_idx in tqdm(T.index):
+        GlaThiDa_coords = (T['lat'].loc[T_idx],
+                           T['lon'].loc[T_idx])
+    #     print(GlaThiDa_coords)
+        for RGI_idx in RGI_coordinates.index:
+    #         print(RGI_idx)
+            RGI_coords = (RGI_coordinates['CenLat'].loc[RGI_idx],
+                          RGI_coordinates['CenLon'].loc[RGI_idx])
+
+            distance = geopy.distance.geodesic(GlaThiDa_coords,RGI_coords).km
+            if 0 <= distance < 1:
+    #             print(RGI_coords)
+                f = pd.Series(distance, name='distance')
+                df = df.append(f, ignore_index=True)
+                df['GlaThiDa_index'].iloc[-1] = T_idx
+                df['RGI_index'].iloc[-1] = RGI_idx
+                df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_2_live.csv')
+
+
+'''
+data_loader_2
 input = path to GlaThiDa data. Default coded in.
 output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes. GlaThiDa and RGI are matched using a different, more rigorous technique than data_loader_2()
 '''
-def data_loader_4(
+def data_loader_2(
     pth_1 = '/data/fast1/glacierml/T_models/T_data/',
     pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
     pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
@@ -132,7 +309,7 @@ def data_loader_4(
     print('matching GlaThiDa and RGI data method 2...')
     
     # read csv of combined indexes and GlaThiDa glacier.csv data
-    comb = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_2_live.csv')
+    comb = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_2.csv')
     comb = comb.rename(columns = {'0':'distance'})
 
     glacier = pd.read_csv(pth_1 + 'glacier.csv')
@@ -197,7 +374,7 @@ def data_loader_4(
     data = data.reset_index()
     
     # load what data we need for training
-    df4 = data[[
+    df2 = data[[
     #     'RGIId',
 #         'GlaThiDa_index',
         'CenLon',
@@ -212,201 +389,124 @@ def data_loader_4(
         'Lmax'
     ]]
     # for some reason thickness was an object after selected from df. Here we make it a number
-    df4['thickness'] = pd.to_numeric(df4['thickness'])
+    df2['thickness'] = pd.to_numeric(df2['thickness'])
     
-    return df4
+    return df2
 
 
-
-
-'''
-data_loader_5
-input = path to GlaThiDa data. Default coded in. will also request regional data when run
-output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_2(). 
-'''
-def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data_1/training_data/'):
-    print('matching GlaThiDa and RGI data...')
-    df = pd.DataFrame()
-    # data has already been matched and cleaned using python files earlier.
-    # this data is broken up by region and this function allows for region selection
-    for file in os.listdir(pth):
-        file_reader = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        df = df.append(file_reader, ignore_index = True)
-        df = df.drop_duplicates(subset = ['CenLat','CenLon'], keep = 'last')
-        df = df[[
-        #     'GlaThiDa_index',
-        #     'RGI_index',
-        #     'RGIId',
-            'region',
-        #     'geographic region',
-            'CenLon',
-            'CenLat',
-            'Area',
-            'Zmin',
-            'Zmed',
-            'Zmax',
-            'Slope',
-            'Aspect',
-            'Lmax',
-            'thickness'
-        ]]
-        
-    # this prints a message that lists available regions to select.
-    # entering anything other than a region that matches will cause it to creash.
-    # need input verification?
-    print(
-        'please select region: ' + str(list(
-            df['region'].unique()
-        ) )
-    )
-    df5 = df[df['region'] == float(input())]    
-    return df5
-
-
-
-
-'''
-data_loader_6
-input = path to GlaThiDa data. Default coded in. will also request regional data when run
-output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_4(). 
-'''
-def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data_2/training_data/'):
-    print('matching GlaThiDa and RGI data...')
-    df = pd.DataFrame()
-    
-    # data has already been matched and cleaned using python files earlier.
-    # this data is broken up by region and this function allows for region selection
-    for file in tqdm(os.listdir(pth)):
-        f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        df = df.append(f, ignore_index = True)
-
-        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
-        df = df[[
-        #     'GlaThiDa_index',
-        #     'RGI_index',
-        #     'RGIId',
-            'region',
-        #     'geographic region',
-            'CenLon',
-            'CenLat',
-            'Area',
-            'Zmin',
-            'Zmed',
-            'Zmax',
-            'Slope',
-            'Aspect',
-            'Lmax',
-            'thickness'
-        ]]
-    
-    # this prints a message that lists available regions to select.
-    # entering anything other than a region that matches will cause it to creash.
-    # need input verification?
-    print(
-        'please select region: ' + str(list(
-            df['region'].unique()
-        ) )
-    )
-    df6 = df[df['region'] == float(input())]    
-    return df6
-
-
-'''
-
-
-'''
-def GlaThiDa_RGI_index_matcher_1(
-    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
-    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
-    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
-):    
-    T = pd.read_csv(pth_1 + 'T.csv', low_memory = False)
-    T = T.dropna(subset = ['MEAN_THICKNESS'])
-
-    RGI_extra = pd.DataFrame()
-    for file in os.listdir(pth_2):
-        print(file)
-        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
-
-    RGI_coordinates = RGI_extra[[
-        'CenLat',
-        'CenLon'
-    ]]
-    RGI_coordinates
-
-    df = pd.DataFrame(columns = ['GlaThiDa_index','RGI_index'])
-    for T_idx in tqdm(T.index):
-        GlaThiDa_coords = (T['LAT'].loc[T_idx],
-                           T['LON'].loc[T_idx])
-    #     print(GlaThiDa_coords)
-        for RGI_idx in RGI_coordinates.index:
-    #         print(RGI_idx)
-            RGI_coords = (RGI_coordinates['CenLat'].loc[RGI_idx],
-                          RGI_coordinates['CenLon'].loc[RGI_idx])
-            distance = geopy.distance.geodesic(GlaThiDa_coords, RGI_coords).km
-            if distance < 1:
-#                 print('DING!')
-#                 print(T_idx)
-#                 print(RGI_idx)
-#                 print(RGI_coords)
-                f = pd.Series(distance, name='distance')
-                df = df.append(f, ignore_index=True)
-                df['GlaThiDa_index'].iloc[-1] = T_idx
-                df['RGI_index'].iloc[-1] = RGI_idx
-                    
-                df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_1_live.csv')
-
-                break
-            
-                
-
-    
-'''
-
-'''    
-def GlaThiDa_RGI_index_matcher_2(
-    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
-    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
-    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
-):
-    T = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)
-    T = T.dropna(subset = ['mean_thickness'])
-
-    RGI_extra = pd.DataFrame()
-    for file in os.listdir(pth_2):
-        print(file)
-        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
-
-    RGI_coordinates = RGI_extra[[
-        'CenLat',
-        'CenLon'
-    ]]
-
-    df = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
-    for T_idx in tqdm(T.index):
-        GlaThiDa_coords = (T['lat'].loc[T_idx],
-                           T['lon'].loc[T_idx])
-    #     print(GlaThiDa_coords)
-        for RGI_idx in RGI_coordinates.index:
-    #         print(RGI_idx)
-            RGI_coords = (RGI_coordinates['CenLat'].loc[RGI_idx],
-                          RGI_coordinates['CenLon'].loc[RGI_idx])
-
-            distance = geopy.distance.geodesic(GlaThiDa_coords,RGI_coords).km
-            if 0 <= distance < 1:
-    #             print(RGI_coords)
-                f = pd.Series(distance, name='distance')
-                df = df.append(f, ignore_index=True)
-                df['GlaThiDa_index'].iloc[-1] = T_idx
-                df['RGI_index'].iloc[-1] = RGI_idx
-                df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_2_live.csv')
-                
 '''
 
 '''
 def GlaThiDa_RGI_index_matcher_3(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
+    glathida = pd.read_csv(pth_1 + 'T.csv')
+    glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
+
+    RGI = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        print(file)
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI = RGI.append(file_reader, ignore_index = True)
+
+    df = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
+    #iterate over each glathida index
+    for i in tqdm(glathida.index):
+        #obtain lat and lon from glathida 
+        glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
+        
+        # find distance between selected glathida glacier and all RGI
+        distances = RGI.apply(
+            lambda row: geopy.distance.geodesic((row.CenLat,row.CenLon),glathida_ll),
+            axis = 1
+        )
+        
+        # find index of minimum distance between glathida and RGI glacier
+        RGI_index = np.argmin(distances)
+        RGI_match = RGI.loc[RGI_index]
+        
+        # concatonate two rows and append to dataframe with indexes for both glathida and RGI
+        temp_df = pd.concat([RGI_match, glathida.loc[i]], axis = 0)
+        df = df.append(temp_df, ignore_index = True)
+    #     df = df.append(GlaThiDa_and_RGI, ignore_index = True)
+        df['GlaThiDa_index'].iloc[-1] = i
+        df['RGI_index'].iloc[-1] = RGI_index
+        
+    df['GlaThiDa_index'] = df['GlaThiDa_index'].astype(int)
+    df['RGI_index'] = df['RGI_index'].astype(int)
+    df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_3_live.csv')
+    
+    
+'''
+
+'''
+def data_loader_3(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
+    print('matching GlaThiDa and RGI data method 3...')
+    RGI = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI = RGI.append(file_reader, ignore_index = True)
+
+    glathida = pd.read_csv(pth_1 + 'T.csv')
+    indexes = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_3.csv')
+#     indexes = indexes.rename(columns = {
+#         'GLACIER_NAME':'name_g',
+#         'Name':'name_r',
+#         'AREA':'area_g',
+#         'Area':'area_r',
+#         'BgnDate':'date_r',
+#         'SURVEY_DATE':'date_g'
+
+
+#     })
+    df = indexes[[
+        'CenLat',
+        'CenLon',
+    #     'LAT',
+    #     'LON',
+        'Area',
+        'Lmax',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'MEAN_THICKNESS',
+    #     'GlaThiDa_index',
+    #     'RGI_index',
+#         'area_g',
+#         'area_r',
+        'Aspect',
+        'Slope',
+    #     'name_r',
+    #     'name_g',
+    #     'date_r',
+    #     'date_g'
+    ]]
+
+#     df['size_anomaly'] = abs(df['area_g'] - df['area_r'])
+#     df = df[df['size_anomaly'] < 1]
+#     df = df.drop([
+#         'size_anomaly',
+#         'area_g'
+# #         'area_r'
+#     ], axis = 1)
+    
+#     df = df.rename(columns = {
+#         'area_r':'Area'
+#     })
+    return df
+    
+    
+    
+'''
+
+'''
+def GlaThiDa_RGI_index_matcher_4(
     pth_1 = '/data/fast1/glacierml/T_models/T_data/',
     pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
     pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
@@ -444,8 +544,185 @@ def GlaThiDa_RGI_index_matcher_3(
         df['RGI_index'].iloc[-1] = RGI_index
 
 
-        df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_3_live.csv')
+        df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_4_live.csv')
+
+        
+'''
+
+'''
+def data_loader_4(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/'
+):
+    print('matching GlaThiDa and RGI data method 4...')
+    RGI = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI = RGI.append(file_reader, ignore_index = True)
+
+    glathida = pd.read_csv(pth_1 + 'glacier.csv')
+    indexes = pd.read_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_4.csv')
+    indexes = indexes.rename(columns = {
+        'name':'name_g',
+        'Name':'name_r',
+        'area':'area_g',
+        'Area':'area_r',
+        'BgnDate':'date_r',
+        'date':'date_g'
+
+
+    })
+    df = indexes[[
+        'CenLat',
+        'CenLon',
+    #     'LAT',
+    #     'LON',
+        'Lmax',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'mean_thickness',
+    #     'GlaThiDa_index',
+    #     'RGI_index',
+        'area_g',
+        'area_r',
+        'Aspect',
+        'Slope',
+    #     'name_r',
+    #     'name_g',
+    #     'date_r',
+    #     'date_g'
+    ]]
+
+    df['size_anomaly'] = abs(df['area_g'] - df['area_r'])
+    df = df[df['size_anomaly'] < 1]
+    df = df.drop([
+        'size_anomaly',
+        'area_g'
+#         'area_r'
+    ], axis = 1)
     
+    df = df.rename(columns = {
+        'area_r':'Area'
+    })
+    
+    df = df.drop(df.loc[df['Zmed']<0].index)
+    df = df.drop(df.loc[df['Lmax']<0].index)
+    df = df.drop(df.loc[df['Slope']<0].index)
+    df = df.drop(df.loc[df['Aspect']<0].index)
+    df = df.reset_index()
+    df = df.drop('index', axis=1)
+    
+    
+    
+    
+    
+    return df
+
+
+'''
+data_loader_5
+input = path to GlaThiDa data. Default coded in. will also request regional data when run
+output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_2(). 
+'''
+def data_loader_5(pth = '/data/fast1/glacierml/T_models/regional_data/rd1/training_data/'):
+    print('matching GlaThiDa and RGI data...')
+    df = pd.DataFrame()
+    # data has already been matched and cleaned using python files earlier.
+    # this data is broken up by region and this function allows for region selection
+    for file in os.listdir(pth):
+        file_reader = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        df = df.append(file_reader, ignore_index = True)
+        df = df.drop_duplicates(subset = ['CenLat','CenLon'], keep = 'last')
+        df = df[[
+        #     'GlaThiDa_index',
+        #     'RGI_index',
+        #     'RGIId',
+            'region',
+        #     'geographic region',
+            'CenLon',
+            'CenLat',
+            'Area',
+            'Zmin',
+            'Zmed',
+            'Zmax',
+            'Slope',
+            'Aspect',
+            'Lmax',
+            'thickness'
+        ]]
+        
+    # this prints a message that lists available regions to select.
+    # entering anything other than a region that matches will cause it to creash.
+    # need input verification?
+    print(
+        'please select region: ' + str(list(
+            df['region'].unique()
+        ) )
+    )
+    df5 = df[df['region'] == float(input())]    
+#     df5 = df5.drop('region', axis=1)
+    return df5
+
+
+
+
+'''
+data_loader_6
+input = path to GlaThiDa data. Default coded in. will also request regional data when run
+output = dataframe containing glacier-scale GlaThiDa information with null entries dropped paired with RGI attributes and divided up by selected region. Uses the same matched index csv as data_loader_4(). 
+'''
+def data_loader_6(pth = '/data/fast1/glacierml/T_models/regional_data/rd2/training_data/'):
+    print('matching GlaThiDa and RGI data...')
+    df = pd.DataFrame()
+    
+    # data has already been matched and cleaned using python files earlier.
+    # this data is broken up by region and this function allows for region selection
+    for file in tqdm(os.listdir(pth)):
+        f = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        df = df.append(f, ignore_index = True)
+
+        df = df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
+        df = df[[
+        #     'GlaThiDa_index',
+        #     'RGI_index',
+        #     'RGIId',
+            'region',
+        #     'geographic region',
+            'CenLon',
+            'CenLat',
+            'Area',
+            'Zmin',
+            'Zmed',
+            'Zmax',
+            'Slope',
+            'Aspect',
+            'Lmax',
+            'thickness'
+        ]]
+    
+    # this prints a message that lists available regions to select.
+    # entering anything other than a region that matches will cause it to creash.
+    # need input verification?
+    print(
+        'please select region: ' + str(list(
+            df['region'].unique()
+        ) )
+    )
+    df6 = df[df['region'] == float(input())]   
+#     df6 = df6.drop('region', axis=1)
+    return df6
+
+
+
+            
+                
+
+    
+
+                
+
                 
                 
 
@@ -501,20 +778,37 @@ output = hyperparameters and layer architecture for DNN model
 '''
 # designed to provide a CLI to the model for each run rather modifying code
 def prethicktor_inputs():
-    print('This model currently supports two layer architecture. Please define first layer')
+    print('This model currently supports two layer architecture. Please set neurons for first layer')
     layer_1_input = input()
-    print('Please define second layer')
+    
+    print('Please set neurons second layer')
     layer_2_input = input()
-    print('Please define learning rate: 0.1, 0.01, 0.001')
+    
+    print('Please select learning rate: 0.1, 0.01, 0.001')
     lr_list = ('0.1, 0.01, 0.001')
     lr_input = input()
     while lr_input not in lr_list:
         print('Please select valid learning rate: 0.1, 0.01, 0.001')
         lr_input = input()
+        
     print('Please define epochs')
-    ep_input = input()
+    ep_input = int(input())
+    while type(ep_input) != int:
+        print('Please input an integer for epochs')
+        ep_input = input()
     
-    return layer_1_input, layer_2_input, lr_input, ep_input
+    print('include dropout layer? y / n')
+    dropout_input = input()
+    dropout_input_list = ('y', 'n')
+    while dropout_input not in dropout_input_list:
+        print('Please select valid input: y / n')
+        dropout_input = input()
+    if dropout_input == 'y':
+        dropout = True
+    elif dropout_input == 'n':
+        dropout = False
+    
+    return layer_1_input, layer_2_input, lr_input, ep_input, dropout
 
 
 
@@ -544,17 +838,37 @@ build_dnn_model
 input = normalized data and selected learning rate
 output = dnn model with desired layer architecture, ready to be trained.
 '''
-def build_dnn_model(norm, learning_rate=0.1, layer_1 = 10, layer_2 = 5):
-    model = keras.Sequential([
-              norm,
-#               layers.Dense(32, activation='relu'),
-              layers.Dense(layer_1, activation='relu'),
-              layers.Dense(layer_2, activation='relu'),
+def build_dnn_model(norm, learning_rate=0.1, layer_1 = 10, layer_2 = 5, dropout = True):
+    
+    if dropout == True:
+        model = keras.Sequential(
+            [
+                  norm,
+                  layers.Dense(layer_1, activation='relu'),
+                  layers.Dropout(rate = 0.1, seed = 0),
+                  layers.Dense(layer_2, activation='relu'),
 
-              layers.Dense(1) ])
+                  layers.Dense(1) 
+            ]
+        )
 
-    model.compile(loss='mean_absolute_error',
-                optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate))
+        model.compile(loss='mean_absolute_error',
+                    optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate))
+        
+    else:
+        model = keras.Sequential(
+            [
+                  norm,
+                  layers.Dense(layer_1, activation='relu'),
+                  layers.Dense(layer_2, activation='relu'),
+
+                  layers.Dense(1) 
+            ]
+        )
+
+        model.compile(loss='mean_absolute_error',
+                    optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate))
+        
     
     return model
 
@@ -591,262 +905,124 @@ def build_and_train_model(dataset,
                           module = 'sm2',
                           res = 'sr2',
                           layer_1 = 10,
-                          layer_2 = 5
+                          layer_2 = 5,
+                          dropout = True
                          ):
-        # define paths
-        arch = str(layer_1) + '-' + str(layer_2)
-        svd_mod_pth = 'saved_models/' + module + '/sm_' + arch + '/'
-        svd_res_pth = 'saved_results/' + res + '/sr_' + arch + '/'
-        
-        # code snippet to make folders for saved models and results if they do not already exist
-        isdir = os.path.isdir(svd_mod_pth)
-        
-        if isdir == False:
-            os.makedirs(svd_mod_pth)
-        
-        isdir = os.path.isdir(svd_res_pth)
-        if isdir == False:
-            os.makedirs(svd_res_pth)
-        
-        
-        
-        
-        
-    #     split data
-        (train_features,test_features,
-         train_labels,test_labels) = data_splitter(dataset)
+    # define paths
+    arch = str(layer_1) + '-' + str(layer_2)
+    svd_mod_pth = 'saved_models/' + module + '/sm_' + arch + '/'
+    svd_res_pth = 'saved_results/' + res + '/sr_' + arch + '/'
+
+    # code snippet to make folders for saved models and results if they do not already exist
+    isdir = os.path.isdir(svd_mod_pth)
+
+    if isdir == False:
+        os.makedirs(svd_mod_pth)
+
+    isdir = os.path.isdir(svd_res_pth)
+    if isdir == False:
+        os.makedirs(svd_res_pth)
+
+
+    if dropout == True:
+        dropout = '1'
+    elif dropout == False:
+        dropout = '0'
+
+
+#     split data
+    (train_features,test_features,
+     train_labels,test_labels) = data_splitter(dataset)
 #         print(dataset.name)
-        
-    #     normalize data
-        print('Normalizing ' + str(dataset.name) + ' data')
-        normalizer = {}
-        variable_list = list(train_features)
-        for variable_name in tqdm(variable_list):
-            normalizer[variable_name] = preprocessing.Normalization(input_shape=[1,], axis=None)
-            normalizer[variable_name].adapt(np.array(train_features[variable_name]))
 
-        normalizer['ALL'] = preprocessing.Normalization(axis=-1)
-        normalizer['ALL'].adapt(np.array(train_features))
-        print(dataset.name + ' data normalized')
-        
-    #      DNN model
-        dnn_model = {}
-        dnn_history = {}
-        dnn_results = {}
+#     normalize data
+#         print('Normalizing ' + str(dataset.name) + ' data')
+    normalizer = {}
+    variable_list = list(train_features)
+    for variable_name in variable_list:
+        normalizer[variable_name] = preprocessing.Normalization(input_shape=[1,], axis=None)
+        normalizer[variable_name].adapt(np.array(train_features[variable_name]))
 
-        print(
-            'Running multi-variable DNN regression on ' + 
-            str(dataset.name) + 
-            ' dataset with parameters: Learning Rate = ' + 
-            str(learning_rate) + 
-            ', Validation split = ' + 
-            str(validation_split) + 
-            ', Epochs = ' + 
-            str(epochs) + 
-            ', Random state = ' + 
-            str(random_state) + 
-            ', Layer Architechture = ' + 
-            arch
-        )
-        
-        # set up model with  normalized data and defined layer architecture
-        dnn_model = build_dnn_model(normalizer['ALL'],learning_rate, layer_1, layer_2)
-        
-        # train model on previously selected and splitdata
-        dnn_history['MULTI'] = dnn_model.fit(
-            train_features,
-            train_labels,
-            validation_split=validation_split,
-            verbose=0, 
-            epochs=epochs
-        )
-        
-        #save model, results, and history
-        
-        print('Saving results')
+    normalizer['ALL'] = preprocessing.Normalization(axis=-1)
+    normalizer['ALL'].adapt(np.array(train_features))
+#         print(dataset.name + ' data normalized')
 
+#      DNN model
+    dnn_model = {}
+    dnn_history = {}
+    dnn_results = {}
 
-        df = pd.DataFrame(dnn_history['MULTI'].history)
-        df.to_csv(            
-           svd_res_pth +
-           str(dataset.name) +
-           '_dnn_history_MULTI_' +
-           str(learning_rate) +
-           '_' +
-           str(validation_split) +
-           '_' +
-           str(epochs) +
-           '_' +
-           str(random_state)
-        
-        )
-        
-        dnn_model.save(
-            svd_mod_pth + 
-            str(dataset.name) + 
-            '_dnn_MULTI_' + 
-            str(learning_rate) + 
-            '_' + 
-            str(validation_split) + 
-            '_' + 
-            str(epochs) + 
-            '_' + 
-            str(random_state)
-        )
-        print('model training complete')
-        print('')
-        
-        
-        
-#          # linear model
-#         print('Running single-variable linear regression on ' 
-#               + str(dataset.name) 
-#               + ' dataset with parameters: Learning Rate = ' 
-#               + str(learning_rate) 
-#               + ', Validation split = ' 
-#               + str(validation_split) 
-#               + ', Epochs = ' 
-#               + str(epochs)
-#               + ', Random state = '
-#               + str(random_state)
-#               + ', Layer Architechture = '
-#               + arch)
-#         linear_model = {}
-#         linear_history = {}
-#         linear_results = {}
-#         variable_list = list(train_features)
+#         print(
+#             'Running multi-variable DNN regression on ' + 
+#             str(dataset.name) + 
+#             ' dataset with parameters: Learning Rate = ' + 
+#             str(learning_rate) + 
+#             ', Layer Architechture = ' +
+#             arch +
+#             ', dropout = ' + 
+#             dropout +
+#             ', Validation split = ' + 
+#             str(validation_split) + 
+#             ', Epochs = ' + 
+#             str(epochs) + 
+#             ', Random state = ' + 
+#             str(random_state) 
+#         )
 
-#         for variable_name in tqdm(variable_list):
-#             linear_model[variable_name] = build_linear_model(normalizer[variable_name],learning_rate)
-#             linear_history[variable_name] = linear_model[variable_name].fit(
-#                                                 train_features[variable_name], train_labels,        
-#                                                 epochs=epochs,
-#                                                 verbose=0,
-#                                                 validation_split=validation_split)
-            
-#             linear_model[variable_name].save(svd_mod_pth 
-#                                              + str(dataset.name) 
-#                                              + '_linear_' 
-#                                              + str(variable_name) 
-#                                              + '_' 
-#                                              + str(learning_rate) 
-#                                              + '_' 
-#                                              + str(validation_split) 
-#                                              + '_' 
-#                                              + str(epochs)
-#                                              + '_'
-#                                              + str(random_state))
-                                         
-            
+    # set up model with  normalized data and defined layer architecture
+    dnn_model = build_dnn_model(normalizer['ALL'], learning_rate, layer_1, layer_2, dropout)
 
-#         print('Running multi-variable linear regression on ' 
-#               + str(dataset.name) 
-#               + ' dataset with parameters: Learning Rate = ' 
-#               + str(learning_rate) 
-#               + ', Validation split = ' 
-#               + str(validation_split) 
-#               + ', Epochs = ' 
-#               + str(epochs)
-#               + ', Random state = '
-#               + str(random_state)
-#               + ', Layer Architechture = '
-#               + arch)
-        
-#         linear_model = build_linear_model(normalizer['ALL'],learning_rate)
-#         linear_history['MULTI'] = linear_model.fit(
-#            train_features, train_labels,        
-#            epochs=epochs,
-#            verbose=0,
-#            validation_split=validation_split)
+    # train model on previously selected and splitdata
+    dnn_history['MULTI'] = dnn_model.fit(
+        train_features,
+        train_labels,
+        validation_split=validation_split,
+        verbose=0, 
+        epochs=epochs
+    )
+
+    #save model, results, and history
 
 #         print('Saving results')
-#         for variable_name in tqdm(list(linear_history)):
-#             df = pd.DataFrame(linear_history[variable_name].history)
-#             df.to_csv(svd_res_pth 
-#                       + str(dataset.name) 
-#                       + '_linear_history_' 
-#                       + str(variable_name) 
-#                       + '_' 
-#                       + str(learning_rate)  
-#                       + '_' 
-#                       + str(validation_split) 
-#                       + '_' 
-#                       + str(epochs)
-#                       + '_'
-#                       + str(random_state))
 
-#         df = pd.DataFrame(linear_history['MULTI'].history)
-#         df.to_csv(svd_res_pth 
-#                   + str(dataset.name) 
-#                   + '_linear_history_MULTI_' 
-#                   + str(learning_rate) 
-#                   + '_' 
-#                   + str(validation_split) 
-#                   + '_' 
-#                   + str(epochs)
-#                   + '_'
-#                   + str(random_state))
+
+    df = pd.DataFrame(dnn_history['MULTI'].history)
+
+
+    df.to_csv(            
+       svd_res_pth +
+       str(dataset.name) +
+       '_' +
+       dropout +
+       '_dnn_history_MULTI_' +
+       str(learning_rate) +
+       '_' +
+       str(validation_split) +
+       '_' +
+       str(epochs) +
+       '_' +
+       str(random_state)
+
+    )
+
+    dnn_model.save(
+        svd_mod_pth + 
+        str(dataset.name) + 
+        '_' +
+        dropout +
+        '_dnn_MULTI_' + 
+        str(learning_rate) + 
+        '_' + 
+        str(validation_split) + 
+        '_' + 
+        str(epochs) + 
+        '_' + 
+        str(random_state)
+    )
+#         print('model training complete')
+#         print('')
         
-#         linear_model.save(svd_mod_pth 
-#                           + str(dataset.name) 
-#                           + '_linear_MULTI_' 
-#                           + str(learning_rate) 
-#                           + '_' 
-#                           + str(validation_split) 
-#                           + '_' 
-#                           + str(epochs)
-#                           + '_'
-#                           + str(random_state))
-
-#         print('Running single-variable DNN regression on '
-#               + str(dataset.name) 
-#               + ' dataset with parameters: Learning Rate = ' 
-#               + str(learning_rate) 
-#               + ', Validation split = ' 
-#               + str(validation_split) 
-#               + ', Epochs = ' 
-#               + str(epochs)
-#               + ', Random state = '
-#               + str(random_state)
-#               + ', Layer Architechture = '
-#               + arch)
-#         variable_list = tqdm(list(train_features))
-#         for variable_name in variable_list:
-#             dnn_model[variable_name] = build_dnn_model(normalizer[variable_name],learning_rate)
-#             dnn_history[variable_name] = dnn_model[variable_name].fit(
-#                                                 train_features[variable_name], train_labels,        
-#                                                 epochs=epochs,
-#                                                 verbose=0,
-#                                                 validation_split=validation_split)    
-#             dnn_model[variable_name].save(svd_mod_pth 
-#                                           + str(dataset.name) 
-#                                           + '_dnn_' 
-#                                           + str(variable_name) 
-#                                           + '_' 
-#                                           + str(learning_rate) 
-#                                           + '_' 
-#                                           + str(validation_split) 
-#                                           + '_' 
-#                                           + str(epochs)
-#                                           + '_'
-#                                           + str(random_state)
-#                                          )
+        
 
 
 
-#         for variable_name in tqdm(list(dnn_history)):
-#             df = pd.DataFrame(dnn_history[variable_name].history)
-#             df.to_csv(
-#                 svd_res_pth + 
-#                 str(dataset.name) + 
-#                 '_dnn_history_' +
-#                 str(variable_name) + 
-#                 '_' +
-#                 str(learning_rate) +
-#                 '_' +
-#                 str(validation_split) +
-#                 '_' +
-#                 str(epochs) +
-#                 '_' +
-#                 str(random_state) 
-#             )
