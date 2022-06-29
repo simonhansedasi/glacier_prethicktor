@@ -35,6 +35,242 @@ def RGI_loader(pth = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'):
     ]]
     return RGI
 
+def data_loader(
+    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
+    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/',
+    pth_4 = '/data/fast1/glacierml/T_models/regional_data/training_data/',
+    RGI_input = 'y',
+    scale = 'g',
+    region_selection = 1,
+    area_scrubber = 'off'
+):        
+    # load glacier GlaThiDa data
+    glacier = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)    
+    glacier = glacier.rename(columns = {
+        'lat':'Lat',
+        'lon':'Lon',
+        'area':'area_g',
+        'mean_slope':'Mean Slope',
+        'mean_thickness':'Thickness'
+    })   
+    
+    # keep it just GlaThiDa
+    if RGI_input == 'n':
+        df = glacier.rename(columns = {
+            'Mean Slope':'Slope'
+        }, inplace = True)
+        df = glacier[[
+            'Lat',
+            'Lon',
+            'area_g',
+            'Slope',
+            'Thickness'
+        ]]
+        df = df.rename(columns = {
+            'area_g':'Area'
+        })
+        df = df.dropna()        
+        return df
+
+    
+    # add in RGI attributes
+    elif RGI_input == 'y':
+        RGI_extra = pd.DataFrame()
+        for file in tqdm(os.listdir(pth_2)):
+            file_reader = pd.read_csv(
+                pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip'
+            )            
+            RGI_extra = RGI_extra.append(file_reader, ignore_index=True)
+            RGI = RGI_extra
+        
+        
+        # read csv of combined GlaThiDa and RGI indexes, matched glacier for glacier
+        comb = pd.read_csv(
+                pth_3 + 'GlaThiDa_RGI_matched_indexes.csv'
+        )
+        # force indexes to be integers rather than floats, and drop duplicates
+        comb['GlaThiDa_index'] = comb['GlaThiDa_index'].astype(int)
+        comb['RGI_index'] = comb['RGI_index'].astype(int)
+        comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
+        
+        # locate data in both datasets and line them up
+        glacier = glacier.loc[comb['GlaThiDa_index']]
+        RGI = RGI.loc[comb['RGI_index']]
+        
+        # reset indexes for merge
+        glacier = glacier.reset_index()
+        RGI = RGI.reset_index()
+        
+        # rename RGI area to differentiate from glathida area.
+        # important for area scrubbing
+        # don't forget to change the name back from area_r to Area when exiting function with df
+        RGI = RGI.rename(columns = {
+            'Area':'area_r'
+        })
+        
+        # GlaThiDa and RGI are lined up, just stick them together and keep both left and right idx
+        df = pd.merge(
+            RGI, 
+            glacier,
+            left_index = True,
+            right_index = True
+        )
+        
+        # drop bad data
+        df = df.drop(df.loc[df['Zmed']<0].index)
+        df = df.drop(df.loc[df['Lmax']<0].index)
+        df = df.drop(df.loc[df['Slope']<0].index)
+        df = df.drop(df.loc[df['Aspect']<0].index)
+        df = df.dropna(subset = ['Thickness'])
+        
+        df = df[[
+            'RGIId',
+            'CenLat',
+            'CenLon',
+            'Lat',
+            'Lon',
+            'area_r',
+            'Zmin',
+            'Zmed',
+            'Zmax',
+            'Slope',
+            'Aspect',
+            'Lmax',
+            'Thickness',
+            'area_g'
+        ]]
+        df = df.dropna()
+        
+        # global scale 
+        if scale == 'g':
+            df = df
+            
+            # finds anomalies between RGI and GlaThiDa areas. 
+            # if anomaly > 1, drop data
+            if area_scrubber == 'on':
+                df = df.rename(columns = {
+                    'name':'name_g',
+                    'Name':'name_r',
+                    
+                    'BgnDate':'date_r',
+                    'date':'date_g'
+                })
+                df['size_anomaly'] = abs(df['area_g'] - df['area_r'])
+                df = df[df['size_anomaly'] < 1]
+                df = df.drop([
+                    'size_anomaly',
+                    'area_g'
+                ], axis = 1)
+                df = df.rename(columns = {
+                    'area_r':'Area'
+                })
+                df = df.drop(df.loc[df['Zmed']<0].index)
+                df = df.drop(df.loc[df['Lmax']<0].index)
+                df = df.drop(df.loc[df['Slope']<0].index)
+                df = df.drop(df.loc[df['Aspect']<0].index)
+                df = df.reset_index()
+                df = df.drop('index', axis=1)
+                df = df[[
+                    'Lat',
+                    'Lon',
+                    'CenLat',
+                    'CenLon',
+                    'Slope',
+                    'Zmin',
+                    'Zmed',
+                    'Zmax',
+                    'Area',
+                    'Aspect',
+                    'Lmax',
+                    'Thickness',
+                ]]
+                
+            elif area_scrubber == 'off':
+                df = df.drop(['area_g', 'RGIId'], axis = 1)
+                df = df.rename(columns = {
+                    'area_r':'Area'
+                })
+                return df
+            
+            
+        # regional scale
+        elif scale == 'r':
+            # create temp df to hold regional data
+            r_df = pd.DataFrame()
+            
+            # sort through regional data previously sorted and cleaned
+            for file in tqdm(os.listdir(pth_4)):
+                f = pd.read_csv(pth_4 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+                r_df = r_df.append(f, ignore_index = True)
+                r_df = r_df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
+                r_df = r_df[[
+                #     'GlaThiDa_index',
+                #     'RGI_index',
+                    'RGIId',
+                    'region',
+                #     'geographic region',
+                    'CenLat',
+                    'CenLon',
+                    'Area',
+                    'Zmin',
+                    'Zmed',
+                    'Zmax',
+                    'Slope',
+                    'Aspect',
+                    'Lmax'
+                ]]
+                
+            
+            r_df = r_df.rename(columns = {
+                'Area':'area_r'
+            })
+            
+            # select only data for specific region
+            r_df = r_df[r_df['region'] == region_selection]   
+            df = df[[
+                'Lat',
+                'Lon',
+                'area_g',
+                'Thickness',
+                'RGIId'
+            ]]
+            
+            # merge df and temp df on RGIId to get regional data
+            df = pd.merge(
+                df, 
+                r_df, 
+#                 left_index = True,
+#                 right_index = True,
+                how = 'inner',
+                on = 'RGIId'
+            )
+            
+            if area_scrubber == 'on':
+                df = df.rename(columns = {
+                    'name':'name_g',
+                    'Name':'name_r',
+                    'Area':'area_r',
+                    'BgnDate':'date_r',
+                    'date':'date_g'
+                })
+                df['size_anomaly'] = abs(df['area_g'] - df['area_r'])
+                df = df[df['size_anomaly'] < 1]
+                df = df.drop([
+                    'size_anomaly',
+                    'area_g'
+                ], axis = 1)
+                df = df.rename(columns = {
+                    'area_r':'Area'
+                })
+                return df
+                
+            elif area_scrubber == 'off':
+                return df
+
+
+
+
 
 '''
 data_loader
