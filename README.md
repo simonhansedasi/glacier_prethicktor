@@ -111,8 +111,8 @@ total model parameters: 180 \
 trained model parameters: 161 
 optimized learning rate: 0.1 \
 optimized epochs: 10 \
-sum total predicted volume: 268.4735908913945 * 10^3 km^3 \
-sum total predicted volume variance: 8.267811960619303
+sum total predicted volume: 268.474 * 10^3 km^3 \
+sum total predicted volume variance: 8.268
 
 
 **Layer Architecture 35-22** -- *1/2 parameters to inputs* \
