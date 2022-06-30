@@ -108,7 +108,7 @@ avg train mae range: 11.061126 - 22.97135
 
 **Layer Architecture 10-5** -- *Default*\
 total model parameters: 180 \
-trained model parameters: 161 
+trained model parameters: 161 \
 optimized learning rate: 0.1 \
 optimized epochs: 10 \
 sum total predicted volume: 268.474 * 10^3 km^3 \
@@ -117,7 +117,7 @@ sum total predicted volume variance: 8.268
 
 **Layer Architecture 35-22** -- *1/2 parameters to inputs* \
 total model parameters: 1184 \
-trained model parameters: 1165 
+trained model parameters: 1165 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
@@ -146,7 +146,7 @@ avg train mae range: 11.86620 - 14.398697
 
 **Layer Architecture 10-5** -- *Default*\
 total model parameters: 180 \
-trained model parameters: 161 
+trained model parameters: 161 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
@@ -155,7 +155,7 @@ sum total predicted volume variance:
 
 **Layer Architecture 48-21** -- *1/2 parameters to inputs* \
 total model parameters: 1550 \
-trained model parameters: 1531 
+trained model parameters: 1531 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
@@ -164,7 +164,7 @@ sum total predicted volume variance:
 
 **Layer Architecture 60-39** -- *1/1 parameters to inputs* \
 total model parameters: 3038 \
-trained model parameters: 3019 
+trained model parameters: 3019 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
