@@ -6,7 +6,6 @@ import warnings
 from tensorflow.python.util import deprecation
 import os
 import logging
-import seaborn as sns
 from tqdm import tqdm
 from IPython.display import display, HTML
 # display(HTML("<style>.container { width:85% !important; }</style>"))
@@ -35,6 +34,10 @@ while chosen_dir not in dir_list:
 
 if chosen_dir == 'sm1':
     df1 = gl.data_loader(
+        pth_1 = '/home/prethicktor/data/T_data/',
+        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
+        pth_3 = '//home/prethicktor/data/matched_indexes/',
+        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
         RGI_input = 'n'
 #                 scale = 'g',
 #                 region_selection = 1,
@@ -49,6 +52,10 @@ if chosen_dir == 'sm1':
 
 if chosen_dir == 'sm2':
     df2 = gl.data_loader(
+        pth_1 = '/home/prethicktor/data/T_data/',
+        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
+        pth_3 = '//home/prethicktor/data/matched_indexes/',
+        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -61,6 +68,10 @@ if chosen_dir == 'sm2':
 
 if chosen_dir == 'sm3':
     df3 = gl.data_loader(
+        pth_1 = '/home/prethicktor/data/T_data/',
+        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
+        pth_3 = '//home/prethicktor/data/matched_indexes/',
+        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -73,6 +84,10 @@ if chosen_dir == 'sm3':
 
 if chosen_dir == 'sm4':
     df4 = gl.data_loader(
+        pth_1 = '/home/prethicktor/data/T_data/',
+        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
+        pth_3 = '//home/prethicktor/data/matched_indexes/',
+        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -120,20 +135,27 @@ region_list = ('sm5', 'sm6')
 rootdir = 'saved_models/' + chosen_dir + '/'
 (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
 dnn_model = {}
-predictions = pd.DataFrame()
+
 print('loading and evaluating models...')
 dropout_input_list = ('y', 'n')
 for dropout_input_iter in dropout_input_list:
+    predictions = pd.DataFrame()
+    deviations = pd.DataFrame()
     dropout_input = dropout_input_iter
     if dropout_input == 'y':
         dropout = '1'
     elif dropout_input == 'n':
         dropout = '0'
+        
+        
     for arch in os.listdir(rootdir):
+        
         if dropout == '1':
             print('layer architecture: ' + arch[3:] + ' dropout = True')
         elif dropout == '0':
             print('layer architecture: ' + arch[3:] + ' dropout = False')
+            
+            
         for folder in tqdm(os.listdir(rootdir + arch)):
             if '_' + dropout + '_' in folder:
                 dnn_model[arch[3:] + '_' + folder] = tf.keras.models.load_model(
@@ -211,313 +233,137 @@ for dropout_input_iter in dropout_input_list:
         
     predictions.rename(columns = {0:'avg train thickness'},inplace = True)
     predictions.to_csv('zults/predictions_' + dataset.name + '_' + dropout + '.csv')
+    
+    # calculate statistics
+    print('calculating statistics...')
+    # deviations df to hold statistics for each model architecture
+    if dropout == '1':
+        predictions_1 = pd.read_csv(
+            'zults/predictions_' + dataset.name + '_' + dropout + '.csv'
+        )
+    elif dropout == '0':
 
-# calculate statistics
-print('calculating statistics...')
-# deviations df to hold statistics for each model architecture
-deviations = pd.DataFrame()
-for architecture in list(predictions['architecture'].unique()):
-    for learning_rate in list(predictions['learning rate'].unique()):
-        for epochs in list(predictions['epochs'].unique()):
-            for dataframe in list(predictions['dataset'].unique()):
+        predictions_2 = pd.read_csv(
+            'zults/predictions_' + dataset.name + '_' + dropout + '.csv'
+        )
+    
+    
+    for architecture in list(predictions['architecture'].unique()):
+        for learning_rate in list(predictions['learning rate'].unique()):
+            for epochs in list(predictions['epochs'].unique()):
+                for dataframe in list(predictions['dataset'].unique()):
 
-                # select section of predictions that matches particular arch, lr, and ep
+                    # select section of predictions that matches particular arch, lr, and ep
 
 
-                df = predictions[
-                    (predictions['architecture'] == architecture) & 
-                    (predictions['learning rate' ] == learning_rate) &
-                    (predictions['epochs'] == epochs) &
-                    (predictions['dataset'] == dataframe)
-                ]
-                if df.empty:
-                    break
-                if not df.empty:
-                    # find mean and std dev of test mae
-                    test_mae_mean = np.mean(df['test mae'])
-                    test_mae_std_dev = np.std(df['test mae'])
+                    df = predictions[
+                        (predictions['architecture'] == architecture) & 
+                        (predictions['learning rate' ] == learning_rate) &
+                        (predictions['epochs'] == epochs) &
+                        (predictions['dataset'] == dataframe)
+                    ]
+                    if df.empty:
+                        break
+                    if not df.empty:
+                        # find mean and std dev of test mae
+                        test_mae_mean = np.mean(df['test mae'])
+                        test_mae_std_dev = np.std(df['test mae'])
 
-                    # find mean and std dev of train mae
-                    train_mae_mean = np.mean(df['train mae'])
-                    train_mae_std_dev = np.std(df['train mae'])
+                        # find mean and std dev of train mae
+                        train_mae_mean = np.mean(df['train mae'])
+                        train_mae_std_dev = np.std(df['train mae'])
 
-                    # find mean and std dev of predictions made based on training data
-                    train_thickness_mean = np.mean(df['avg train thickness']) 
-                    train_thickness_std_dev = np.std(df['avg train thickness'])
+                        # find mean and std dev of predictions made based on training data
+                        train_thickness_mean = np.mean(df['avg train thickness']) 
+                        train_thickness_std_dev = np.std(df['avg train thickness'])
 
-                    # find mean and std dev of predictions made based on test data
-                    test_thickness_mean = np.mean(df['avg test thickness']) 
-                    test_thickness_std_dev = np.std(df['avg test thickness'])
+                        # find mean and std dev of predictions made based on test data
+                        test_thickness_mean = np.mean(df['avg test thickness']) 
+                        test_thickness_std_dev = np.std(df['avg test thickness'])
 
-                    # put something in a series that can be appended to a df
-                    s = pd.Series(train_thickness_mean)
-                    deviations = deviations.append(s, ignore_index=True)  
+                        # put something in a series that can be appended to a df
+                        s = pd.Series(train_thickness_mean)
+                        deviations = deviations.append(s, ignore_index=True)  
 
-                    # begin populating deviations table
-                    deviations.loc[
-                        deviations.index[-1], 'layer architecture'
-                    ] = architecture  
+                        # begin populating deviations table
+                        deviations.loc[
+                            deviations.index[-1], 'layer architecture'
+                        ] = architecture  
 
-                    deviations.loc[
-                        deviations.index[-1], 'model parameters'
-                    ] = dnn_model[
-                            architecture + 
-                            '_' + 
+                        deviations.loc[
+                            deviations.index[-1], 'model parameters'
+                        ] = dnn_model[
+                                architecture + 
+                                '_' + 
+                                dataset.name + 
+                                '_' +
+                                dropout +
+                                '_dnn_MULTI_' +
+                                str(learning_rate) +
+                                '_0.2_' +
+                                str(int(epochs)) +
+                                '_0'
+                            ].count_params() 
+
+                        deviations.loc[
+                            deviations.index[-1], 'total inputs'
+                        ] = (len(dataset) * (len(dataset.columns) -1))
+
+                        deviations.loc[
+                            deviations.index[-1], 'df'
+                        ] = dataframe
+
+                        deviations.loc[
+                            deviations.index[-1], 'dropout'
+                        ] = dropout
+
+                        deviations.loc[
+                            deviations.index[-1], 'learning rate'
+                        ] = learning_rate
+
+                        deviations.loc[
+                            deviations.index[-1], 'validation split'
+                        ]= 0.2
+
+                        deviations.loc[
+                            deviations.index[-1], 'epochs'
+                        ] = epochs
+
+                        deviations.loc[
+                            deviations.index[-1], 'test mae avg'
+                        ] = test_mae_mean
+
+                        deviations.loc[
+                            deviations.index[-1], 'train mae avg'] = train_mae_mean
+
+                        deviations.loc[
+                            deviations.index[-1], 'test mae std dev'
+                        ] = test_mae_std_dev
+
+                        deviations.loc[
+                            deviations.index[-1], 'train mae std dev'
+                        ] = train_mae_std_dev
+
+                        deviations.loc[
+                            deviations.index[-1], 'test predicted thickness std dev'
+                        ] = test_thickness_std_dev
+
+                        deviations.loc[
+                            deviations.index[-1], 'train predicted thickness std dev'
+                        ] = train_thickness_std_dev
+
+
+
+                        deviations.drop(columns = {0},inplace = True)    
+                        deviations = deviations.dropna()
+
+
+                        deviations = deviations.sort_values('test mae avg')
+                        deviations['epochs'] = deviations['epochs'].astype(int)
+                        deviations.to_csv(
+                            'zults/deviations_' + 
                             dataset.name + 
-                            '_' +
-                            dropout +
-                            '_dnn_MULTI_' +
-                            str(learning_rate) +
-                            '_0.2_' +
-                            str(int(epochs)) +
-                            '_0'
-                        ].count_params() 
-
-                    deviations.loc[
-                        deviations.index[-1], 'total inputs'
-                    ] = (len(dataset) * (len(dataset.columns) -1))
-
-                    deviations.loc[
-                        deviations.index[-1], 'df'
-                    ] = dataframe
-
-                    deviations.loc[
-                        deviations.index[-1], 'dropout'
-                    ] = dropout
-
-                    deviations.loc[
-                        deviations.index[-1], 'learning rate'
-                    ] = learning_rate
-
-                    deviations.loc[
-                        deviations.index[-1], 'validation split'
-                    ]= 0.2
-
-                    deviations.loc[
-                        deviations.index[-1], 'epochs'
-                    ] = epochs
-
-                    deviations.loc[
-                        deviations.index[-1], 'test mae avg'
-                    ] = test_mae_mean
-
-                    deviations.loc[
-                        deviations.index[-1], 'train mae avg'] = train_mae_mean
-
-                    deviations.loc[
-                        deviations.index[-1], 'test mae std dev'
-                    ] = test_mae_std_dev
-
-                    deviations.loc[
-                        deviations.index[-1], 'train mae std dev'
-                    ] = train_mae_std_dev
-
-                    deviations.loc[
-                        deviations.index[-1], 'test predicted thickness std dev'
-                    ] = test_thickness_std_dev
-
-                    deviations.loc[
-                        deviations.index[-1], 'train predicted thickness std dev'
-                    ] = train_thickness_std_dev
-
-
-
-                    deviations.drop(columns = {0},inplace = True)    
-                    deviations = deviations.dropna()
-
-
-                    deviations = deviations.sort_values('test mae avg')
-                    deviations['epochs'] = deviations['epochs'].astype(int)
-                    deviations.to_csv('zults/deviations_' + dataset.name + '_' + dropout + '.csv')
-
-
-print('loading RGI...')
-rootdir = '/data/fast0/datasets/rgi60-attribs/'
-RGI_extra = pd.DataFrame()
-for file in os.listdir(rootdir):
-    file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-    RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
-
-    # select only RGI data that was used to train the model   
-    RGI = RGI_extra[[
-    'CenLat',
-    'CenLon',
-    'Slope',
-    'Zmin',
-    'Zmed',
-    'Zmax',
-    'Area',
-    'Aspect',
-    'Lmax'
-    ]]
-
-RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
-RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
-RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
-RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
-RGI = RGI.reset_index()
-RGI = RGI.drop('index', axis=1)
-# RGI = RGI.rename(columns = {
-# 'CenLon':'lon',
-# 'CenLat':'lat',
-# 'Area':'area',
-# 'Slope':'mean_slope'
-# })
-
-
-
-if chosen_dir == 'sm1':
-    RGI = RGI.rename(columns = {
-        'CenLat':'Lat',
-        'CenLon':'Lon',
-        'Area':'Area',
-        'Slope':'Mean Slope'
-    })
-    RGI = RGI[[
-        'Lat',
-        'Lon',
-        'Area',
-        'Mean Slope'
-    ]]
-
-
-
-
-
-
-if chosen_dir == 'sm5' or chosen_dir == 'sm6':
-    print('loading RGI...')
-    rootdir = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'
-    RGI_extra = pd.DataFrame()
-    for file in tqdm(os.listdir(rootdir)):
-        file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-
-        # trim the RGIId entry to locate 2 digit region number.
-        # Loop will only load desired RGI region based on these region tags
-        region_1 = file_reader['RGIId'].iloc[-1][6:]
-        region = region_1[:2]
-        if str(region) == str(reg):
-            RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
-
-    RGI = RGI_extra[[
-        'CenLat',
-        'CenLon',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Area',
-        'Aspect',
-        'Lmax'
-    ]]
-
-    # here we want to drop any bad RGI data that can throw off predictions
-    RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
-    RGI = RGI.reset_index()
-    RGI = RGI.drop('index', axis=1)
-
-
-deviations = deviations [[
-'layer architecture',
-'model parameters',
-'total inputs',
-'learning rate',
-'epochs',
-'test mae avg',
-'train mae avg',
-'test mae std dev',
-'train mae std dev'
-]]
-
-
-
-
-print(deviations.to_string())
-# here we can select an entry from the deviations table to make predictions. Default is top entry
-print('Please select model index to predict thicknesses for RGI')
-selected_model = int(input())
-while type(selected_model) != int:
-    print('Please select model index to predict thicknesses for RGI')
-    selected_model = int(input()) 
-
-
-arch = deviations['layer architecture'].loc[selected_model]
-lr = deviations['learning rate'].loc[selected_model]
-# vs = deviations['validation split'].iloc[selected_model]
-ep = deviations['epochs'].loc[selected_model]
-print('layer architecture: ' + arch + ' learning rate: ' + str(lr) + ' epochs: ' + str(ep))
-print('predicting RGI thicknesses using model trained on RGI data matched with GlaThiDa thicknesses...')
-
-RS = range(0,25,1)
-dfs = pd.DataFrame()
-for rs in tqdm(RS):
-# each series is one random state of an ensemble of 25.
-# predictions are made on each random state and appended to a df as a column
-    s = pd.Series(
-        dnn_model[
-            str(arch) +
-            '_' +
-            dataset.name +
-            '_' +
-            dropout + 
-            '_dnn_MULTI_' +
-            str(lr) +
-            '_' +
-            str(0.2) +
-            '_' +
-            str(ep) + 
-            '_' + 
-            str(rs)
-        ].predict(RGI, verbose=0).flatten(), 
-        name = rs
-    )
-
-    dfs[rs] = s
-
-
-# make a copy of RGI to add predicted thickness and their statistics
-RGI_prethicked = RGI.copy() 
-RGI_prethicked['avg predicted thickness'] = 'NaN'
-RGI_prethicked['predicted thickness std dev'] = 'NaN'
-
-
-print('calculating average thickness across random state ensemble...')
-# loop through predictions df and find average across each ensemble of 25 random states
-for i in tqdm(dfs.index):
-    avg_predicted_thickness = np.mean(dfs.loc[i])
-    RGI_prethicked['avg predicted thickness'].loc[i] = avg_predicted_thickness
-
-
-print('computing standard deviations and variances for RGI predicted thicknesses')
-# loop through predictions df and find std dev across each ensemble of 25 random states
-for i in tqdm(dfs.index):
-
-
-    predicted_thickness_std_dev = np.std(dfs.loc[i])
-    RGI_prethicked['predicted thickness std dev'].loc[i] = predicted_thickness_std_dev
-
-RGI_prethicked.to_csv(
-'zults/RGI_predicted_' 
-+ dataset.name + 
-'_' + 
-dropout + 
-'_' + 
-arch + 
-'_' + 
-str(lr) + 
-'_' + 
-str(ep) + 
-'.csv'
-)
-
-
-
-
-
-
-
-
-
+                            '_' + 
+                            dropout + 
+                            '.csv'
+                        )
