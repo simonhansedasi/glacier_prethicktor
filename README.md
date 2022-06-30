@@ -13,7 +13,10 @@ A machine learning approach to predicting glacier thicknesses.
 
 ### sm1
 
+GlaThiDa data only, no RGI attributes added. 
+
 total inputs: 440
+
 avg test mae range: 34.423079 - 89.075339 \
 avg train mae range: 12.263926 - 14.530515
 
@@ -55,6 +58,8 @@ sum total predicted volume variance:
 
 ### sm2
 
+GlaThiDa thickness data merged with RGI physical attributes. No size comparison between GlaThiDa and RGI glaciers applied, i.e. area_scrubber = off
+
 total inputs: 3834
 
 avg test mae range: 27.289853 - 31.172687 \
@@ -89,6 +94,9 @@ sum total predicted volume variance:
 
 
 ### sm3
+
+GlaThiDa thickness data merged with RGI physical attributes. Sizes of RGI and GlaThiDa glaciers compared and only kept in training data if the difference in size is less than 1 km sq.
+
 
 total inputs: 2304
 
@@ -126,6 +134,8 @@ sum total predicted volume variance:
 
 
 ### sm4
+
+GlaThiDa thickness data merged with RGI physical attributes. Sizes of RGI and GlaThiDa glaciers compared and only kept in training data if the difference in size is less than 5 km sq.
 
 total inputs: 3015
 
