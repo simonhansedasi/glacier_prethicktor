@@ -7,35 +7,160 @@ A machine learning approach to predicting glacier thicknesses.
 
 ---
 
-**The Glacier Thickness Predictor (GTP) is divided into four modules representing different datasets used in model training: sm, sm2, sm4, sm5.**
+**The Glacier Thickness Predictor (GTP) is divided into four modules representing different datasets used in model training: sm1, sm2, sm4, sm5.**
 
 
 
-**sm:** \
-training data - glacier \
-avg test mae range: 36.024810 - 99.422656 \
-avg train mae range: 10.851193 - 35.202624
+### sm1
 
-**sm2:** \
-training data - Glam \
-avg test mae range: 10.680168 - 16.546986 \
-avg train mae range: 9.754352 - 16.536474 
-
-**sm4:** \
-training data - Glam_phys \
-avg test mae range: 14.431750 - 31.223658 \
-avg train mae range: 12.829470 - 31.172126
-
-**sm5:** \
-training data - Glam_2 \
-avg test mae range: 44.656052 - 69.933537 \
-avg train mae range: 27.547083 - 71.829759 
+total inputs: 440
+avg test mae range: 34.423079 - 89.075339 \
+avg train mae range: 12.263926 - 14.530515
 
 
+**Layer Architecture 10-5** -- *Default*\
+total model parameters: 120 \
+trained model parameters: 111 \
+optimized learning rate: 0.1 \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+**Layer Architecture 16-8** -- *1/2 parameters to inputs* \
+total model parameters: 234 \
+trained model parameters: 225 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+**Layer Architecture 20-15** -- *1/1 parameters to inputs* \
+total model parameters: 440 \
+trained model parameters: 431 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+**Layer Architecture 35-22** -- *experimental overparameterization* \
+total model parameters: 999 \
+trained model parameters: 990 
+sum total predicted volume: \
+sum total predicted volume variance: 
 
 
 
----
+### sm2
+
+total inputs: 3834
+
+avg test mae range: 27.289853 - 31.172687 \
+avg train mae range: 19.661094 - 24.033518
+
+**Layer Architecture 10-5** -- *Default*\
+total model parameters: 180 \
+trained model parameters: 161 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+**Layer Architecture 50-28** -- *1/2 parameters to inputs* \
+total model parameters: 1976 \
+trained model parameters: 1957 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+**Layer Architecture 64-48** -- *1/1 parameters to inputs* \
+total model parameters: 3828 \
+trained model parameters: 3809 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+
+### sm3
+
+total inputs: 2304
+
+
+avg test mae range: 12.414377 - 21.948432 \
+avg train mae range: 11.061126 - 22.97135
+
+**Layer Architecture 10-5** -- *Default*\
+total model parameters: 180 \
+trained model parameters: 161 
+optimized learning rate: 0.1 \
+optimized epochs: 10 \
+sum total predicted volume: 268.4735908913945 * 10^3 km^3 \
+sum total predicted volume variance: 8.267811960619303
+
+
+**Layer Architecture 35-22** -- *1/2 parameters to inputs* \
+total model parameters: 1184 \
+trained model parameters: 1165 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+**Layer Architecture 55-30** -- *1/1 parameters to inputs* \
+total model parameters: 2280 \
+trained model parameters: 2261 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+
+
+### sm4
+
+total inputs: 3015
+
+avg test mae range: 14.268922 - 15.341705 \
+avg train mae range: 11.86620 - 14.398697
+
+**Layer Architecture 10-5** -- *Default*\
+total model parameters: 180 \
+trained model parameters: 161 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+**Layer Architecture 48-21** -- *1/2 parameters to inputs* \
+total model parameters: 1550 \
+trained model parameters: 1531 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+**Layer Architecture 60-39** -- *1/1 parameters to inputs* \
+total model parameters: 3038 \
+trained model parameters: 3019 
+optimized learning rate: \
+optimized epochs: \
+sum total predicted volume: \
+sum total predicted volume variance: 
+
+
+
+<!-- ---
 
 ## User Guide
 
@@ -198,6 +323,7 @@ Another key difference in Glam_2 index matching is that each GlaThiDa entry is c
         distance = geopy.distance.geodesic(GlaThiDa_coords,RGI_coords).km
         if 0 <= distance < 1:
             f = pd.Series(distance, name='distance')
+            L = L.copy()
             L = L.append(f, ignore_index=True)
             L['GlaThiDa_index'].iloc[-1] = T_idx
             L['RGI_index'].iloc[-1] = RGI_idx
@@ -226,4 +352,4 @@ Now that GlaThiDa and closest RGI indexes are matched, it is time to match GlaTh
         rgi = RGI_extra.iloc[[rgi_index]]
 
         data = data.append(rgi)
-        data['thickness'].iloc[-1] = glathida_thickness
+        data['thickness'].iloc[-1] = glathida_thickness -->
