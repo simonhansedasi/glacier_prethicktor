@@ -126,7 +126,7 @@ sum total predicted volume variance:
 
 **Layer Architecture 55-30** -- *1/1 parameters to inputs* \
 total model parameters: 2280 \
-trained model parameters: 2261 
+trained model parameters: 2261 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
