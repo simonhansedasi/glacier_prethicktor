@@ -331,7 +331,7 @@ output = hyperparameters and layer architecture for DNN model
 '''
 # designed to provide a CLI to the model for each run rather modifying code
 def prethicktor_inputs():
-    print('This model currently supports two layer architecture. Please set neurons for first layer')
+    print('Please set neurons for first layer')
     layer_1_input = input()
     
     print('Please set neurons second layer')
