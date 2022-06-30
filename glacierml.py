@@ -334,7 +334,7 @@ def prethicktor_inputs():
     print('Please set neurons for first layer')
     layer_1_input = input()
     
-    print('Please set neurons second layer')
+    print('Please set neurons for second layer')
     layer_2_input = input()
     
     print('Please set learning rate: 0.1, 0.01, 0.001')
