@@ -32,7 +32,7 @@ sum total predicted volume variance:
 
 **Layer Architecture 16-8** -- *1/2 parameters to inputs* \
 total model parameters: 234 \
-trained model parameters: 225 
+trained model parameters: 225 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
@@ -41,7 +41,7 @@ sum total predicted volume variance:
 
 **Layer Architecture 20-15** -- *1/1 parameters to inputs* \
 total model parameters: 440 \
-trained model parameters: 431 
+trained model parameters: 431 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
@@ -50,7 +50,9 @@ sum total predicted volume variance:
 
 **Layer Architecture 35-22** -- *experimental overparameterization* \
 total model parameters: 999 \
-trained model parameters: 990 
+trained model parameters: 990 \
+optimized learning rate: \
+optimized epochs: \
 sum total predicted volume: \
 sum total predicted volume variance: 
 
@@ -67,7 +69,7 @@ avg train mae range: 19.661094 - 24.033518
 
 **Layer Architecture 10-5** -- *Default*\
 total model parameters: 180 \
-trained model parameters: 161 
+trained model parameters: 161 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
@@ -76,7 +78,7 @@ sum total predicted volume variance:
 
 **Layer Architecture 50-28** -- *1/2 parameters to inputs* \
 total model parameters: 1976 \
-trained model parameters: 1957 
+trained model parameters: 1957 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
@@ -85,7 +87,7 @@ sum total predicted volume variance:
 
 **Layer Architecture 64-48** -- *1/1 parameters to inputs* \
 total model parameters: 3828 \
-trained model parameters: 3809 
+trained model parameters: 3809 \
 optimized learning rate: \
 optimized epochs: \
 sum total predicted volume: \
