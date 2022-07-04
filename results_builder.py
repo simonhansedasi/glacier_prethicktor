@@ -6,6 +6,7 @@ import warnings
 from tensorflow.python.util import deprecation
 import os
 import logging
+import seaborn as sns
 from tqdm import tqdm
 from IPython.display import display, HTML
 # display(HTML("<style>.container { width:85% !important; }</style>"))
@@ -21,8 +22,7 @@ pd.set_option('mode.chained_assignment', None)
 
 
 print('please select module: sm1, sm2, sm3, sm4')
-dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5', 'sm6', 'all')
-
+dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'all')
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
@@ -211,14 +211,43 @@ for dropout_input_iter in dropout_input_list:
                     predictions.loc[predictions.index[-1], 'learning rate'] = '0.01'
                 if '0.001' in folder:
                     predictions.loc[predictions.index[-1], 'learning rate']= '0.001'
-                if '45' in folder:
-                    predictions.loc[predictions.index[-1], 'epochs']= '45'
+                    
+                if '10' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '10'
+                if '15' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '15'               
+                if '20' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '20' 
                 if '25' in folder:
                     predictions.loc[predictions.index[-1], 'epochs']= '25'
+                if '30' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '30'
                 if '35' in folder:
                     predictions.loc[predictions.index[-1], 'epochs']= '35'
+                if '40' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '40'
+                if '45' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '45'
                 if '50' in folder:
                     predictions.loc[predictions.index[-1], 'epochs']= '50'
+                if '55' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '55'
+                if '60' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '60'
+                if '65' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '65'
+                if '70' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '70'
+                if '75' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '75'
+                if '80' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '80'
+                if '85' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '85'
+                if '90' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '90'
+                if '95' in folder:
+                    predictions.loc[predictions.index[-1], 'epochs']= '95'
                 if '100' in folder:
                     predictions.loc[predictions.index[-1], 'epochs']= '100'
                 if '150' in folder:
@@ -236,134 +265,145 @@ for dropout_input_iter in dropout_input_list:
     
     # calculate statistics
     print('calculating statistics...')
-    # deviations df to hold statistics for each model architecture
-    if dropout == '1':
-        predictions_1 = pd.read_csv(
-            'zults/predictions_' + dataset.name + '_' + dropout + '.csv'
-        )
-    elif dropout == '0':
 
-        predictions_2 = pd.read_csv(
-            'zults/predictions_' + dataset.name + '_' + dropout + '.csv'
-        )
-    
-    
-    for architecture in list(predictions['architecture'].unique()):
-        for learning_rate in list(predictions['learning rate'].unique()):
-            for epochs in list(predictions['epochs'].unique()):
-                for dataframe in list(predictions['dataset'].unique()):
-
-                    # select section of predictions that matches particular arch, lr, and ep
-
-
-                    df = predictions[
-                        (predictions['architecture'] == architecture) & 
-                        (predictions['learning rate' ] == learning_rate) &
-                        (predictions['epochs'] == epochs) &
-                        (predictions['dataset'] == dataframe)
-                    ]
-                    if df.empty:
-                        break
-                    if not df.empty:
+    for ep in list(predictions['epochs'].unique()):
+        df = predictions[predictions['epochs'] == ep]
+        for dataframe in list(predictions['dataset'].unique()):
+            dfs = df[df['dataset'] == dataframe]
+            for arch in list(predictions['architecture'].unique()):
+                dfsr = dfs[dfs['architecture'] == arch]
+                if dfsr.empty:
+                    pass
+                for lr in list(predictions['learning rate'].unique()):
+                    dfsrq = dfsr[dfsr['learning rate'] == lr]
+                    if dfsrq.empty:
+                        pass
+                        
+                    if not dfsrq.empty:
                         # find mean and std dev of test mae
-                        test_mae_mean = np.mean(df['test mae'])
-                        test_mae_std_dev = np.std(df['test mae'])
-
-                        # find mean and std dev of train mae
-                        train_mae_mean = np.mean(df['train mae'])
-                        train_mae_std_dev = np.std(df['train mae'])
-
-                        # find mean and std dev of predictions made based on training data
-                        train_thickness_mean = np.mean(df['avg train thickness']) 
-                        train_thickness_std_dev = np.std(df['avg train thickness'])
-
-                        # find mean and std dev of predictions made based on test data
-                        test_thickness_mean = np.mean(df['avg test thickness']) 
-                        test_thickness_std_dev = np.std(df['avg test thickness'])
-
-                        # put something in a series that can be appended to a df
-                        s = pd.Series(train_thickness_mean)
-                        deviations = deviations.append(s, ignore_index=True)  
-
-                        # begin populating deviations table
-                        deviations.loc[
-                            deviations.index[-1], 'layer architecture'
-                        ] = architecture  
-
-                        deviations.loc[
-                            deviations.index[-1], 'model parameters'
-                        ] = dnn_model[
-                                architecture + 
+                        
+                        model_name = (
+                                arch + 
                                 '_' + 
                                 dataset.name + 
                                 '_' +
                                 dropout +
                                 '_dnn_MULTI_' +
-                                str(learning_rate) +
+                                str(lr) +
                                 '_0.2_' +
-                                str(int(epochs)) +
+                                str(int(ep)) +
                                 '_0'
+                        )
+                        if model_name not in dnn_model:
+                            pass
+                        else:
+                            test_mae_mean = np.mean(dfsrq['test mae'])
+                            test_mae_std_dev = np.std(dfsrq['test mae'])
+
+                            # find mean and std dev of train mae
+                            train_mae_mean = np.mean(dfsrq['train mae'])
+                            train_mae_std_dev = np.std(dfsrq['train mae'])
+
+                            # find mean and std dev of predictions made based on training data
+                            train_thickness_mean = np.mean(dfsrq['avg train thickness']) 
+                            train_thickness_std_dev = np.std(dfsrq['avg train thickness'])
+
+                            # find mean and std dev of predictions made based on test data
+                            test_thickness_mean = np.mean(dfsrq['avg test thickness']) 
+                            test_thickness_std_dev = np.std(dfsrq['avg test thickness'])
+
+                            # put something in a series that can be appended to a df
+                            s = pd.Series(train_thickness_mean)
+                            deviations = deviations.append(s, ignore_index=True)  
+
+                            # begin populating deviations table
+                            deviations.loc[
+                                deviations.index[-1], 'layer architecture'
+                            ] = arch  
+
+
+
+
+                            deviations.loc[
+                                deviations.index[-1], 'total parameters'
+                            ] = dnn_model[
+                                    arch + 
+                                    '_' + 
+                                    dataset.name + 
+                                    '_' +
+                                    dropout +
+                                    '_dnn_MULTI_' +
+                                    str(lr) +
+                                    '_0.2_' +
+                                    str(int(ep)) +
+                                    '_0'
                             ].count_params() 
 
-                        deviations.loc[
-                            deviations.index[-1], 'total inputs'
-                        ] = (len(dataset) * (len(dataset.columns) -1))
+                            deviations.loc[
+                                deviations.index[-1], 'trained parameters'
+                            ] = deviations.loc[
+                                deviations.index[-1], 'total parameters'
+                            ] - (len(dataset.columns) + (len(dataset.columns) - 1))
 
-                        deviations.loc[
-                            deviations.index[-1], 'df'
-                        ] = dataframe
+                            deviations.loc[
+                                deviations.index[-1], 'total inputs'
+                            ] = (len(dataset) * (len(dataset.columns) -1))
 
-                        deviations.loc[
-                            deviations.index[-1], 'dropout'
-                        ] = dropout
+                            deviations.loc[
+                                deviations.index[-1], 'df'
+                            ] = dataframe
 
-                        deviations.loc[
-                            deviations.index[-1], 'learning rate'
-                        ] = learning_rate
+                            deviations.loc[
+                                deviations.index[-1], 'dropout'
+                            ] = dropout
 
-                        deviations.loc[
-                            deviations.index[-1], 'validation split'
-                        ]= 0.2
+                            deviations.loc[
+                                deviations.index[-1], 'learning rate'
+                            ] = lr
 
-                        deviations.loc[
-                            deviations.index[-1], 'epochs'
-                        ] = epochs
+                            deviations.loc[
+                                deviations.index[-1], 'validation split'
+                            ]= 0.2
 
-                        deviations.loc[
-                            deviations.index[-1], 'test mae avg'
-                        ] = test_mae_mean
+                            deviations.loc[
+                                deviations.index[-1], 'epochs'
+                            ] = ep
 
-                        deviations.loc[
-                            deviations.index[-1], 'train mae avg'] = train_mae_mean
+                            deviations.loc[
+                                deviations.index[-1], 'test mae avg'
+                            ] = test_mae_mean
 
-                        deviations.loc[
-                            deviations.index[-1], 'test mae std dev'
-                        ] = test_mae_std_dev
+                            deviations.loc[
+                                deviations.index[-1], 'train mae avg'] = train_mae_mean
 
-                        deviations.loc[
-                            deviations.index[-1], 'train mae std dev'
-                        ] = train_mae_std_dev
+                            deviations.loc[
+                                deviations.index[-1], 'test mae std dev'
+                            ] = test_mae_std_dev
 
-                        deviations.loc[
-                            deviations.index[-1], 'test predicted thickness std dev'
-                        ] = test_thickness_std_dev
+                            deviations.loc[
+                                deviations.index[-1], 'train mae std dev'
+                            ] = train_mae_std_dev
 
-                        deviations.loc[
-                            deviations.index[-1], 'train predicted thickness std dev'
-                        ] = train_thickness_std_dev
+                            deviations.loc[
+                                deviations.index[-1], 'test predicted thickness std dev'
+                            ] = test_thickness_std_dev
 
-
-
-                        deviations.drop(columns = {0},inplace = True)    
-                        deviations = deviations.dropna()
+                            deviations.loc[
+                                deviations.index[-1], 'train predicted thickness std dev'
+                            ] = train_thickness_std_dev
 
 
-                        deviations = deviations.sort_values('test mae avg')
-                        deviations['epochs'] = deviations['epochs'].astype(int)
-                        deviations.to_csv(
-                            'zults/deviations_' + 
-                            dataset.name + 
-                            '_' + 
-                            dropout + 
-                            '.csv'
-                        )
+
+                            deviations.drop(columns = {0},inplace = True)    
+                            deviations = deviations.dropna()
+
+
+                            deviations = deviations.sort_values('test mae avg')
+                            deviations['epochs'] = deviations['epochs'].astype(int)
+                            deviations.to_csv(
+                                'zults/deviations_' + 
+                                dataset.name + 
+                                '_' + 
+                                dropout + 
+                                '.csv'
+                            )
