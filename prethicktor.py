@@ -98,7 +98,7 @@ deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')
 deviations = pd.concat([deviations_1, deviations_2])
 deviations = deviations.reset_index()
 print('loading RGI...')
-rootdir = '/data/fast0/datasets/rgi60-attribs/'
+rootdir = '/home/prethicktor/data/RGI/rgi60-attribs/'
 RGI_extra = pd.DataFrame()
 for file in os.listdir(rootdir):
     file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')

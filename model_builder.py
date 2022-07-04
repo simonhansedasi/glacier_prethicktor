@@ -18,7 +18,7 @@ pd.set_option('mode.chained_assignment', None)
 def main():
     # define range for learning rate and random state. 
     # learning rate no longer varied 
-#     LR = 0.1, 0.01, 0.001
+    LR = 0.1, 0.01, 0.001
     RS = range(0,25,1)
     
 
@@ -41,7 +41,7 @@ def main():
     # sm4 = GlaThiDa matched with RGI using technique 2 defined in glacierml.py
     # res = variable to construct directory to save results
     
-    layer_1_input, layer_2_input, lr_input, ep_input = gl.prethicktor_inputs()
+    layer_1_input, layer_2_input, lr_input,  ep_input = gl.prethicktor_inputs()
     arch = str(layer_1_input) + '-' + str(layer_2_input)
     
 
@@ -165,7 +165,7 @@ def main():
     
     
         for rs in tqdm(RS):
-    #             for lr in LR:
+#             for lr in LR:
 
             gl.build_and_train_model(
                 dataset, 

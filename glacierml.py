@@ -289,11 +289,12 @@ def data_loader(
                     'Zmin',
                     'Zmed',
                     'Zmax',
-                    'Area',
+                    'area_r',
                     'Aspect',
                     'Lmax',
                     'Thickness',
                 ]]
+                df = df.rename(columns = {'area_r':'Area'})
                 return df
 
 
