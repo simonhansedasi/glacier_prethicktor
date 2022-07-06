@@ -169,39 +169,39 @@ if chosen_dir == 'sm1':
 
 
 
-if chosen_dir == 'sm5' or chosen_dir == 'sm6':
-    print('loading RGI...')
-    rootdir = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'
-    RGI_extra = pd.DataFrame()
-    for file in tqdm(os.listdir(rootdir)):
-        file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
+# if chosen_dir == 'sm5' or chosen_dir == 'sm6':
+#     print('loading RGI...')
+#     rootdir = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'
+#     RGI_extra = pd.DataFrame()
+#     for file in tqdm(os.listdir(rootdir)):
+#         file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
 
-        # trim the RGIId entry to locate 2 digit region number.
-        # Loop will only load desired RGI region based on these region tags
-        region_1 = file_reader['RGIId'].iloc[-1][6:]
-        region = region_1[:2]
-        if str(region) == str(reg):
-            RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
+#         # trim the RGIId entry to locate 2 digit region number.
+#         # Loop will only load desired RGI region based on these region tags
+#         region_1 = file_reader['RGIId'].iloc[-1][6:]
+#         region = region_1[:2]
+#         if str(region) == str(reg):
+#             RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
 
-    RGI = RGI_extra[[
-        'CenLat',
-        'CenLon',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Area',
-        'Aspect',
-        'Lmax'
-    ]]
+#     RGI = RGI_extra[[
+#         'CenLat',
+#         'CenLon',
+#         'Slope',
+#         'Zmin',
+#         'Zmed',
+#         'Zmax',
+#         'Area',
+#         'Aspect',
+#         'Lmax'
+#     ]]
 
-    # here we want to drop any bad RGI data that can throw off predictions
-    RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
-    RGI = RGI.reset_index()
-    RGI = RGI.drop('index', axis=1)
+#     # here we want to drop any bad RGI data that can throw off predictions
+#     RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
+#     RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
+#     RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
+#     RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
+#     RGI = RGI.reset_index()
+#     RGI = RGI.drop('index', axis=1)
 
 
 deviations = deviations [[
