@@ -109,6 +109,7 @@ if module == 'sm5':
     dataset = df5
     dataset.name = 'df5'
     df5['Area'] = df5['Area']*1e6
+    res = 'sr5'
 
 deviations_1 = pd.read_csv('zults/deviations_' + dataset.name + '_1.csv')
 deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')

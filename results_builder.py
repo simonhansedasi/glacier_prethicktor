@@ -22,11 +22,11 @@ pd.set_option('mode.chained_assignment', None)
 
 
 print('please select module: sm1, sm2, sm3, sm4')
-dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'all')
+dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5', 'all')
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
-    print('Please enter valid module selection: sm1, sm2, sm3, sm4')
+    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5')
     chosen_dir = input()    
 
 
@@ -97,6 +97,24 @@ if chosen_dir == 'sm4':
     dataset = df4
     dataset.name = 'df4'
     res = 'sr4'
+    
+# replicate df2 and change Area to sq m
+if chosen_dir == 'sm5':
+    df5 = gl.data_loader(
+        pth_1 = '/home/prethicktor/data/T_data/',
+        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
+        pth_3 = '//home/prethicktor/data/matched_indexes/',
+        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        RGI_input = 'y',
+        scale = 'g',
+        # region_selection = 1,
+        area_scrubber = 'off',
+        # anomaly_input = 5
+    )
+    dataset = df5
+    dataset.name = 'df5'
+    res = 'sr5'
+    df5['Area'] = df5['Area']*1e6
 
 # elif chosen_dir == 'sm5':
 #     df5 = gl.data_loader()
@@ -126,8 +144,8 @@ if chosen_dir == 'sm4':
 #     else:
 #         reg = reg
 
-global_list = ('sm1', 'sm2', 'sm3', 'sm4')
-region_list = ('sm5', 'sm6')
+global_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5')
+region_list = ('sm6')
 
 
 
