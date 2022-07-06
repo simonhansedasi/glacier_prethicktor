@@ -18,7 +18,7 @@ RGI_loader
 
 '''
 def RGI_loader(
-    pth = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'
+    pth = '/data/fast1/glacierml/data/RGI/rgi60-attribs/'
 ):
     RGI_extra = pd.DataFrame()
     for file in tqdm(os.listdir(pth)):
@@ -38,10 +38,10 @@ def RGI_loader(
     return RGI
 
 def data_loader(
-    pth_1 = '/data/fast1/glacierml/T_models/T_data/',
-    pth_2 = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/',
-    pth_3 = '/data/fast1/glacierml/T_models/matched_indexes/',
-    pth_4 = '/data/fast1/glacierml/T_models/regional_data/training_data/',
+    pth_1 = '/data/fast1/glacierml/data/T_data/',
+    pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/data/matched_indexes/',
+    pth_4 = '/data/fast1/glacierml/data/regional_data/training_data/',
     RGI_input = 'y',
     scale = 'g',
     region_selection = 1,
@@ -455,7 +455,8 @@ def build_and_train_model(dataset,
                           res = 'sr2',
                           layer_1 = 10,
                           layer_2 = 5,
-                          dropout = True
+                          dropout = True,
+                          verbose = False
                          ):
     # define paths
     arch = str(layer_1) + '-' + str(layer_2)
@@ -532,14 +533,14 @@ def build_and_train_model(dataset,
 
     #save model, results, and history
 
-#         print('Saving results')
+    if verbose:
+        print('Saving results')
 
 
     df = pd.DataFrame(dnn_history['MULTI'].history)
 
-
-    df.to_csv(            
-       svd_res_pth +
+    
+    history_filename = (svd_res_pth +
        str(dataset.name) +
        '_' +
        dropout +
@@ -550,12 +551,11 @@ def build_and_train_model(dataset,
        '_' +
        str(epochs) +
        '_' +
-       str(random_state)
+       str(random_state))
 
-    )
+    df.to_csv(  history_filename  )
 
-    dnn_model.save(
-        svd_mod_pth + 
+    model_filename =  (svd_mod_pth + 
         str(dataset.name) + 
         '_' +
         dropout +
@@ -566,7 +566,12 @@ def build_and_train_model(dataset,
         '_' + 
         str(epochs) + 
         '_' + 
-        str(random_state)
-    )
+        str(random_state))
+    
+    dnn_model.save(  model_filename  )
+    
+    return history_filename, model_filename
+    
+    
 #         print('model training complete')
 #         print('')
