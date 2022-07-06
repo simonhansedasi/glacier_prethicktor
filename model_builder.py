@@ -18,21 +18,21 @@ pd.set_option('mode.chained_assignment', None)
 def main():
     # define range for learning rate and random state. 
     # learning rate no longer varied 
-    LR = 0.1, 0.01, 0.001
+    # LR = 0.1, 0.01, 0.001
     RS = range(0,25,1)
     
 
     
     # select either to train on all available data, or break up training by regions
 
-    print('please select module: sm1, sm2, sm3, sm4')
+    print('please select module: sm1, sm2, sm3, sm4', 'sm5')
     module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6')
     module = input()
     
 
 
     while module not in module_list:
-        print('please select valid module: sm1, sm2, sm3, sm4, sm5, sm6')
+        print('please select valid module: sm1, sm2, sm3, sm4, sm5')
         module = input()
     # here we can select between databases
     # sm1 = original GlaThiDa information
@@ -154,7 +154,6 @@ def main():
 #         else:
 #             reg = reg
 
-    layer_1_input, layer_2_input, lr_input, ep_input, dropout = gl.prethicktor_inputs()
     arch = str(layer_1_input) + '-' + str(layer_2_input)
     dropout_input_list = ('y', 'n')
     for dropout_input_iter in dropout_input_list:
