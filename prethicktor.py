@@ -15,13 +15,13 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
-print('please select module: sm1, sm2, sm3, sm4')
-dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4')
+print('please select module: sm1, sm2, sm3, sm4, sm5')
+dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5')
 
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
-    print('Please enter valid module selection: sm1, sm2, sm3, sm4')
+    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5')
     chosen_dir = input()    
 
 
@@ -94,7 +94,7 @@ if chosen_dir == 'sm4':
     res = 'sr4'
     
 # replicate df2 and change Area to sq m
-if module == 'sm5':
+if chosen_dir == 'sm5':
     df5 = gl.data_loader(
         pth_1 = '/home/prethicktor/data/T_data/',
         pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
