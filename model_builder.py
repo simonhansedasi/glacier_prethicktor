@@ -60,8 +60,6 @@ def main():
         dataset = df1
         dataset.name = 'df1'
         res = 'sr1'
-#         print(module)
-#         print(dataset)
 
     if module == 'sm2':
         df2 = gl.data_loader(
@@ -111,6 +109,7 @@ def main():
         dataset.name = 'df4'
         res = 'sr4'
         
+    # replicate df2 and change Area to sq m
     if module == 'sm5':
         df5 = gl.data_loader(
             pth_1 = '/home/prethicktor/data/T_data/',
@@ -119,26 +118,44 @@ def main():
             pth_4 = '/home/prethicktor/data/regional_data/training_data/',
             RGI_input = 'y',
             scale = 'g',
-            region_selection = 1,
-            area_scrubber = 'on',
-            anomaly_input = 5
+            # region_selection = 1,
+            area_scrubber = 'off',
+            # anomaly_input = 5
         )
         dataset = df5
         dataset.name = 'df5'
-        reg = df5['region'].iloc[-1]
-        df5 = df5.drop('region', axis=1)
-        dataset = df5
-        dataset.name = str('df5_' + str(reg))
+        df5['Area'] = df5['Area']*1e6
+        
+        
+        
+#     if module == 'sm6':
+#         df6 = gl.data_loader(
+#             pth_1 = '/home/prethicktor/data/T_data/',
+#             pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
+#             pth_3 = '//home/prethicktor/data/matched_indexes/',
+#             pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+#             RGI_input = 'y',
+#             scale = 'g',
+#             # region_selection = 1,
+#             area_scrubber = 'on',
+#             anomaly_input = 5
+#         )
+#         dataset = df6
+#         dataset.name = 'df6'
+#         reg = df6['region'].iloc[-1]
+#         df5 = df6.drop('region', axis=1)
+#         dataset = df6
+#         dataset.name = str('df6_' + str(reg))
 
-    #code snippet to add a leading 0 to regional ID so it matches with RGI when built later
-        if len(str(reg)) ==1:
-            N = 1
-            reg = str(reg).zfill(N + len(str(reg)))
-        else:
-            reg = reg
+#     #code snippet to add a leading 0 to regional ID so it matches with RGI when built later
+#         if len(str(reg)) ==1:
+#             N = 1
+#             reg = str(reg).zfill(N + len(str(reg)))
+#         else:
+#             reg = reg
 
-#     layer_1_input, layer_2_input, lr_input, ep_input, dropout = gl.prethicktor_inputs()
-#     arch = str(layer_1_input) + '-' + str(layer_2_input)
+    layer_1_input, layer_2_input, lr_input, ep_input, dropout = gl.prethicktor_inputs()
+    arch = str(layer_1_input) + '-' + str(layer_2_input)
     dropout_input_list = ('y', 'n')
     for dropout_input_iter in dropout_input_list:
         dropout_input = dropout_input_iter
@@ -161,9 +178,6 @@ def main():
             str(ep_input) 
         )
 
-
-    
-    
         for rs in tqdm(RS):
 #             for lr in LR:
 
@@ -178,11 +192,6 @@ def main():
                 layer_2 = layer_2_input,
                 dropout = dropout
             )
-# here we can select between two regional datasets. 
-# sm5 uses matching technique 1, same to build sm2
-# sm6 uses matching technique 2, same to build sm4
-
-            
 
 
 if __name__ == "__main__":

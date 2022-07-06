@@ -92,6 +92,23 @@ if chosen_dir == 'sm4':
     dataset = df4
     dataset.name = 'df4'
     res = 'sr4'
+    
+# replicate df2 and change Area to sq m
+if module == 'sm5':
+    df5 = gl.data_loader(
+        pth_1 = '/home/prethicktor/data/T_data/',
+        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
+        pth_3 = '//home/prethicktor/data/matched_indexes/',
+        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        RGI_input = 'y',
+        scale = 'g',
+        # region_selection = 1,
+        area_scrubber = 'off',
+        # anomaly_input = 5
+    )
+    dataset = df5
+    dataset.name = 'df5'
+    df5['Area'] = df5['Area']*1e6
 
 deviations_1 = pd.read_csv('zults/deviations_' + dataset.name + '_1.csv')
 deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')

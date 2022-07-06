@@ -17,7 +17,9 @@ RGI_loader
 
 
 '''
-def RGI_loader(pth = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'):
+def RGI_loader(
+    pth = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'
+):
     RGI_extra = pd.DataFrame()
     for file in tqdm(os.listdir(pth)):
         file_reader = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
@@ -383,7 +385,9 @@ build_dnn_model
 input = normalized data and selected learning rate
 output = dnn model with desired layer architecture, ready to be trained.
 '''
-def build_dnn_model(norm, learning_rate=0.1, layer_1 = 10, layer_2 = 5, dropout = True):
+def build_dnn_model(
+    norm, learning_rate=0.1, layer_1 = 10, layer_2 = 5, dropout = True
+):
     
     if dropout == True:
         model = keras.Sequential(
@@ -566,8 +570,3 @@ def build_and_train_model(dataset,
     )
 #         print('model training complete')
 #         print('')
-        
-        
-
-
-
