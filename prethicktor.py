@@ -155,7 +155,7 @@ if chosen_dir == 'sm1':
 
 
 if chosen_dir == 'sm5':
-    RGI = RGI_extra[[
+    RGI = RGI[[
         'CenLat',
         'CenLon',
         'Slope',
