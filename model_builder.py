@@ -110,7 +110,7 @@ def main():
         dataset = df5
         dataset.name = 'df5'
         df5 = df5.drop('Zmed', axis = 1)
-        # res = 'sr5'
+        res = 'sr5'
         
 #     if module == 'sm6':
 #         df6 = gl.data_loader(
