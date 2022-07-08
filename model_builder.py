@@ -111,7 +111,7 @@ def main():
         dataset.name = 'df5'
         df5 = df5.drop('Zmed', axis = 1)
         res = 'sr5'
-        
+        print(dataset)
 #     if module == 'sm6':
 #         df6 = gl.data_loader(
 #             pth_1 = '/home/prethicktor/data/T_data/',
