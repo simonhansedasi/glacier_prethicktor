@@ -107,10 +107,10 @@ def main():
             area_scrubber = 'off',
             # anomaly_input = 5
         )
-        dataset = df5
-        dataset.name = 'df5'
         df5 = df5.drop('Zmed', axis = 1)
         res = 'sr5'
+        dataset = df5
+        dataset.name = 'df5'
         print(dataset)
 #     if module == 'sm6':
 #         df6 = gl.data_loader(
