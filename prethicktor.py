@@ -29,7 +29,7 @@ while chosen_dir not in dir_list:
 
 if chosen_dir == 'sm1':
     df1 = gl.data_loader(
-        root_dir = '/home/prethicktor/data/'
+        root_dir = '/home/prethicktor/data/',
         RGI_input = 'n'
 #                 scale = 'g',
 #                 region_selection = 1,
@@ -44,7 +44,7 @@ if chosen_dir == 'sm1':
 
 if chosen_dir == 'sm2':
     df2 = gl.data_loader(
-        root_dir = '/home/prethicktor/data/'
+        root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -57,7 +57,7 @@ if chosen_dir == 'sm2':
 
 if chosen_dir == 'sm3':
     df3 = gl.data_loader(
-        root_dir = '/home/prethicktor/data/'
+        root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -70,7 +70,7 @@ if chosen_dir == 'sm3':
 
 if chosen_dir == 'sm4':
     df4 = gl.data_loader(
-        root_dir = '/home/prethicktor/data/'
+        root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -84,7 +84,7 @@ if chosen_dir == 'sm4':
 # replicate df2 and change Area to sq m
 if chosen_dir == 'sm5':
     df5 = gl.data_loader(
-        root_dir = '/home/prethicktor/data/'
+        root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',
         scale = 'g',
         # region_selection = 1,

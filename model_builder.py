@@ -47,7 +47,7 @@ def main():
 
     if module == 'sm1':
         df1 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/'
+            root_dir = '/home/prethicktor/data/',
             RGI_input = 'n'
 #                 scale = 'g',
 #                 region_selection = 1,
@@ -60,7 +60,7 @@ def main():
 
     if module == 'sm2':
         df2 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/'
+            root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
 #                 region_selection = 1,
@@ -73,7 +73,7 @@ def main():
 
     if module == 'sm3':
         df3 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/'
+            root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
 #                 region_selection = 1,
@@ -86,7 +86,7 @@ def main():
 
     if module == 'sm4':
         df4 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/'
+            root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
 #                 region_selection = 1,
@@ -100,7 +100,7 @@ def main():
     # replicate module 2 and drop Zmed
     if module == 'sm5':
         df5 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/'
+            root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
             # region_selection = 1,
