@@ -29,10 +29,7 @@ while chosen_dir not in dir_list:
 
 if chosen_dir == 'sm1':
     df1 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'n'
 #                 scale = 'g',
 #                 region_selection = 1,
@@ -47,10 +44,7 @@ if chosen_dir == 'sm1':
 
 if chosen_dir == 'sm2':
     df2 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -63,10 +57,7 @@ if chosen_dir == 'sm2':
 
 if chosen_dir == 'sm3':
     df3 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -79,10 +70,7 @@ if chosen_dir == 'sm3':
 
 if chosen_dir == 'sm4':
     df4 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -96,10 +84,7 @@ if chosen_dir == 'sm4':
 # replicate df2 and change Area to sq m
 if chosen_dir == 'sm5':
     df5 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'y',
         scale = 'g',
         # region_selection = 1,
@@ -108,7 +93,7 @@ if chosen_dir == 'sm5':
     )
     dataset = df5
     dataset.name = 'df5'
-    df5['Area'] = df5['Area']*1e6
+    df5 = df5.drop('Zmed', axis = 1)
     res = 'sr5'
 
 deviations_1 = pd.read_csv('zults/deviations_' + dataset.name + '_1.csv')
@@ -120,7 +105,7 @@ rootdir = '/home/prethicktor/data/RGI/rgi60-attribs/'
 RGI_extra = pd.DataFrame()
 for file in os.listdir(rootdir):
     file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-    RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
+    RGI_extra = pd.concat([RGI_extra, file_reader], ignore_index = True)
 
     # select only RGI data that was used to train the model   
     RGI = RGI_extra[[
@@ -169,31 +154,18 @@ if chosen_dir == 'sm1':
 
 
 
-# if chosen_dir == 'sm5' or chosen_dir == 'sm6':
-#     print('loading RGI...')
-#     rootdir = '/data/fast1/glacierml/T_models/RGI/rgi60-attribs/'
-#     RGI_extra = pd.DataFrame()
-#     for file in tqdm(os.listdir(rootdir)):
-#         file_reader = pd.read_csv(rootdir+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-
-#         # trim the RGIId entry to locate 2 digit region number.
-#         # Loop will only load desired RGI region based on these region tags
-#         region_1 = file_reader['RGIId'].iloc[-1][6:]
-#         region = region_1[:2]
-#         if str(region) == str(reg):
-#             RGI_extra = RGI_extra.append(file_reader, ignore_index = True)
-
-#     RGI = RGI_extra[[
-#         'CenLat',
-#         'CenLon',
-#         'Slope',
-#         'Zmin',
-#         'Zmed',
-#         'Zmax',
-#         'Area',
-#         'Aspect',
-#         'Lmax'
-#     ]]
+if chosen_dir == 'sm5':
+    RGI = RGI_extra[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        # 'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
 
 #     # here we want to drop any bad RGI data that can throw off predictions
 #     RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
@@ -316,12 +288,3 @@ RGI_prethicked.to_csv(
     str(ep) + 
     '.csv'
 )
-
-
-
-
-
-
-
-
-

@@ -97,7 +97,7 @@ def main():
         dataset.name = 'df4'
         res = 'sr4'
         
-    # replicate df2 and change Area to sq m
+    # replicate module 2 and drop Zmed
     if module == 'sm5':
         df5 = gl.data_loader(
             root_dir = '/home/prethicktor/data/'
@@ -109,8 +109,8 @@ def main():
         )
         dataset = df5
         dataset.name = 'df5'
-        df5['Area'] = df5['Area']*1e6
-        res = 'sr5'
+        df5 = df5.drop('Zmed', axis = 1)
+        # res = 'sr5'
         
 #     if module == 'sm6':
 #         df6 = gl.data_loader(

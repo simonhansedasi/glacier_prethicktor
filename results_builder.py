@@ -99,7 +99,7 @@ if chosen_dir == 'sm5':
     dataset = df5
     dataset.name = 'df5'
     res = 'sr5'
-    df5['Area'] = df5['Area']*1e6
+    df5 = df5.drop('Zmed', axis = 1)
 
 # elif chosen_dir == 'sm5':
 #     df5 = gl.data_loader()
