@@ -108,17 +108,17 @@ for file in os.listdir(rootdir):
     RGI_extra = pd.concat([RGI_extra, file_reader], ignore_index = True)
 
     # select only RGI data that was used to train the model   
-    RGI = RGI_extra[[
-    'CenLat',
-    'CenLon',
-    'Slope',
-    'Zmin',
-    'Zmed',
-    'Zmax',
-    'Area',
-    'Aspect',
-    'Lmax'
-    ]]
+RGI = RGI_extra[[
+'CenLat',
+'CenLon',
+'Slope',
+'Zmin',
+'Zmed',
+'Zmax',
+'Area',
+'Aspect',
+'Lmax'
+]]
 
 RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
 RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
@@ -166,7 +166,7 @@ if chosen_dir == 'sm5':
         'Aspect',
         'Lmax'
     ]]
-
+print(RGI)
 #     # here we want to drop any bad RGI data that can throw off predictions
 #     RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
 #     RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
