@@ -34,10 +34,7 @@ while chosen_dir not in dir_list:
 
 if chosen_dir == 'sm1':
     df1 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'n'
 #                 scale = 'g',
 #                 region_selection = 1,
@@ -52,10 +49,7 @@ if chosen_dir == 'sm1':
 
 if chosen_dir == 'sm2':
     df2 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -68,10 +62,7 @@ if chosen_dir == 'sm2':
 
 if chosen_dir == 'sm3':
     df3 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -84,10 +75,7 @@ if chosen_dir == 'sm3':
 
 if chosen_dir == 'sm4':
     df4 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
@@ -101,10 +89,7 @@ if chosen_dir == 'sm4':
 # replicate df2 and change Area to sq m
 if chosen_dir == 'sm5':
     df5 = gl.data_loader(
-        pth_1 = '/home/prethicktor/data/T_data/',
-        pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-        pth_3 = '//home/prethicktor/data/matched_indexes/',
-        pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+        root_dir = '/home/prethicktor/data/'
         RGI_input = 'y',
         scale = 'g',
         # region_selection = 1,
@@ -209,7 +194,10 @@ for dropout_input_iter in dropout_input_list:
                     avg_thickness, avg_test_thickness, right_index=True, left_index=True
                 )
 
-                predictions = predictions.append(temp_df, ignore_index = True)
+                predictions = pd.concat(
+                    [predictions, temp_df], ignore_index = True
+                )
+                
                 predictions.loc[predictions.index[-1], 'model'] = folder
                 predictions.loc[predictions.index[-1], 'test mae'] = mae_test
                 predictions.loc[predictions.index[-1], 'train mae'] = mae_train
@@ -332,7 +320,11 @@ for dropout_input_iter in dropout_input_list:
 
                             # put something in a series that can be appended to a df
                             s = pd.Series(train_thickness_mean)
-                            deviations = deviations.append(s, ignore_index=True)  
+                            
+                            deviations = pd.concat(
+                                [deviations, s], ignore_index=True
+                            )
+                            
 
                             # begin populating deviations table
                             deviations.loc[

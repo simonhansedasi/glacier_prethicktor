@@ -47,10 +47,7 @@ def main():
 
     if module == 'sm1':
         df1 = gl.data_loader(
-            pth_1 = '/home/prethicktor/data/T_data/',
-            pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-            pth_3 = '//home/prethicktor/data/matched_indexes/',
-            pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+            root_dir = '/home/prethicktor/data/'
             RGI_input = 'n'
 #                 scale = 'g',
 #                 region_selection = 1,
@@ -63,10 +60,7 @@ def main():
 
     if module == 'sm2':
         df2 = gl.data_loader(
-            pth_1 = '/home/prethicktor/data/T_data/',
-            pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-            pth_3 = '//home/prethicktor/data/matched_indexes/',
-            pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+            root_dir = '/home/prethicktor/data/'
             RGI_input = 'y',
             scale = 'g',
 #                 region_selection = 1,
@@ -79,10 +73,7 @@ def main():
 
     if module == 'sm3':
         df3 = gl.data_loader(
-            pth_1 = '/home/prethicktor/data/T_data/',
-            pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-            pth_3 = '//home/prethicktor/data/matched_indexes/',
-            pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+            root_dir = '/home/prethicktor/data/'
             RGI_input = 'y',
             scale = 'g',
 #                 region_selection = 1,
@@ -95,10 +86,7 @@ def main():
 
     if module == 'sm4':
         df4 = gl.data_loader(
-            pth_1 = '/home/prethicktor/data/T_data/',
-            pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-            pth_3 = '//home/prethicktor/data/matched_indexes/',
-            pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+            root_dir = '/home/prethicktor/data/'
             RGI_input = 'y',
             scale = 'g',
 #                 region_selection = 1,
@@ -112,10 +100,7 @@ def main():
     # replicate df2 and change Area to sq m
     if module == 'sm5':
         df5 = gl.data_loader(
-            pth_1 = '/home/prethicktor/data/T_data/',
-            pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-            pth_3 = '//home/prethicktor/data/matched_indexes/',
-            pth_4 = '/home/prethicktor/data/regional_data/training_data/',
+            root_dir = '/home/prethicktor/data/'
             RGI_input = 'y',
             scale = 'g',
             # region_selection = 1,
@@ -126,8 +111,6 @@ def main():
         dataset.name = 'df5'
         df5['Area'] = df5['Area']*1e6
         res = 'sr5'
-        
-        
         
 #     if module == 'sm6':
 #         df6 = gl.data_loader(

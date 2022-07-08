@@ -23,7 +23,7 @@ def RGI_loader(
     RGI_extra = pd.DataFrame()
     for file in tqdm(os.listdir(pth)):
         file_reader = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = RGI_extra.append(file_reader)
+        RGI_extra = pd.concat([RGI_extra,file_reader], ignore_index = True)
     RGI = RGI_extra[[
         'CenLat',
         'CenLon',
@@ -38,16 +38,20 @@ def RGI_loader(
     return RGI
 
 def data_loader(
-    pth_1 = '/data/fast1/glacierml/data/T_data/',
-    pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
-    pth_3 = '/data/fast1/glacierml/data/matched_indexes/',
-    pth_4 = '/data/fast1/glacierml/data/regional_data/training_data/',
+    root_dir = '/data/fast1/glacierml/data/',
     RGI_input = 'y',
     scale = 'g',
     region_selection = 1,
     area_scrubber = 'off',
     anomaly_input = 5
 ):        
+    
+    pth_1 = root_dir + 'T_data/'
+    pth_2 = root_dir + 'RGI/rgi60-attribs/'
+    pth_3 = root_dir + 'matched_indexes/'
+    pth_4 = root_dir + 'regional_data/training_data/'
+    
+    
     # load glacier GlaThiDa data
     glacier = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)    
     glacier = glacier.rename(columns = {
@@ -84,7 +88,7 @@ def data_loader(
             file_reader = pd.read_csv(
                 pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip'
             )            
-            RGI_extra = RGI_extra.append(file_reader, ignore_index=True)
+            RGI_extra = pd.concat([RGI_extra, file_reader], ignore_index=True)
             RGI = RGI_extra
         
         
@@ -205,7 +209,7 @@ def data_loader(
             # sort through regional data previously sorted and cleaned
             for file in os.listdir(pth_4):
                 f = pd.read_csv(pth_4 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-                r_df = r_df.append(f, ignore_index = True)
+                r_df = pd.concat([r_df, f], ignore_index = True)
                 r_df = r_df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
                 r_df = r_df[[
                 #     'GlaThiDa_index',
@@ -573,5 +577,3 @@ def build_and_train_model(dataset,
     return history_filename, model_filename
     
     
-#         print('model training complete')
-#         print('')
