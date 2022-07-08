@@ -96,10 +96,11 @@ if chosen_dir == 'sm5':
         area_scrubber = 'off',
         # anomaly_input = 5
     )
+    df5 = df5.drop('Zmed', axis = 1)
     dataset = df5
     dataset.name = 'df5'
     res = 'sr5'
-    df5 = df5.drop('Zmed', axis = 1)
+    
 
 # elif chosen_dir == 'sm5':
 #     df5 = gl.data_loader()

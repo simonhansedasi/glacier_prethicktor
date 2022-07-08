@@ -91,9 +91,9 @@ if chosen_dir == 'sm5':
         area_scrubber = 'off',
         # anomaly_input = 5
     )
+    df5 = df5.drop('Zmed', axis = 1)
     dataset = df5
     dataset.name = 'df5'
-    df5 = df5.drop('Zmed', axis = 1)
     res = 'sr5'
 
 deviations_1 = pd.read_csv('zults/deviations_' + dataset.name + '_1.csv')
@@ -166,7 +166,6 @@ if chosen_dir == 'sm5':
         'Aspect',
         'Lmax'
     ]]
-print(RGI)
 #     # here we want to drop any bad RGI data that can throw off predictions
 #     RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
 #     RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
