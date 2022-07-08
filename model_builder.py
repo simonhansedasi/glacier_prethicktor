@@ -137,7 +137,7 @@ def main():
 #             reg = str(reg).zfill(N + len(str(reg)))
 #         else:
 #             reg = reg
-
+    print(dataset)
     arch = str(layer_1_input) + '-' + str(layer_2_input)
     dropout_input_list = ('y', 'n')
     for dropout_input_iter in dropout_input_list:
