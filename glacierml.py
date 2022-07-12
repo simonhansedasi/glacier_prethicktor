@@ -103,6 +103,7 @@ def data_loader(
         
         # locate data in both datasets and line them up
         glacier = glacier.loc[comb['GlaThiDa_index']]
+        
         RGI = RGI.loc[comb['RGI_index']]
         
         # reset indexes for merge
@@ -282,6 +283,7 @@ def data_loader(
                     'Aspect',
                     'Lmax',
                     'Thickness',
+                    'regoin'
                 ]]
                 return df
                 
@@ -299,6 +301,7 @@ def data_loader(
                     'Aspect',
                     'Lmax',
                     'Thickness',
+                    'region'
                 ]]
                 df = df.rename(columns = {'area_r':'Area'})
                 return df
@@ -308,6 +311,48 @@ def data_loader(
     return df
 
 
+'''
+GlaThiDa_RGI_index_matcher:
+'''
+def GlaThiDa_RGI_index_matcher(
+    pth_1 = '/data/fast1/glacierml/data/T_data/',
+    pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/data/matched_indexes/'
+):
+    glathida = pd.read_csv(pth_1 + 'glacier.csv')
+    glathida = glathida.dropna(subset = ['mean_thickness'])
+
+    RGI = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        print(file)
+        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI = pd.concat([RGI, file_reader], ignore_index = True)
+    RGI = RGI.reset_index()
+    df = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
+    #iterate over each glathida index
+    for i in tqdm(glathida.index):
+        #obtain lat and lon from glathida 
+        glathida_ll = (glathida.loc[i].lat,glathida.loc[i].lon)
+        
+        # find distance between selected glathida glacier and all RGI
+        distances = RGI.apply(
+            lambda row: geopy.distance.geodesic((row.CenLat,row.CenLon),glathida_ll),
+            axis = 1
+        )
+        
+        # find index of minimum distance between glathida and RGI glacier
+        RGI_index = np.argmin(distances)
+        RGI_match = RGI.loc[RGI_index]
+        
+        # concatonate two rows and append to dataframe with indexes for both glathida and RGI
+        temp_df = pd.concat([RGI_match, glathida.loc[i]], axis = 0)
+        df = df.append(temp_df, ignore_index = True)
+    #     df = df.append(GlaThiDa_and_RGI, ignore_index = True)
+        df['GlaThiDa_index'].iloc[-1] = i
+        df['RGI_index'].iloc[-1] = RGI_index
+
+
+        df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_live.csv')
         
         
 '''
@@ -576,4 +621,298 @@ def build_and_train_model(dataset,
     
     return history_filename, model_filename
     
+
+    
+'''
+
+'''
+def predictions_maker(
+    rs,
+    dropout,
+    arch,
+    dataset,
+    folder,
+    model_loc,
+    model_name,
+):
+    df = pd.DataFrame()
+    dnn_model = {}
+    
+    (
+        train_features, test_features, train_labels, test_labels
+    ) = data_splitter(
+        dataset, random_state = rs
+    )
+    dnn_model[model_name] = tf.keras.models.load_model(model_loc)
+    
+    mae_test = dnn_model[model_name].evaluate(
+                    test_features, test_labels, verbose=0
+                )
+    mae_train = dnn_model[model_name].evaluate(
+        train_features, train_labels, verbose=0
+    )
+
+    pred_train = dnn_model[model_name].predict(
+        train_features, verbose=0
+    )
+
+    pred_test = dnn_model[model_name].predict(
+        test_features, verbose=0
+    )
+
+    avg_thickness = pd.Series(
+        np.mean(pred_train), name = 'avg train thickness'
+    )
+
+    avg_test_thickness = pd.Series(
+        np.mean(pred_test),  name = 'avg test thickness'
+    )
+
+    temp_df = pd.merge(
+        avg_thickness, avg_test_thickness, right_index=True, left_index=True
+    )
+
+    df = pd.concat(
+        [df, temp_df], ignore_index = True
+    )
+
+    df.loc[df.index[-1], 'model'] = folder
+    df.loc[df.index[-1], 'test mae'] = mae_test
+    df.loc[df.index[-1], 'train mae'] = mae_train
+    df.loc[df.index[-1], 'architecture'] = arch[3:]
+    df.loc[df.index[-1], 'validation split'] = '0.2'
+    df.loc[df.index[-1], 'dataset'] = dataset.name
+    df.loc[df.index[-1], 'dropout'] = dropout
+
+#                 if chosen_dir in global_list:
+#                     predictions.loc[predictions.index[-1], 'region'] = 'g'
+#                 if chosen_dir in region_list:
+#                     predictions.loc[predictions.index[-1], 'region'] = int(reg)
+
+    if '0.1' in folder:
+        df.loc[df.index[-1], 'learning rate'] = '0.1'
+    if '0.01' in folder:
+        df.loc[df.index[-1], 'learning rate'] = '0.01'
+    if '0.001' in folder:
+        df.loc[df.index[-1], 'learning rate']= '0.001'
+
+    if '10' in folder:
+        df.loc[df.index[-1], 'epochs']= '10'
+    if '15' in folder:
+        df.loc[df.index[-1], 'epochs']= '15'               
+    if '20' in folder:
+        df.loc[df.index[-1], 'epochs']= '20' 
+    if '25' in folder:
+        df.loc[df.index[-1], 'epochs']= '25'
+    if '30' in folder:
+        df.loc[df.index[-1], 'epochs']= '30'
+    if '35' in folder:
+        df.loc[df.index[-1], 'epochs']= '35'
+    if '40' in folder:
+        df.loc[df.index[-1], 'epochs']= '40'
+    if '45' in folder:
+        df.loc[df.index[-1], 'epochs']= '45'
+    if '50' in folder:
+        df.loc[df.index[-1], 'epochs']= '50'
+    if '55' in folder:
+        df.loc[df.index[-1], 'epochs']= '55'
+    if '60' in folder:
+        df.loc[df.index[-1], 'epochs']= '60'
+    if '65' in folder:
+        df.loc[df.index[-1], 'epochs']= '65'
+    if '70' in folder:
+        df.loc[df.index[-1], 'epochs']= '70'
+    if '75' in folder:
+        df.loc[df.index[-1], 'epochs']= '75'
+    if '80' in folder:
+        df.loc[df.index[-1], 'epochs']= '80'
+    if '85' in folder:
+        df.loc[df.index[-1], 'epochs']= '85'
+    if '90' in folder:
+        df.loc[df.index[-1], 'epochs']= '90'
+    if '95' in folder:
+        df.loc[df.index[-1], 'epochs']= '95'
+    if '100' in folder:
+        df.loc[df.index[-1], 'epochs']= '100'
+    if '150' in folder:
+        df.loc[df.index[-1], 'epochs']= '150'
+    if '200' in folder:
+        df.loc[df.index[-1], 'epochs']= '200'       
+
+    if '300' in folder:
+        df.loc[df.index[-1], 'epochs']= '300'
+    if '400' in folder:
+        df.loc[df.index[-1], 'epochs']= '400'
+
+    return df
+    
+
+def deviations_calculator(
+    model_loc,
+    model_name,
+    ep,
+    arch, 
+    lr,
+    dropout,
+    dataframe,
+    dataset,
+    dfsrq
+    
+):
+    dnn_model = {}
+    df = pd.DataFrame()
+    test_mae_mean = np.mean(dfsrq['test mae'])
+    test_mae_std_dev = np.std(dfsrq['test mae'])
+
+    # find mean and std dev of train mae
+    train_mae_mean = np.mean(dfsrq['train mae'])
+    train_mae_std_dev = np.std(dfsrq['train mae'])
+
+    # find mean and std dev of predictions made based on training data
+    train_thickness_mean = np.mean(dfsrq['avg train thickness']) 
+    train_thickness_std_dev = np.std(dfsrq['avg train thickness'])
+
+    # find mean and std dev of predictions made based on test data
+    test_thickness_mean = np.mean(dfsrq['avg test thickness']) 
+    test_thickness_std_dev = np.std(dfsrq['avg test thickness'])
+
+    # put something in a series that can be appended to a df
+    s = pd.Series(train_thickness_mean)
+
+    df = pd.concat(
+        [df, s], ignore_index=True
+    )
+
+
+    # begin populating deviations table
+    df.loc[
+        df.index[-1], 'layer architecture'
+    ] = arch  
+
+
+
+    dnn_model[model_name] = tf.keras.models.load_model(model_loc)
+    
+    df.loc[
+        df.index[-1], 'total parameters'
+    ] = dnn_model[model_name].count_params() 
+
+    df.loc[
+        df.index[-1], 'trained parameters'
+    ] = df.loc[
+        df.index[-1], 'total parameters'
+    ] - (len(dataset.columns) + (len(dataset.columns) - 1))
+
+    df.loc[
+        df.index[-1], 'total inputs'
+    ] = (len(dataset) * (len(dataset.columns) -1))
+
+    df.loc[
+        df.index[-1], 'df'
+    ] = dataframe
+
+    df.loc[
+        df.index[-1], 'dropout'
+    ] = dropout
+
+    df.loc[
+        df.index[-1], 'learning rate'
+    ] = lr
+
+    df.loc[
+        df.index[-1], 'validation split'
+    ]= 0.2
+
+    df.loc[
+        df.index[-1], 'epochs'
+    ] = ep
+
+    df.loc[
+        df.index[-1], 'test mae avg'
+    ] = test_mae_mean
+
+    df.loc[df.index[-1], 'train mae avg'] = train_mae_mean
+
+    df.loc[df.index[-1], 'test mae std dev'] = test_mae_std_dev
+
+    df.loc[df.index[-1], 'train mae std dev'] = train_mae_std_dev
+
+    df.loc[
+        df.index[-1], 'test predicted thickness std dev'
+    ] = test_thickness_std_dev
+
+    df.loc[
+        df.index[-1], 'train predicted thickness std dev'
+    ] = train_thickness_std_dev
+
+
+
+    df.drop(columns = {0},inplace = True)    
+    df = df.dropna()
+
+
+    df = df.sort_values('test mae avg')
+    df['epochs'] = df['epochs'].astype(int)
+    
+
+
+    
+    return df
+    
+    
+def random_state_finder(
+    folder
+):
+    if folder.endswith('_0'):
+        rs = 0
+    if folder.endswith('_1'):
+        rs = 1
+    if folder.endswith('_2'):
+        rs = 2
+    if folder.endswith('_3'):
+        rs = 3
+    if folder.endswith('_4'):
+        rs = 4
+    if folder.endswith('_5'):
+        rs = 5
+    if folder.endswith('_6'):
+        rs = 6
+    if folder.endswith('_7'):
+        rs = 7
+    if folder.endswith('_8'):
+        rs = 8
+    if folder.endswith('_9'):
+        rs = 9
+    if folder.endswith('10'):
+        rs = 10
+    if folder.endswith('11'):
+        rs = 11
+    if folder.endswith('12'):
+        rs = 12
+    if folder.endswith('13'):
+        rs = 13
+    if folder.endswith('14'):
+        rs = 14
+    if folder.endswith('15'):
+        rs = 15
+    if folder.endswith('16'):
+        rs = 16
+    if folder.endswith('17'):
+        rs = 17
+    if folder.endswith('18'):
+        rs = 18
+    if folder.endswith('19'):
+        rs = 19
+    if folder.endswith('20'):
+        rs = 20
+    if folder.endswith('21'):
+        rs = 21
+    if folder.endswith('22'):
+        rs = 22
+    if folder.endswith('23'):
+        rs = 23
+    if folder.endswith('24'):
+        rs = 24
+        
+    return rs
     
