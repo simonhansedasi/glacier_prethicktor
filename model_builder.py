@@ -31,9 +31,11 @@ def main():
         module = input()
     # here we can select between databases
     # sm1 = original GlaThiDa information
-    # sm2 = GlaThiDa matched with RGI using technique 1 defined in glacierml.py
-    # sm3 = sm2 w/o lat and lon
-    # sm4 = GlaThiDa matched with RGI using technique 2 defined in glacierml.py
+    # sm2 = GlaThiDa matched with RGI at global scale
+    # sm3 = sm2 with area scrubber on, no area anomalies greater than 1 km**2
+    # sm4 = sm3 with area scrubber set to 5 km**2
+    # sm5 = global scale, no scrubber, drop zmed
+    # sm6 = GlaThiDa thicknesses with RGI attributes at regional scale
     # res = variable to construct directory to save results
     
     layer_1_input, layer_2_input, lr_input,  ep_input = gl.prethicktor_inputs()
@@ -95,7 +97,7 @@ def main():
         dataset.name = 'df5'
     
     if module == 'sm6':
-        print('please select region: 1, 2, 3, 6, 7, 8, 9, 10, 11, 13')
+        print('please select region: 1, 2, 3, 6, 7, 8, 9, 10, 11, 13, 19')
         region = input()
         df6 = gl.data_loader(
             root_dir = '/home/prethicktor/data/',
@@ -104,7 +106,13 @@ def main():
             region_selection = int(region),
             area_scrubber = 'off'
         )
-        
+        reg = df6['region'].iloc[-1]
+        df6 = df6.drop('region', axis=1)
+        dataset = df6
+        dataset.name = 'df6_' + str(region)
+        res = 'sr6'
+    print(dataset.name)
+    print(dataset)    
     arch = str(layer_1_input) + '-' + str(layer_2_input)
     dropout_input_list = ('y', 'n')
     for dropout_input_iter in dropout_input_list:
@@ -113,6 +121,7 @@ def main():
             dropout = True
         elif dropout_input == 'n':
             dropout = False
+
         print(
             'Running multi-variable DNN regression on ' + 
             str(dataset.name) + 

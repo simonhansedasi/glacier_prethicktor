@@ -126,12 +126,21 @@ def data_loader(
         )
         
         # drop bad data
-        df = df.drop(df.loc[df['Zmed']<0].index)
-        df = df.drop(df.loc[df['Lmax']<0].index)
-        df = df.drop(df.loc[df['Slope']<0].index)
-        df = df.drop(df.loc[df['Aspect']<0].index)
-        df = df.dropna(subset = ['Thickness'])
-        
+        if region_selection == 19:
+            df = df
+#             df = df.drop(df.loc[df['Zmed']<0].index)
+#             df = df.drop(df.loc[df['Lmax']<0].index)
+#             df = df.drop(df.loc[df['Slope']<0].index)
+#             df = df.drop(df.loc[df['Aspect']<0].index)
+#             df = df.dropna(subset = ['Thickness'])
+
+        elif region_selection != 19:
+            df = df.drop(df.loc[df['Zmed']<0].index)
+            df = df.drop(df.loc[df['Lmax']<0].index)
+            df = df.drop(df.loc[df['Slope']<0].index)
+            df = df.drop(df.loc[df['Aspect']<0].index)
+            df = df.dropna(subset = ['Thickness'])
+            
         df = df[[
             'RGIId',
             'CenLat',
@@ -283,7 +292,7 @@ def data_loader(
                     'Aspect',
                     'Lmax',
                     'Thickness',
-                    'regoin'
+                    'region'
                 ]]
                 return df
                 

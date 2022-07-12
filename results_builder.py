@@ -102,7 +102,7 @@ if chosen_dir == 'sm5':
     res = 'sr5'
     
 if chosen_dir == 'sm6':
-    print('please select region: 1, 2, 3, 6, 7, 8, 9, 10, 11, 13')
+    print('please select region: 1, 2, 3, 6, 7, 8, 9, 10, 11, 13, 19')
     region_selection = input()
     df6 = gl.data_loader(
         root_dir = '/home/prethicktor/data/',
@@ -119,7 +119,8 @@ if chosen_dir == 'sm6':
         dataset = df6
         dataset.name = str('df6_' + str(reg))
         res = 'sr6'
-
+        
+    
         #code snippet to add a leading 0 to regional ID so it matches with RGI when built later
         if len(str(reg)) == 1:
             N = 1
