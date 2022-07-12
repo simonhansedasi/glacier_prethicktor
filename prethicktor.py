@@ -7,7 +7,6 @@ import tensorflow as tf
 from tensorflow.python.util import deprecation
 import logging
 import warnings
-
 tf.get_logger().setLevel(logging.ERROR)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
@@ -15,17 +14,14 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
-print('please select module: sm1, sm2, sm3, sm4, sm5')
-dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5')
+print('please select module: sm1, sm2, sm3, sm4, sm5, sm6')
+dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5', 'sm6')
 
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
     print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5')
     chosen_dir = input()    
-
-
-
 
 if chosen_dir == 'sm1':
     df1 = gl.data_loader(
@@ -96,11 +92,34 @@ if chosen_dir == 'sm5':
     dataset.name = 'df5'
     res = 'sr5'
 
+if chosen_dir == 'sm6':
+    print('please select region: 1, 2, 3, 6, 7, 8, 9, 10, 11, 13')
+    region_selection = input()
+    df6 = gl.data_loader(
+        root_dir = '/home/prethicktor/data/',
+        RGI_input = 'y',
+        scale = 'r',
+        region_selection = int(region_selection),
+        area_scrubber = 'off'
+    )
+    reg = df6['region'].iloc[-1]
+    df6 = df6.drop('region', axis=1)
+    dataset = df6
+    dataset.name = str('df6_' + str(reg))
+    res = 'sr6'
+
+    #code snippet to add a leading 0 to regional ID so it matches with RGI when built later
+    if len(str(reg)) == 1:
+        N = 1
+        reg = str(reg).zfill(N + len(str(reg)))
+    else:
+        reg = str(reg)    
+    
+
 deviations_1 = pd.read_csv('zults/deviations_' + dataset.name + '_1.csv')
 deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')
 deviations = pd.concat([deviations_1, deviations_2])
 deviations = deviations.reset_index()
-print('loading RGI...')
 rootdir = '/home/prethicktor/data/RGI/rgi60-attribs/'
 RGI_extra = pd.DataFrame()
 for file in os.listdir(rootdir):
@@ -133,8 +152,6 @@ RGI = RGI.drop('index', axis=1)
 # 'Slope':'mean_slope'
 # })
 
-
-
 if chosen_dir == 'sm1':
     RGI = RGI.rename(columns = {
         'CenLat':'Lat',
@@ -149,11 +166,6 @@ if chosen_dir == 'sm1':
         'Mean Slope'
     ]]
 
-
-
-
-
-
 if chosen_dir == 'sm5':
     RGI = RGI[[
         'CenLat',
@@ -166,13 +178,29 @@ if chosen_dir == 'sm5':
         'Aspect',
         'Lmax'
     ]]
-#     # here we want to drop any bad RGI data that can throw off predictions
-#     RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
-#     RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
-#     RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
-#     RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
-#     RGI = RGI.reset_index()
-#     RGI = RGI.drop('index', axis=1)
+    
+if chosen_dir == 'sm6':
+    RGI = pd.DataFrame()
+    pth = '/home/prethicktor/data/RGI/rgi60-attribs/'
+    for file in os.listdir(pth):
+        region_number = file[:2]
+        if region_number == reg:
+            df = pd.read_csv(pth + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+            RGI = pd.concat([RGI, df], ignore_index = True)
+            
+            
+
+    RGI = RGI[[
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
 
 
 deviations = deviations [[
@@ -230,20 +258,22 @@ for rs in tqdm(RS):
         str(rs)
     )
     
-    dnn_model[model] = tf.keras.models.load_model(
-                    rootdir + 'sm_' + arch + '/' + 
-                    dataset.name + 
-                    '_' + 
-                    str(dropout) + 
-                    '_dnn_MULTI_' + 
-                    str(lr) + 
-                    '_' +
-                    str(0.2) +
-                    '_' +
-                    str(ep) + 
-                    '_' + 
-                    str(rs)
+    path = (
+        rootdir + 'sm_' + arch + '/' + 
+        dataset.name + 
+        '_' + 
+        str(dropout) + 
+        '_dnn_MULTI_' + 
+        str(lr) + 
+        '_' +
+        str(0.2) +
+        '_' +
+        str(ep) + 
+        '_' + 
+        str(rs)
     )
+    
+    dnn_model[model] = tf.keras.models.load_model(path)
     
     s = pd.Series(
         dnn_model[model].predict(RGI, verbose=0).flatten(), 
