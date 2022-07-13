@@ -18,12 +18,30 @@ RGI_loader
 
 '''
 def RGI_loader(
-    pth = '/data/fast1/glacierml/data/RGI/rgi60-attribs/'
+    pth = '/data/fast1/glacierml/data/RGI/rgi60-attribs/', 
+    region_selection = 'all'
 ):
+    if len(str(region_selection)) == 1:
+        N = 1
+        region_selection = str(region_selection).zfill(N + len(str(region_selection)))
+    else:
+        region_selection = region_selection
+        
     RGI_extra = pd.DataFrame()
-    for file in tqdm(os.listdir(pth)):
-        file_reader = pd.read_csv(pth+file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = pd.concat([RGI_extra,file_reader], ignore_index = True)
+    for file in (os.listdir(pth)):
+        
+        region_number = file[:2]
+        if str(region_selection) == 'all':
+            file_reader = pd.read_csv(pth + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+            RGI_extra = pd.concat([RGI_extra,file_reader], ignore_index = True)
+            
+        elif str(region_selection) != str(region_number):
+            pass
+        
+        elif str(region_selection) == str(region_number):
+            file_reader = pd.read_csv(pth + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+            RGI_extra = pd.concat([RGI_extra,file_reader], ignore_index = True)
+            
     RGI = RGI_extra[[
         'CenLat',
         'CenLon',
@@ -539,8 +557,9 @@ def build_and_train_model(dataset,
 
 
 #     split data
-    (train_features,test_features,
-     train_labels,test_labels) = data_splitter(dataset)
+    (
+        train_features, test_features, train_labels, test_labels
+    ) = data_splitter(dataset)
 #         print(dataset.name)
 
 #     normalize data
@@ -553,29 +572,11 @@ def build_and_train_model(dataset,
 
     normalizer['ALL'] = preprocessing.Normalization(axis=-1)
     normalizer['ALL'].adapt(np.array(train_features))
-#         print(dataset.name + ' data normalized')
 
 #      DNN model
     dnn_model = {}
     dnn_history = {}
     dnn_results = {}
-
-#         print(
-#             'Running multi-variable DNN regression on ' + 
-#             str(dataset.name) + 
-#             ' dataset with parameters: Learning Rate = ' + 
-#             str(learning_rate) + 
-#             ', Layer Architechture = ' +
-#             arch +
-#             ', dropout = ' + 
-#             dropout +
-#             ', Validation split = ' + 
-#             str(validation_split) + 
-#             ', Epochs = ' + 
-#             str(epochs) + 
-#             ', Random state = ' + 
-#             str(random_state) 
-#         )
 
     # set up model with  normalized data and defined layer architecture
     dnn_model = build_dnn_model(normalizer['ALL'], learning_rate, layer_1, layer_2, dropout)
@@ -591,14 +592,13 @@ def build_and_train_model(dataset,
 
     #save model, results, and history
 
-    if verbose:
-        print('Saving results')
 
 
     df = pd.DataFrame(dnn_history['MULTI'].history)
 
     
-    history_filename = (svd_res_pth +
+    history_filename = (
+        svd_res_pth +
        str(dataset.name) +
        '_' +
        dropout +
@@ -609,11 +609,13 @@ def build_and_train_model(dataset,
        '_' +
        str(epochs) +
        '_' +
-       str(random_state))
+       str(random_state)
+    )
 
     df.to_csv(  history_filename  )
 
-    model_filename =  (svd_mod_pth + 
+    model_filename =  (
+        svd_mod_pth + 
         str(dataset.name) + 
         '_' +
         dropout +
@@ -624,7 +626,8 @@ def build_and_train_model(dataset,
         '_' + 
         str(epochs) + 
         '_' + 
-        str(random_state))
+        str(random_state)
+    )
     
     dnn_model.save(  model_filename  )
     
@@ -747,7 +750,6 @@ def predictions_maker(
         df.loc[df.index[-1], 'epochs']= '150'
     if '200' in folder:
         df.loc[df.index[-1], 'epochs']= '200'       
-
     if '300' in folder:
         df.loc[df.index[-1], 'epochs']= '300'
     if '400' in folder:
@@ -766,7 +768,6 @@ def deviations_calculator(
     dataframe,
     dataset,
     dfsrq
-    
 ):
     dnn_model = {}
     df = pd.DataFrame()
@@ -792,13 +793,10 @@ def deviations_calculator(
         [df, s], ignore_index=True
     )
 
-
     # begin populating deviations table
     df.loc[
         df.index[-1], 'layer architecture'
     ] = arch  
-
-
 
     dnn_model[model_name] = tf.keras.models.load_model(model_loc)
     
@@ -862,9 +860,6 @@ def deviations_calculator(
 
     df = df.sort_values('test mae avg')
     df['epochs'] = df['epochs'].astype(int)
-    
-
-
     
     return df
     

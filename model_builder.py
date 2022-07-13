@@ -22,12 +22,12 @@ def main():
     RS = range(0,25,1)
     
     # select either to train on all available data, or break up training by regions
-    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6')
-    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6')
+    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7')
+    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7')
     module = input()
     
     while module not in module_list:
-        print('please select valid module: sm1, sm2, sm3, sm4, sm5, sm6')
+        print('please select valid module: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
         module = input()
     # here we can select between databases
     # sm1 = original GlaThiDa information
@@ -97,20 +97,85 @@ def main():
         dataset.name = 'df5'
     
     if module == 'sm6':
-        print('please select region: 1, 2, 3, 6, 7, 8, 9, 10, 11, 13, 19')
-        region = input()
-        df6 = gl.data_loader(
+        for region_selection in range(1,20,1):
+            
+            if len(str(region_selection)) == 1:
+                N = 1
+                region_selection = str(region_selection).zfill(N + len(str(region_selection)))
+            else:
+                str(region_selection) == str(region_selection)
+                
+            print(region_selection)
+
+            df6 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'y',
+                scale = 'r',
+                region_selection = int(region_selection),
+                area_scrubber = 'off'
+            )
+            if df6.empty:
+                pass            
+            if len(df6) >= 3:
+                df6 = df6.drop('region', axis=1)
+                dataset = df6
+                dataset.name = str('df6_' + str(region_selection))
+                res = 'sr6'
+
+                arch = str(layer_1_input) + '-' + str(layer_2_input)
+                dropout_input_list = ('y', 'n')
+                for dropout_input_iter in dropout_input_list:
+                    dropout_input = dropout_input_iter
+                    if dropout_input == 'y':
+                        dropout = True
+                    elif dropout_input == 'n':
+                        dropout = False
+
+                    print(
+                        'Running multi-variable DNN regression on ' + 
+                        str(dataset.name) + 
+                        ' dataset with parameters: Learning Rate = ' + 
+                        str(lr_input) + 
+                        ', Layer Architechture = ' +
+                        arch +
+                        ', dropout = ' + 
+                        str(dropout) +
+                        ', Validation split = ' + 
+                        str(0.2) + 
+                        ', Epochs = ' + 
+                        str(ep_input) 
+                    )
+
+                    for rs in tqdm(RS):
+            #             for lr in LR:
+
+                        gl.build_and_train_model(
+                            dataset, 
+                            learning_rate = float(lr_input), 
+                            random_state = rs, 
+                            epochs = int(ep_input), 
+                            module = module, 
+                            res = res,
+                            layer_1 = layer_1_input,
+                            layer_2 = layer_2_input,
+                            dropout = dropout
+                        )
+            
+    if module == 'sm6' and region_selection == '19':
+        raise SystemExit
+        
+    if module == 'sm7':
+        df7 = gl.data_loader(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
-            scale = 'r',
-            region_selection = int(region),
-            area_scrubber = 'off'
+            scale = 'g',
         )
-        reg = df6['region'].iloc[-1]
-        df6 = df6.drop('region', axis=1)
-        dataset = df6
-        dataset.name = 'df6_' + str(region)
-        res = 'sr6'
+        dataset = df7
+        dataset.name = 'df7'
+        res = 'sr7'
+        
+        
+        
     print(dataset.name)
     print(dataset)    
     arch = str(layer_1_input) + '-' + str(layer_2_input)
