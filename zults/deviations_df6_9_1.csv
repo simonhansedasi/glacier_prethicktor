@@ -1,2 +1,0 @@
-,layer architecture,total parameters,trained parameters,total inputs,df,dropout,learning rate,validation split,epochs,test mae avg,train mae avg,test mae std dev,train mae std dev,test predicted thickness std dev,train predicted thickness std dev
-0,10-5,180.0,161.0,99.0,df6_9,1,0.01,0.2,100,56.47349189758301,60.538780212402344,42.88906665212066,26.53701792214997,47.75848388671875,28.062231063842773
