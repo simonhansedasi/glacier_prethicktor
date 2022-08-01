@@ -3,11 +3,22 @@ A machine learning approach to predicting glacier thicknesses.
 
 ---
 
+## Workflow 
+
+---
+
+### Step 1: \
+### consult the ting
+
+
+
+
+---
+
 ## Model Assembly 
 
 ---
 
-**The Glacier Thickness Predictor (GTP) is divided into four modules representing different datasets used in model training: sm1, sm2, sm4, sm5.**
 
 
 
