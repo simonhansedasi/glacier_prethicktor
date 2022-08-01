@@ -156,7 +156,7 @@ def data_loader(
             df = df.drop(df.loc[df['Zmed']<0].index)
             df = df.drop(df.loc[df['Lmax']<0].index)
             df = df.drop(df.loc[df['Slope']<0].index)
-            df = df.drop(df.loc[df['Aspect']<0].index)
+#             df = df.drop(df.loc[df['Aspect']<0].index)
             df = df.dropna(subset = ['Thickness'])
             
         df = df[[
@@ -203,7 +203,7 @@ def data_loader(
                 df = df.drop(df.loc[df['Zmed']<0].index)
                 df = df.drop(df.loc[df['Lmax']<0].index)
                 df = df.drop(df.loc[df['Slope']<0].index)
-                df = df.drop(df.loc[df['Aspect']<0].index)
+#                 df = df.drop(df.loc[df['Aspect']<0].index)
                 df = df.reset_index()
                 df = df.drop('index', axis=1)
                 df = df[[
