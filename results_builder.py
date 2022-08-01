@@ -16,6 +16,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
 print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
+print(' ')
 dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7')
 chosen_dir = input()
 
@@ -108,6 +109,7 @@ if chosen_dir == 'sm6':
             rootdir = 'saved_models/' + chosen_dir + '/'
             (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
             dnn_model = {}
+            print(' ')
 
             print('loading and evaluating models...')
             dropout_input_list = ('y', 'n')
@@ -261,7 +263,7 @@ if chosen_dir == 'sm7':
 rootdir = 'saved_models/' + chosen_dir + '/'
 (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
 dnn_model = {}
-
+print(' ')
 print('loading and evaluating models...')
 dropout_input_list = ('y', 'n')
 for dropout_input_iter in dropout_input_list:
@@ -311,46 +313,28 @@ for dropout_input_iter in dropout_input_list:
     predictions.to_csv('zults/predictions_' + dataset.name + '_' + dropout + '.csv')
     
     # calculate statistics
+    print(' ')
     print('calculating statistics...')
+
     dnn_model = {}
     for epochs in list(predictions['epochs'].unique()):
         df = predictions[predictions['epochs'] == epochs]
-        
+
         for dataframe in list(df['dataset'].unique()):
             dfs = df[df['dataset'] == dataframe]
-            
+
             for arch in list(dfs['architecture'].unique()):
                 dfsr = dfs[dfs['architecture'] == arch]
                 
-                if dfsr.empty:
-                    pass
+
                 
                 for lr in list(dfsr['learning rate'].unique()):
                     dfsrq = dfsr[dfsr['learning rate'] == lr]
-                    
-                    if dfsrq.empty:
-                        pass
-                    
-                    if not dfsrq.empty:
-                            # find mean and std dev of test mae
-                        model_name = (
-                                arch + 
-                                '_' + 
-                                dataset.name + 
-                                '_' +
-                                dropout +
-                                '_dnn_MULTI_' +
-                                str(lr) +
-                                '_0.2_' +
-                                str(100) +
-                                '_0'
-                        )
-                        
-                        model_loc = (
-                            rootdir + 
-                            'sm_' +
+
+
+                    model_name = (
                             arch + 
-                            '/' + 
+                            '_' + 
                             dataset.name + 
                             '_' +
                             dropout +
@@ -359,8 +343,28 @@ for dropout_input_iter in dropout_input_list:
                             '_0.2_' +
                             str(100) +
                             '_0'
-                        )
-                        
+                    )
+
+                    model_loc = (
+                        rootdir + 
+                        'sm_' +
+                        arch + 
+                        '/' + 
+                        dataset.name + 
+                        '_' +
+                        dropout +
+                        '_dnn_MULTI_' +
+                        str(lr) +
+                        '_0.2_' +
+                        str(100) +
+                        '_0'
+                    )
+
+                    isdir = os.path.isdir(model_loc)
+
+                    if isdir == False:
+                        print('model not here, calculating next model')
+                    elif isdir == True:
                         df = gl.deviations_calculator(
                             model_loc = model_loc,
                             model_name = model_name,
@@ -372,7 +376,7 @@ for dropout_input_iter in dropout_input_list:
                             dataset = dataset,
                             dfsrq = dfsrq
                         )
-    
+
                         deviations = pd.concat(
                             [deviations, df], ignore_index = True
                         )
