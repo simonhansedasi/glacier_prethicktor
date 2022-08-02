@@ -25,7 +25,7 @@ The Glacier Thickness Predictor (GTP) consists of four python files, an interact
 
 ### Step 1: 
 Assemble or select a module of training data \
-![Image](figs/readme/data_selection.png)
+![Image](/figs/readme/data_selection.png)
 
 
 ### Step 2:
