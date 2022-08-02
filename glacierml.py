@@ -410,12 +410,15 @@ output = hyperparameters and layer architecture for DNN model
 '''
 # designed to provide a CLI to the model for each run rather modifying code
 def prethicktor_inputs():
+    print('')
     print('Please set neurons for first layer')
     layer_1_input = input()
     
+    print('')
     print('Please set neurons for second layer')
     layer_2_input = input()
     
+    print('')
     print('Please set learning rate: 0.1, 0.01, 0.001')
     lr_list = ('0.1, 0.01, 0.001')
     lr_input = input()
@@ -423,6 +426,7 @@ def prethicktor_inputs():
         print('Please set valid learning rate: 0.1, 0.01, 0.001')
         lr_input = input()
         
+    print('')
     print('Please set epochs')
     ep_input = int(input())
     while type(ep_input) != int:
