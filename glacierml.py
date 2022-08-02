@@ -246,7 +246,7 @@ def data_loader(
                 r_df = r_df[[
                 #     'GlaThiDa_index',
                 #     'RGI_index',
-#                     'RGIId',
+                    'RGIId',
                     'region',
                 #     'geographic region',
                     'CenLat',
