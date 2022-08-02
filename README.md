@@ -34,7 +34,7 @@ Calculate layer architecture using zults grabber notebook. \
 
 
 ### Step 3:
-Run python file model_builder.py for desired module. The command line interface will ask the user to input layer architecture, learning rate, and epochs.\
+Run python file model_builder.py for desired module. The command line interface will ask the user to input layer architecture, learning rate, and epochs.   \
 
 ![Image](figs/readme/model_builder.png)
 
