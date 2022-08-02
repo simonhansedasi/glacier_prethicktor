@@ -186,7 +186,7 @@ def main():
             dropout = True
         elif dropout_input == 'n':
             dropout = False
-
+        print('')
         print(
             'Running multi-variable DNN regression on ' + 
             str(dataset.name) + 
