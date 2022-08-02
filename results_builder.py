@@ -264,7 +264,7 @@ rootdir = 'saved_models/' + chosen_dir + '/'
 (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
 dnn_model = {}
 print(' ')
-print('loading and evaluating models...')
+
 dropout_input_list = ('y', 'n')
 for dropout_input_iter in dropout_input_list:
     predictions = pd.DataFrame()
@@ -276,7 +276,7 @@ for dropout_input_iter in dropout_input_list:
         
     elif dropout_input == 'n':
         dropout = '0'
-        
+    print('loading and evaluating models...')
     for arch in os.listdir(rootdir):        
         if dropout == '1':
             print('layer architecture: ' + arch[3:] + ' dropout = True')
@@ -313,9 +313,9 @@ for dropout_input_iter in dropout_input_list:
     predictions.to_csv('zults/predictions_' + dataset.name + '_' + dropout + '.csv')
     
     # calculate statistics
-    print(' ')
+    
     print('calculating statistics...')
-
+    print(' ')
     dnn_model = {}
     for epochs in list(predictions['epochs'].unique()):
         df = predictions[predictions['epochs'] == epochs]
