@@ -105,7 +105,7 @@ def main():
             else:
                 str(region_selection) == str(region_selection)
                 
-            print(region_selection)
+            # print(region_selection)
 
             df6 = gl.data_loader(
                 root_dir = '/home/prethicktor/data/',
@@ -176,8 +176,8 @@ def main():
         
         
         
-    print(dataset.name)
-    print(dataset)    
+    # print(dataset.name)
+    # print(dataset)    
     arch = str(layer_1_input) + '-' + str(layer_2_input)
     dropout_input_list = ('y', 'n')
     for dropout_input_iter in dropout_input_list:
