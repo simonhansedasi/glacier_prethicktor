@@ -29,12 +29,13 @@ Assemble or select a module of training data \
 
 
 ### Step 2:
-Calculate layer architecture using zults grabber notebok. \
+Calculate layer architecture using zults grabber notebook. \
 ![Image](figs/readme/parameter_calculator.png)
 
 
 ### Step 3:
-Run python file model_builder.py for desired module. The command line interface will ask the user to input layer architecture, learning rate, and epochs. \ 
+Run python file model_builder.py for desired module. The command line interface will ask the user to input layer architecture, learning rate, and epochs.\
+
 ![Image](figs/readme/model_builder.png)
 
 
