@@ -15,7 +15,7 @@ A machine learning approach to predicting glacier thicknesses.
 ---
 Knowledge of global ice volume remains a crucial factor for adapting to our changing climate. Consensus estimates have been presented, however, physical models make several assumptions. Here we attempt a data driven approach to estimating the global ice volume. \
  \
-The Glacier Thickness Predictor (GTP) consists of four python files and an interactive jupyter notebook. 
+The Glacier Thickness Predictor (GTP) consists of four python files, an interactive jupyter notebook for model analysis, and an example workflow notebook. The example notebook provides a simplified version of the model workflow, while the main GTP is run through a terminal window and is capable of running on either GPU or CPU in a docker container. 
 
 ---
 
@@ -24,7 +24,8 @@ The Glacier Thickness Predictor (GTP) consists of four python files and an inter
 ---
 
 ### Step 1: 
-Assemble or select a module of training data
+Assemble or select a module of training data \
+![Image](/home/simonhans/coding/glacier_prethicktor/figs/readme)
 
 
 ### Step 2:
