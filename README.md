@@ -34,7 +34,7 @@ Calculate layer architecture using zults grabber notebook. \
 
 
 ### Step 3:
-Run python file model_builder.py for desired module. The command line interface will ask the user to input layer architecture, learning rate, and epochs.   \
+Run python file model_builder.py for desired module. The CLI will ask for layer architecture, learning rate, and epochs. \
 
 ![Image](figs/readme/model_builder.png)
 
@@ -52,7 +52,8 @@ Analyze ML results in zults grabber notebook and change parameters as needed. Th
 ### Step 6:
 Run python file prethicktor.py on selected module. A table of trained models will load, select one to use for making thickness predictions. \
 ![Image](figs/readme/prethicktor_1.png)
-\
+
+
 Once selected, the GTP will predict thicknesses and calcuate deviations across the 25 models for each region \
 ![Image](figs/readme/prethicktor_part_2.png)
 ### Step 7:
