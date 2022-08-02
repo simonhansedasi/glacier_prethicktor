@@ -207,6 +207,7 @@ def data_loader(
                 df = df.reset_index()
                 df = df.drop('index', axis=1)
                 df = df[[
+                    'RGIId'
 #                     'Lat',
 #                     'Lon',
                     'CenLat',
@@ -222,7 +223,10 @@ def data_loader(
                 ]]
                 
             elif area_scrubber == 'off':
-                df = df.drop(['area_g', 'RGIId'], axis = 1)
+                df = df.drop([
+                    'area_g', 
+                    'RGIId'
+                             ], axis = 1)
                 df = df.rename(columns = {
                     'area_r':'Area'
                 })
@@ -298,6 +302,7 @@ def data_loader(
                     'area_r':'Area'
                 })
                 df = df[[
+#                     'RGIId'
 #                     'Lat',
 #                     'Lon',
                     'CenLat',
@@ -316,6 +321,7 @@ def data_loader(
                 
             elif area_scrubber == 'off':
                 df = df[[
+#                     'RGIId'
 #                     'Lat',
 #                     'Lon',
                     'CenLat',
