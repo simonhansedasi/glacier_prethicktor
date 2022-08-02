@@ -15,6 +15,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
 print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
+
 dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7')
 
 chosen_dir = input()
@@ -218,6 +219,7 @@ if chosen_dir == 'sm6':
 
                 predicted_thickness_std_dev = np.std(dfs.loc[i])
                 RGI_prethicked['predicted thickness std dev'].loc[i] = predicted_thickness_std_dev
+            print(' ')
 
             RGI_prethicked.to_csv(
                 'zults/RGI_predicted_' +
@@ -250,6 +252,24 @@ if chosen_dir == 'sm7':
     deviations = pd.concat([deviations_1, deviations_2])
     deviations = deviations.reset_index()
     rootdir = '/home/prethicktor/data/RGI/rgi60-attribs/'
+    deviations = deviations [[
+        'layer architecture',
+        'dropout',
+        # 'model parameters',
+        # 'total inputs',
+        'learning rate',
+        'epochs',
+        # 'test mae avg',
+        # 'train mae avg',
+        # 'test mae std dev',
+        # 'train mae std dev'
+    ]]
+    print(' ')
+
+    print(deviations.to_string())
+    # here we can select an entry from the deviations table to make predictions. Default is top entry
+    print('Please select model index to predict thicknesses for RGI')
+    selected_model = int(input())
     for region_selection in range(1,20,1):
         RGI = gl.RGI_loader(
             pth = '/home/prethicktor/data/RGI/rgi60-attribs/',
@@ -274,10 +294,7 @@ if chosen_dir == 'sm7':
             # 'train mae std dev'
         ]]
 
-#         print(deviations.to_string())
-        # here we can select an entry from the deviations table to make predictions. Default is top entry
-        print('Please select model index to predict thicknesses for RGI')
-        selected_model = 0
+
         while type(selected_model) != int:
             print('Please select model index to predict thicknesses for RGI')
             selected_model = int(input()) 
@@ -365,6 +382,7 @@ if chosen_dir == 'sm7':
 
             predicted_thickness_std_dev = np.std(dfs.loc[i])
             RGI_prethicked['predicted thickness std dev'].loc[i] = predicted_thickness_std_dev
+        print(' ')
 
         RGI_prethicked.to_csv(
             'zults/RGI_predicted_' +
@@ -557,6 +575,7 @@ for i in tqdm(dfs.index):
     predicted_thickness_std_dev = np.std(dfs.loc[i])
     RGI_prethicked['predicted thickness std dev'].loc[i] = predicted_thickness_std_dev
 
+print(' ')
 RGI_prethicked.to_csv(
     'zults/RGI_predicted_' +
     dataset.name + 
