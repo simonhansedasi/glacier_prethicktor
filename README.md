@@ -1,8 +1,11 @@
 # glacier_prethicktor
 A machine learning approach to predicting glacier thicknesses.
 
-Table of Contents:
+### Table of Contents:
 
+#### 1. Project Description
+#### 2. Workflow
+#### 3. Model Assembly
 
 
 ---
