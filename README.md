@@ -29,31 +29,31 @@ Assemble or select a module of training data \
 
 
 ### Step 2:
-Calculate layer architecture using zults grabber notebok
+Calculate layer architecture using zults grabber notebok. \
 ![Image](figs/readme/parameter_calculator.png)
 
 
 ### Step 3:
-Run python file model_builder.py for desired module. The command line interface will ask the user to input layer architecture, learning rate, and epochs. 
+Run python file model_builder.py for desired module. The command line interface will ask the user to input layer architecture, learning rate, and epochs. \ 
 ![Image](figs/readme/model_builder.png)
 
 
 ### Step 4:
-Run python file results_builder.py for desired module.
+Run python file results_builder.py for desired module. \
 ![Image](figs/readme/results_builder.png)
 
 
 ### Step 5:
-Analyze ML results in zults grabber notebook and change parameters as needed. The notebook will load all models that have results, and it is possible to select which data to view.
+Analyze ML results in zults grabber notebook and change parameters as needed. The notebook will load all models that have results, and it is possible to select which data to view. \
 ![Image](figs/readme/deviations_analysis.png)
 
 
 ### Step 6:
-Run python file prethicktor.py on selected module. A table of trained models will load, select one to use for making thickness predictions.
+Run python file prethicktor.py on selected module. A table of trained models will load, select one to use for making thickness predictions. \
 ![Image](figs/readme/prethicktor_part_1.png)
 \
-Once selected, the GTP will predict thicknesses and calcuate deviations across the 25 models for each region
-
+Once selected, the GTP will predict thicknesses and calcuate deviations across the 25 models for each region \
+![Image](figs/readme/prethicktor_part_2.png)
 ### Step 7:
 Load predicted thicknesses for desired model in zults grabber notebook and analyze results
 
