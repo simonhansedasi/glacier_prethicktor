@@ -43,6 +43,7 @@ def RGI_loader(
             RGI_extra = pd.concat([RGI_extra,file_reader], ignore_index = True)
             
     RGI = RGI_extra[[
+        'RGIId',
         'CenLat',
         'CenLon',
         'Slope',
