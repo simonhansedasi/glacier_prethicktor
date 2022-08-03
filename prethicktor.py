@@ -275,6 +275,7 @@ if chosen_dir == 'sm7':
             pth = '/home/prethicktor/data/RGI/rgi60-attribs/',
             region_selection = int(region_selection)
         )
+        RGI = RGI.drop('RGIId', axis = 1)
         if len(str(region_selection)) == 1:
             N = 1
             region_selection = str(region_selection).zfill(N + len(str(region_selection)))
