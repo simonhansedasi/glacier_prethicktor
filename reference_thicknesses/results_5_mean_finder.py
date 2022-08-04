@@ -54,4 +54,4 @@ for region_number in region_list:
         mean_glacier_thickness = df.mean().mean()
 #         print(mean_glacier_thickness)
         RGI['Farinotti Mean Thickness'].loc[RGI['RGIId'] == file[:14]] = mean_glacier_thickness
-RGI.to_csv('farinotti_thicknesses/results_5_mean_thicknesses.csv')
+RGI.to_csv('results_5_mean_thicknesses.csv')

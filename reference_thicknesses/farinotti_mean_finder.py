@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 from tqdm import tqdm
-import glacierml as gl
+# import glacierml as gl
 
 pth_2 = '/home/simonhans/data/prethicktor/RGI/rgi60-attribs/'
 RGI_extra = pd.DataFrame(columns = ['Farinotti Mean Thickness'])
@@ -35,8 +35,9 @@ for region_number in range(1,20,1):
         imarray = np.array(im)
         df = pd.DataFrame(imarray)
         df = df.replace(0.0, np.nan)
-        mean_glacier_thickness = df.mean().mean()
+        mean_glacier_thickness = np.nanmean(np.nanmean(df.to_numpy()))
+        
         RGI['Farinotti Mean Thickness'].loc[RGI['RGIId'] == file[:14]] = mean_glacier_thickness
         
         
-RGI.to_csv('Farinotti_mean_thickness_RGI_ID.csv')
+RGI.to_csv('Farinotti_mean_thickness_RGI_ID_2.csv')
