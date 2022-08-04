@@ -35,23 +35,30 @@ pth_1 = '/home/simonhans/data/prethicktor/RGI/results_model_1/'
 
 region_list = (11, 12, 14)
 for region_number in range(1,20,1):
-            
+
+#     print(RGI)
     if len(str(region_number)) == 1:
         N = 1
         region_number = str(region_number).zfill(N + len(str(region_number)))
     else:
         str(region_number) == str(region_number)
-
+    print(region_number)
+    
     region_folder = pth_1 + 'RGI60-' + str(region_number) + '/'
     for file in tqdm(os.listdir(region_folder)):
         im = Image.open(region_folder + file)
-#         im.show()
         imarray = np.array(im)
+        part_1 = file[10:]
+        rgi_name = part_1[:-4]
+#         print(rgi_name)
+#         im.show()
         df = pd.DataFrame(imarray)
-        df = df.replace(-9999, np.nan)
         df = df.replace(0.0, np.nan)
+#         print(file)
 #         print(df)
-        mean_glacier_thickness = df.mean().mean()
+        mean_glacier_thickness =  np.nanmean(np.nanmean(df.to_numpy()))
 #         print(mean_glacier_thickness)
-        RGI['Farinotti Mean Thickness'].loc[RGI['RGIId'] == file[:14]] = mean_glacier_thickness
+        RGI['Farinotti Mean Thickness'].loc[RGI['RGIId'] == rgi_name] = mean_glacier_thickness
+#         break
+#     break
 RGI.to_csv('results_1_mean_thicknesses.csv')

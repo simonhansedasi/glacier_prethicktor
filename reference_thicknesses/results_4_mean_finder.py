@@ -46,6 +46,8 @@ for region_number in region_list:
     for file in tqdm(os.listdir(region_folder)):
         im = Image.open(region_folder + file)
 #         im.show()
+        part_1 = file[10:]
+        rgi_name = part_1[:-4]
         imarray = np.array(im)
         df = pd.DataFrame(imarray)
         df = df.replace(-9999, np.nan)
@@ -53,5 +55,5 @@ for region_number in region_list:
 #         print(df)
         mean_glacier_thickness = df.mean().mean()
 #         print(mean_glacier_thickness)
-        RGI['Farinotti Mean Thickness'].loc[RGI['RGIId'] == file[:14]] = mean_glacier_thickness
+        RGI['Farinotti Mean Thickness'].loc[RGI['RGIId'] == rgi_name] = mean_glacier_thickness
 RGI.to_csv('results_4_mean_thicknesses.csv')
