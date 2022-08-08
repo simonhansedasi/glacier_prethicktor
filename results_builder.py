@@ -259,7 +259,18 @@ if chosen_dir == 'sm7':
         dataset.name = 'df7'
         res = 'sr7'
         
-
+        
+if chosen_dir == 'sm8':
+    for region_selection in range(1,20,1):
+        df8 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+        )
+        df8 = df8.drop('Zmed', axis = 1)
+        dataset = df8
+        dataset.name = 'df8'
+        res = 'sr8'
 rootdir = 'saved_models/' + chosen_dir + '/'
 (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
 dnn_model = {}

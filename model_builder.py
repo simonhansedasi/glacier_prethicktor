@@ -22,12 +22,12 @@ def main():
     RS = range(0,25,1)
     
     # select either to train on all available data, or break up training by regions
-    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7')
-    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7')
+    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7', 'sm8')
+    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7', 'sm8')
     module = input()
     
     while module not in module_list:
-        print('please select valid module: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
+        print('please select valid module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
         module = input()
     # here we can select between databases
     # sm1 = original GlaThiDa information
@@ -173,6 +173,17 @@ def main():
         dataset = df7
         dataset.name = 'df7'
         res = 'sr7'
+        
+    if module == 'sm8':
+        df8 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+        )
+        df8 = df8.drop('Zmed', axis = 1)
+        dataset = df8
+        dataset.name = 'df8'
+        res = 'sr8'
         
         
         
