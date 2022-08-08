@@ -15,13 +15,13 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 
-print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
+print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
 print(' ')
-dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7')
+dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7', 'sm8')
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
-    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
+    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
     chosen_dir = input()    
 
 if chosen_dir == 'sm1':
@@ -271,6 +271,8 @@ if chosen_dir == 'sm8':
         dataset = df8
         dataset.name = 'df8'
         res = 'sr8'
+        print(df8)
+        
 rootdir = 'saved_models/' + chosen_dir + '/'
 (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
 dnn_model = {}
