@@ -506,7 +506,6 @@ if chosen_dir == 'sm8':
                 '_' + 
                 str(rs)
             )
-            print(model)
 
             path = (
                 rootdir + 'sm_' + arch + '/' + 
