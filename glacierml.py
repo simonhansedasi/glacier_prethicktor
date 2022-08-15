@@ -208,7 +208,7 @@ def data_loader(
                 df = df.reset_index()
                 df = df.drop('index', axis=1)
                 df = df[[
-                    'RGIId'
+                    'RGIId',
 #                     'Lat',
 #                     'Lon',
                     'CenLat',
