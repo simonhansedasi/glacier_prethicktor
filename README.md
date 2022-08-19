@@ -4,8 +4,9 @@ A machine learning approach to predicting glacier thicknesses.
 ### Table of Contents:
 
 #### 1. Project Description
-#### 2. Workflow
-#### 3. Model Assembly
+#### 2. Detailed description
+#### 3. Workflow
+#### 4. Model Assembly
 
 
 ---
@@ -15,11 +16,120 @@ A machine learning approach to predicting glacier thicknesses.
 ---
 Knowledge of global ice volume remains a crucial factor for adapting to our changing climate. Consensus estimates have been presented, however, physical models make several assumptions. Here we attempt a data driven approach to estimating the global ice volume. \
  \
-The Glacier Thickness Predictor (GTP) consists of four python files, an interactive jupyter notebook for model analysis, and an example workflow notebook. The example notebook provides a simplified version of the model workflow, while the main GTP is run through a terminal window and is capable of running on either GPU or CPU in a docker container. 
+The Glacier Thickness Predictor (GTP) consists of four python files an example workflow notebook, and 5 more notebooks for model and data analysis. The example notebook provides a simplified version of the model workflow, while the main GTP is run through a terminal window and is capable of running on either GPU or CPU in a docker container. 
 
 ---
 
-## 2. Workflow 
+## 2. Detailed description 
+
+---
+
+---
+
+## 2. Detailed description 
+
+---
+<ol>
+    
+<li> glacierml.py </li>
+This file contains all the functions used throughout the GTP. Imported as gl.
+<br>
+    <br/>
+
+<li> model_builder.py </li>
+This file contains scripts to build and train ML models to predict the thickness of glaciers. When run the user will be prompted to select a module. These modules represent different ways of assembling training data with gl.data_loader().
+    
+<ul>
+<br/>
+
+<li> sm1 </li>
+GlaThiDa data only (Area, Mean Slope, Centroid Latitude, Centroid Longitude)
+<br>
+    <br/>
+
+<li>sm2</li>
+GlaThiDa data combined with RGI on a global scale. No corrections for size anomalies (Area mismatch between GlaThiDa and RGI)
+<br>
+    <br/>
+
+    
+<li>sm3</li>
+GlaThiDa data combined with RGI on a global scale. Corrections for size anomalies include dropping glaciers with size difference greater than 1 km
+<br>
+    <br/>
+<li>sm4</li>
+GlaThiDa data combined with RGI on a global scale. Corrections for size anomalies include dropping glaciers with size difference greater than 5 km
+<br>
+    <br/>
+
+<li>sm5</li>
+GlaThiDa data combined with RGI on a global scale. No corrections for size anomalies (Area mismatch between GlaThiDa and RGI). Dropped data column 'Zmed' from training and predictions as it contains several erroneous data. 
+<br>
+    <br/>
+
+<li>sm6</li>
+GlaThiDa data combined with RGI on a regional scale. No correction for size anomalies. Each data set is trained and predicted for only that RGI region
+<br>
+    <br/>
+
+<li>sm7</li>
+GlaThiDa data combined with RGI on a global scale. No corrections for size anomalies (Area mismatch between GlaThiDa and RGI). **NOTE** sm7 is the same as sm2, however, at the time the prethicktor.py file was not set up to make predictions regionally. To make regional predictions, an entire new module was required. prethicktor.py has since been patched such that any module can predict regionally.
+<br>
+    <br/>
+
+<li>sm8</li>
+GlaThiDa data combined with RGI on a global scale. No corrections for size anomalies. Dropped data column 'Zmed' from training and predictions as it contains several erroneous data.
+</ul>
+    
+<br>
+    <br/>
+    
+After a training module is selected, the user is then prompted for layer architecture, learning rate, and epochs. These hyperparameters are useful knobs to tweak to perfect model performance, but as a first run on a module, the defaults used in this project are:
+<ul>
+    <li> layer 1 = 10 </li>
+    <li> layer 2 = 5 </li>
+    <li> learning rate = 0.01 </li>
+    <li> epochs = 100 </li>
+</ul>
+    <br/>
+With the hyperparameters input, the model_builder.py will build and train two ensembles of models with different randomly selected validation and training data. The first ensemble includes a dropout layer, the second ensemble does not include a dropout layer. The models and their histories are then saved in their respective saved folders in the projects home directory. The models and histories can also be saved into memory as a variable, demonstrated in the example-workflow notebook.
+    
+    
+<br>
+    <br/>
+<li> results_builder.py </li>
+The results_builder.py file loads and evaluates the models in a given training module and then saves the results to a csv. 
+<br>
+    <br/>
+    
+The CLI in the terminal will prompt for a module when run. results_builder.py will load and evaluate all models in the selected module using gl.predictions_maker(). This function assembles a dataframe of model information and predictions made on training and testing datasets, identifiable by the given random state of selected data. Each thickness is then multiplied by the area used in its prediction to compute a predicted volume. Volumes are then summed and divided by the summed area of the dataset to produce an average thickness across all predicted glaciers in a given train or test dataset. This process is repeated for all 25 random states in the ensemble. After all models have been evaluated, results_builder.py will save a .csv file of all model predictions.
+    
+These predictions tables are then passed to the gl.deviations_calculator() function to compute the standard deviations and variances across the ensembles. This function will collapse each 25 entry predictions table into a single row for a deviations table showing the average value and standard deviations for mean absolute error and predicted thicknesses. These deviations tables are then loaded in the ML analysis notebook to examine predictions and loss curves, as well as prethicktor.py to make global or regional predictions for glaciers in the Randolph Glacier Inventory.
+
+<li> prethicktor.py </li>
+This python file loads a desired model ensemble to make predictions for glaciers with unknown thicknesses in the Randolph Glacier Inventory (RGI).
+
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+## 3. Workflow 
 
 ---
 

@@ -683,11 +683,26 @@ def predictions_maker(
     pred_test = dnn_model[model_name].predict(
         test_features, verbose=0
     )
-
+    
+    train_thickness = pd.Series(pred_train.flatten(), name = 'thickness')
+    train_features = train_features.reset_index()
+    train_features = train_features.drop('index', axis = 1)
+    dft = pd.concat([train_features, thickness], axis = 1)
+    dft['vol'] = dft['thickness'] * (dft['Area'] * 1e6)
+    avg_train_thickness = sum(dft['vol']) / sum(dft['Area'] * 1e6)
+    
     avg_thickness = pd.Series(
         np.mean(pred_train), name = 'avg train thickness'
     )
 
+    test_thickness = pd.Series(pred_test.flatten(), name = 'thickness')
+    test_features = test_features.reset_index()
+    test_features = test_features.drop('index', axis = 1)
+    dft = pd.concat([test_features, test_thickness], axis = 1)
+    dft['vol'] = dft['thickness'] * (dft['Area'] * 1e6)
+    avg_test_thickness = sum(dft['vol']) / sum(dft['Area'] * 1e6)
+    
+    
     avg_test_thickness = pd.Series(
         np.mean(pred_test),  name = 'avg test thickness'
     )
@@ -936,12 +951,21 @@ def random_state_finder(
 '''
 predictions_loader
 '''
-def predictions_loader():
+def predictions_loader(
+    training_module,
+    architecture,
+    learning_rate,
+    epochs,
+):
     root_dir = 'zults/'
     RGI_predicted = pd.DataFrame()
+
     for file in tqdm(os.listdir(root_dir)):
-        if 'RGI_predicted' in file:
+        # print(file)
+        if 'RGI_predicted' in file and 'df' + training_module + '_' in file and architecture in file and learning_rate in file and epochs in file:
+            # print(file)
             file_reader = pd.read_csv(root_dir + file)
+            # print(file_reader)
             file_reader['volume km3'] = (
                 file_reader['avg predicted thickness'] / 1e3
             ) * file_reader['Area']
