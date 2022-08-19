@@ -345,6 +345,7 @@ def data_loader(
     return df
 
 
+
 '''
 GlaThiDa_RGI_index_matcher:
 '''
@@ -931,3 +932,672 @@ def random_state_finder(
         
     return rs
     
+    
+'''
+predictions_loader
+'''
+def predictions_loader():
+    root_dir = 'zults/'
+    RGI_predicted = pd.DataFrame()
+    for file in tqdm(os.listdir(root_dir)):
+        if 'RGI_predicted' in file:
+            file_reader = pd.read_csv(root_dir + file)
+            file_reader['volume km3'] = (
+                file_reader['avg predicted thickness'] / 1e3
+            ) * file_reader['Area']
+    #         print(file_reader)
+            file_reader = file_reader.dropna()
+        
+            sum_volume = sum(file_reader['volume km3'])
+            total_volume = pd.Series(sum_volume, name = 'total volume')
+            RGI_predicted = pd.concat([RGI_predicted, total_volume], ignore_index = True)    
+            
+            file_reader['variance'] = file_reader['predicted thickness std dev'] **2 
+            variance = sum(file_reader['variance'])
+            
+            RGI_predicted.loc[
+                RGI_predicted.index[-1], 'total variance'
+            ] = np.sqrt(variance)/1e3
+
+            area = sum(file_reader['Area'])
+
+            RGI_predicted.loc[
+                RGI_predicted.index[-1], 'area'
+            ] = area
+            
+            for i in range(1,9,1):
+                if ('df' + str(i) + '_1_') in file or ('df' + str(i) + '_0_'):
+                    RGI_predicted.loc[
+                            RGI_predicted.index[-1], 'volf'
+                    ] = 158.17
+
+                    RGI_predicted.loc[
+                        RGI_predicted.index[-1], 'tolerance'
+                    ] = 41.0
+
+                    RGI_predicted.loc[
+                        RGI_predicted.index[-1], 'h mean f'
+                    ] = 224
+                   
+            if '_01_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '01'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 18.98
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 4.92
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 218    
+                
+                
+            if '_02_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '02'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 1.06
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.27
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 72
+                
+                
+            if '_03_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '03'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 28.33
+            
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 7.35
+            
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 270
+                
+            if '_04_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '04'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 8.61
+            
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 2.23
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 210
+                
+            if '_05_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '05'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 15.69
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 4.07
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 175
+                
+            if '_06_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '06'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] =  3.77
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] =  0.98 
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] =  341 
+                
+            if '_07_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '07'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] =  7.47 
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] =  1.94 
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] =  220 
+                
+            if '_08_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '08'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] =  0.30 
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] =  0.08 
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] =  101 
+                
+            if '_09_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '09'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 14.64
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 3.80
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 283
+                
+            if '_10_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '10'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 0.14
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.04
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 56
+                
+            if '_11_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '11'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 0.13
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.03
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 61   
+                
+            
+            if '_12_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '12'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 0.06
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.02
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 48
+                
+            if '_13_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '13'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 3.27
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.85
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 66
+                
+            if '_14_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '14'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 2.87
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.74
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 85
+            
+            if '_15_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '15'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 0.88
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.23
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 59
+                
+            if '_16_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '16'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 0.10
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.03
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 42
+            
+            
+            if '_17_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '17'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 5.34
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 1.39
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 181
+                
+                
+            if '_18_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '18'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 0.07
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 0.02
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 63
+            
+            if '_19_' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'region'
+                ] = '19'
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'volf'
+                ] = 46.47
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'tolerance'
+                ] = 12.06
+                
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'h mean f'
+                ] = 349
+            
+            
+            
+            if 'df1' not in file:
+                att_list = [
+                    'Area',
+                    'Aspect',
+                    'Lmax',
+                    'Slope',
+                    'Zmin',
+                    'Zmax'
+                ]
+                for att in att_list:
+                    mean = file_reader[att].mean()
+                    median = file_reader[att].median()
+                    std = file_reader[att].std()
+                    q3 = np.quantile(file_reader[att], 0.75)
+                    q1 = np.quantile(file_reader[att], 0.25)
+                    iqr = q3 - q1  
+
+                    RGI_predicted.loc[
+                        RGI_predicted.index[-1], att + '_RGI_mean'
+                    ] = mean
+
+                    RGI_predicted.loc[
+                        RGI_predicted.index[-1], att + '_RGI_median'
+                    ] = median
+
+                    RGI_predicted.loc[
+                        RGI_predicted.index[-1], att + '_RGI_std'
+                    ] = std
+
+                    RGI_predicted.loc[
+                        RGI_predicted.index[-1], att + '_RGI_iqr'
+                    ] = iqr
+
+
+            if '10-5' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '10-5'
+                
+            if '16-8' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '16-8'
+                
+            if '24-12' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '24-12'
+                
+            if '37-20' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '37-20'
+                
+            if '47-21' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '47-21'
+                
+            if '50-28' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '50-28'
+                
+            if '50-25' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '50-25'
+                
+            if '59-28' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '59-28'
+                                
+            if '60-46' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '60-46'
+                
+            if '64-36' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '64-36'
+                
+            if '64-42' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '64-42'
+                
+            if '64-48' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '64-48'
+                
+                
+            for i in range(1,9,1):
+                 if ('df' + str(i) + '_') in file:
+                    RGI_predicted.loc[
+                        RGI_predicted.index[-1], 'dataframe'
+                    ] = 'df' + str(i) + '_' + str(
+                        RGI_predicted['region'].loc[RGI_predicted.index[-1]])
+        
+
+
+                
+            if '0.1' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.100'
+            if '0.01' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.010'
+            if '0.001' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.001'
+            if '_20' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '20'
+            if '_25' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '25'
+            if '_50' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '50'
+            if '_60' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '60'
+            if '_15' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '15'
+            if '_30' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '30'
+            if '_40' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '40'
+            if '_100' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'
+                
+    RGI_predicted = RGI_predicted.rename(columns = {
+        0:'vol'
+    })
+
+    RGI_predicted['vol'] = RGI_predicted['vol'] / 1e3
+
+    RGI_predicted['mean thickness'] = (
+        (RGI_predicted['vol'] * 1e3) / RGI_predicted['area']
+    ) * 1e3
+    RGI_predicted['voldiff'] = (RGI_predicted['vol']) - RGI_predicted['volf'] 
+    RGI_predicted = RGI_predicted.reset_index()
+    RGI_predicted = RGI_predicted.drop('index', axis = 1)
+    RGI_predicted = RGI_predicted.sort_values([
+    #     'mean thickness (km)',
+    #     'architecture',
+    #     'learning rate',
+        'dataframe'
+    ], ascending = True)
+                        
+    return RGI_predicted
+
+'''
+'''
+def glathida_stats_adder(
+    df,
+    pth_1 = '/data/fast1/glacierml/data/regional_data/raw/',
+    pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/data/regional_data/training_data/',
+    
+):
+    # finish building df
+
+    dfa = pd.DataFrame()
+    for file in tqdm(os.listdir(pth_1)):
+        dfb = pd.read_csv(pth_1 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        region_and_number = file[:-4]
+        region_number = region_and_number[:2]
+        region = region_and_number[3:]
+
+        dfb['geographic region'] = region
+        dfb['region'] = region_number
+        dfa = dfa.append(dfb, ignore_index=True)
+
+    dfa = dfa.reset_index()
+
+    dfa = dfa[[
+        'GlaThiDa_index',
+        'RGI_index',
+        'RGIId',
+        'region',
+        'geographic region'
+    ]]
+    RGI_extra = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        f = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = pd.concat([RGI_extra, f], ignore_index = True)
+
+        region_and_number = file[:-4]
+        region_number = region_and_number[:2]
+        region = region_and_number[9:]
+        dfc = dfa[dfa['region'] == region_number]
+
+        for file in os.listdir(pth_3):
+            if file[:2] == region_number:
+                glathida_regional = pd.read_csv(pth_3 + file)
+
+        GlaThiDa_mean_area = glathida_regional['Area'].mean()
+        GlaThiDa_mean_aspect = glathida_regional['Aspect'].mean()
+        GlaThiDa_mean_lmax = glathida_regional['Lmax'].mean()
+        GlaThiDa_mean_slope = glathida_regional['Slope'].mean()
+        GlaThiDa_mean_zmin = glathida_regional['Zmin'].mean()
+        GlaThiDa_mean_zmax = glathida_regional['Zmax'].mean()
+
+        GlaThiDa_median_area = glathida_regional['Area'].median()
+        GlaThiDa_median_aspect = glathida_regional['Aspect'].median()
+        GlaThiDa_median_lmax = glathida_regional['Lmax'].median()
+        GlaThiDa_median_slope = glathida_regional['Slope'].median()
+        GlaThiDa_median_zmin = glathida_regional['Zmin'].median()
+        GlaThiDa_median_zmax = glathida_regional['Zmax'].median()
+
+        GlaThiDa_std_area = glathida_regional['Area'].std(ddof=0)
+        GlaThiDa_std_aspect = glathida_regional['Aspect'].std(ddof=0)
+        GlaThiDa_std_lmax = glathida_regional['Lmax'].std(ddof=0)
+        GlaThiDa_std_slope = glathida_regional['Slope'].std(ddof=0)
+        GlaThiDa_std_zmin = glathida_regional['Zmin'].std(ddof=0)
+        GlaThiDa_std_zmax = glathida_regional['Zmax'].std(ddof=0)
+
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_mean'
+        ] = GlaThiDa_mean_area
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_mean'
+        ] = GlaThiDa_mean_aspect
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_mean'
+        ] = GlaThiDa_mean_lmax
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_mean'
+        ] = GlaThiDa_mean_slope
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_mean'
+        ] = GlaThiDa_mean_zmin
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_mean'
+        ] = GlaThiDa_mean_zmax
+
+
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_median'
+        ] = GlaThiDa_median_area
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_median'
+        ] = GlaThiDa_median_aspect
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_median'
+        ] = GlaThiDa_median_lmax
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_median'
+        ] = GlaThiDa_median_slope
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_median'
+        ] = GlaThiDa_median_zmin
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_median'
+        ] = GlaThiDa_median_zmax
+
+
+
+
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_std'
+        ] = GlaThiDa_std_area
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_std'
+        ] = GlaThiDa_std_aspect
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_std'
+        ] = GlaThiDa_std_lmax
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_std'
+        ] = GlaThiDa_std_slope
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_std'
+        ] = GlaThiDa_std_zmin
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_std'
+        ] = GlaThiDa_std_zmax
+
+
+
+
+
+
+        trainable_ratio = (len(dfc) / len(f))
+        percent_trainable = trainable_ratio * 100
+
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'ratio trainable'
+        ] = trainable_ratio
+
+    df['vol_ratio'] = df['vol'] / df['volf']
+    df['vol_from_zero'] = abs(1 - df['vol_ratio'])
+
+    return df
