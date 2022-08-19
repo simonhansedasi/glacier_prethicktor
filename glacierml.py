@@ -342,6 +342,26 @@ def data_loader(
 
 
 
+            
+    for region_number in (range(1,20,1)):
+        if len(str(region_number)) == 1:
+            N = 1
+            region_number = str(region_number).zfill(N + len(str(region_number)))
+        else:
+            region_number == str(region_number)
+
+
+        if region_number != 19:
+            drops = df[
+                ((df['region'] == str(region_number)) & (df['Zmin'] < 0)) |
+                ((df['region'] == str(region_number)) & (df['Zmed'] < 0)) |
+                ((df['region'] == str(region_number)) & (df['Zmax'] < 0)) |
+                ((df['region'] == str(region_number)) & (df['Slope'] < 0)) |
+                ((df['region'] == str(region_number)) & (df['Aspect'] < 0))
+            ].index
+
+            if not drops.empty:
+                df = df.drop(drops)
     return df
 
 
@@ -687,7 +707,7 @@ def predictions_maker(
     train_thickness = pd.Series(pred_train.flatten(), name = 'thickness')
     train_features = train_features.reset_index()
     train_features = train_features.drop('index', axis = 1)
-    dft = pd.concat([train_features, thickness], axis = 1)
+    dft = pd.concat([train_features, train_thickness], axis = 1)
     dft['vol'] = dft['thickness'] * (dft['Area'] * 1e6)
     avg_train_thickness = sum(dft['vol']) / sum(dft['Area'] * 1e6)
     
@@ -1002,7 +1022,6 @@ def predictions_loader(
                     RGI_predicted.loc[
                         RGI_predicted.index[-1], 'h mean f'
                     ] = 224
-                   
             if '_01_' in file:
                 RGI_predicted.loc[
                     RGI_predicted.index[-1], 'region'

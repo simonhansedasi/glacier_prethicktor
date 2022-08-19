@@ -187,24 +187,38 @@ while type(selected_model) != int:
     selected_model = int(input()) 
 
 
-    
+
+        
 for region_selection in range(1,20,1):
     RGI = gl.RGI_loader(
         pth = '/home/prethicktor/data/RGI/rgi60-attribs/',
         region_selection = int(region_selection)
     )
-    RGI = RGI.drop('RGIId', axis = 1)
-    RGI = RGI.drop(RGI.loc[RGI['Zmed']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Lmax']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Slope']<0].index)
-    RGI = RGI.drop(RGI.loc[RGI['Aspect']<0].index)
-    RGI = RGI.reset_index()
-    RGI = RGI.drop('index', axis=1)
     if len(str(region_selection)) == 1:
         N = 1
         region_selection = str(region_selection).zfill(N + len(str(region_selection)))
     else:
         region_selection = region_selection
+        
+    RGI['region'] = RGI['RGIId'].str[6:8]
+    RGI = RGI.drop('RGIId', axis = 1)    
+    RGI = RGI.reset_index()
+    RGI = RGI.drop('index', axis=1)
+    print(region_selection)
+    if region_selection != 19:
+        drops = RGI[
+            ((RGI['region'] == str(region_selection)) & (RGI['Zmin'] < 0)) |
+            ((RGI['region'] == str(region_selection)) & (RGI['Zmed'] < 0)) |
+            ((RGI['region'] == str(region_selection)) & (RGI['Zmax'] < 0)) |
+            ((RGI['region'] == str(region_selection)) & (RGI['Slope'] < 0)) |
+            ((RGI['region'] == str(region_selection)) & (RGI['Aspect'] < 0))
+        ].index
+        print(drops)
+        if not drops.empty:
+            print('dropping bad data')
+            RGI = RGI.drop(drops)
+    RGI = RGI.drop('region', axis = 1)
+    print(RGI['Zmed'].min())
 
     deviations = deviations [[
         'layer architecture',
