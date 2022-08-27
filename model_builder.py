@@ -22,13 +22,15 @@ def main():
     RS = range(0,25,1)
     
     # select either to train on all available data, or break up training by regions
-    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7', 'sm8')
-    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7', 'sm8')
-    module = input()
     
-    while module not in module_list:
-        print('please select valid module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
-        module = input()
+    
+    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7', 'sm8')
+    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6','sm7', 'sm8')
+#     module = input()
+
+#     while module not in module_list:
+#         print('please select valid module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
+#         module = input()
     # here we can select between databases
     # sm1 = original GlaThiDa information
     # sm2 = GlaThiDa matched with RGI at global scale
@@ -38,197 +40,224 @@ def main():
     # sm6 = GlaThiDa thicknesses with RGI attributes at regional scale
     # res = variable to construct directory to save results
     
-    layer_1_input, layer_2_input, lr_input,  ep_input = gl.prethicktor_inputs()
-    arch = str(layer_1_input) + '-' + str(layer_2_input)
+#     layer_1_input, layer_2_input, lr_input,  ep_input = gl.prethicktor_inputs()
 
-    if module == 'sm1':
-        df1 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/',
-            RGI_input = 'n'
-        )
-        dataset = df1
-        dataset.name = 'df1'
-        res = 'sr1'
+    lr_list = ('0.1', '0.01', '0.001')
+    ep_input = '100'
 
-    if module == 'sm2':
-        df2 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/',
-            RGI_input = 'y',
-            scale = 'g',
-        )
-        dataset = df2
-        dataset.name = 'df2'
-        res = 'sr2'
+#         arch = str(layer_1_input) + '-' + str(layer_2_input)
+    for lr in lr_list:
+        lr_input = lr
 
-    if module == 'sm3':
-        df3 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/',
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = 1
-        )
-        dataset = df3
-        dataset.name = 'df3'
-        res = 'sr3'
+        if module == 'sm1':
+            df1 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'n'
+            )
+            dataset = df1
+            dataset.name = 'df1'
+            res = 'sr1'
+            layer_1_list = ['16', '24']
+            layer_2_list = ['8', '12']
 
-    if module == 'sm4':
-        df4 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/',
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = 5
-        )
-        dataset = df4
-        dataset.name = 'df4'
-        res = 'sr4'
-        
-    # replicate module 2 and drop Zmed
-    if module == 'sm5':
-        df5 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/',
-            RGI_input = 'y',
-            scale = 'g',
-        )
-        df5 = df5.drop('Zmed', axis = 1)
-        res = 'sr5'
-        dataset = df5
-        dataset.name = 'df5'
-    
-    if module == 'sm6':
-        for region_selection in range(1,20,1):
-            
-            if len(str(region_selection)) == 1:
-                N = 1
-                region_selection = str(region_selection).zfill(N + len(str(region_selection)))
-            else:
-                str(region_selection) == str(region_selection)
-                
-            # print(region_selection)
-
-            df6 = gl.data_loader(
+        if module == 'sm2':
+            df2 = gl.data_loader(
                 root_dir = '/home/prethicktor/data/',
                 RGI_input = 'y',
-                scale = 'r',
-                region_selection = int(region_selection),
-                area_scrubber = 'off'
+                scale = 'g',
             )
-            if df6.empty:
-                pass            
-            if len(df6) >= 3:
-                df6 = df6.drop('region', axis=1)
-                dataset = df6
-                dataset.name = str('df6_' + str(region_selection))
-                res = 'sr6'
+            df2 = df2.drop(['region'], axis = 1)
+            dataset = df2
+            dataset.name = 'df2'
+            res = 'sr2'
+#                 arch_list = ['50-28', '64-48']
+            layer_1_list = ['50', '64']
+            layer_2_list = ['28', '48']
+        if module == 'sm3':
+            df3 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'y',
+                scale = 'g',
+                area_scrubber = 'on',
+                anomaly_input = 1
+            )
+            df3 = df3.drop(['RGIId', 'region'], axis = 1)
+            dataset = df3
+            dataset.name = 'df3'
+            res = 'sr3'
+            layer_1_list = ['37', '59']
+            layer_2_list = ['20', '28']
+        if module == 'sm4':
+            df4 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'y',
+                scale = 'g',
+                area_scrubber = 'on',
+                anomaly_input = 5
+            )
+            df4 = df4.drop(['RGIId', 'region'], axis = 1)
+            dataset = df4
+            dataset.name = 'df4'
+            res = 'sr4'
+            layer_1_list = ['47', '64']
+            layer_2_list = ['21', '36']
+        # replicate module 2 and drop Zmed
+        if module == 'sm5':
+            df5 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'y',
+                scale = 'g',
+            )
+            df5 = df5.drop('Zmed', axis = 1)
+            df5 = df5.drop(['region'], axis = 1)
+            res = 'sr5'
+            dataset = df5
+            dataset.name = 'df5'
+            layer_1_list = ['50', '64']
+            layer_2_list = ['25', '42']
+        if module == 'sm6':
+            for region_selection in range(1,20,1):
 
-                arch = str(layer_1_input) + '-' + str(layer_2_input)
-                dropout_input_list = ('y', 'n')
-                for dropout_input_iter in dropout_input_list:
-                    dropout_input = dropout_input_iter
-                    if dropout_input == 'y':
-                        dropout = True
-                    elif dropout_input == 'n':
-                        dropout = False
+                if len(str(region_selection)) == 1:
+                    N = 1
+                    region_selection = str(region_selection).zfill(N + len(str(region_selection)))
+                else:
+                    str(region_selection) == str(region_selection)
 
-                    print(
-                        'Running multi-variable DNN regression on ' + 
-                        str(dataset.name) + 
-                        ' dataset with parameters: Learning Rate = ' + 
-                        str(lr_input) + 
-                        ', Layer Architechture = ' +
-                        arch +
-                        ', dropout = ' + 
-                        str(dropout) +
-                        ', Validation split = ' + 
-                        str(0.2) + 
-                        ', Epochs = ' + 
-                        str(ep_input) 
-                    )
+                # print(region_selection)
 
-                    for rs in tqdm(RS):
-            #             for lr in LR:
+                df6 = gl.data_loader(
+                    root_dir = '/home/prethicktor/data/',
+                    RGI_input = 'y',
+                    scale = 'r',
+                    region_selection = int(region_selection),
+                    area_scrubber = 'off'
+                )
+                if df6.empty:
+                    pass            
+                if len(df6) >= 3:
+                    df6 = df6.drop('region', axis=1)
+                    dataset = df6
+                    dataset.name = str('df6_' + str(region_selection))
+                    res = 'sr6'
 
-                        gl.build_and_train_model(
-                            dataset, 
-                            learning_rate = float(lr_input), 
-                            random_state = rs, 
-                            epochs = int(ep_input), 
-                            module = module, 
-                            res = res,
-                            layer_1 = layer_1_input,
-                            layer_2 = layer_2_input,
-                            dropout = dropout
+                    arch = str(layer_1_input) + '-' + str(layer_2_input)
+                    dropout_input_list = ('y', 'n')
+                    for dropout_input_iter in dropout_input_list:
+                        dropout_input = dropout_input_iter
+                        if dropout_input == 'y':
+                            dropout = True
+                        elif dropout_input == 'n':
+                            dropout = False
+
+                        print(
+                            'Running multi-variable DNN regression on ' + 
+                            str(dataset.name) + 
+                            ' dataset with parameters: Learning Rate = ' + 
+                            str(lr_input) + 
+                            ', Layer Architechture = ' +
+                            arch +
+                            ', dropout = ' + 
+                            str(dropout) +
+                            ', Validation split = ' + 
+                            str(0.2) + 
+                            ', Epochs = ' + 
+                            str(ep_input) 
                         )
-            
-    if module == 'sm6' and region_selection == '19':
-        raise SystemExit
-        
-    if module == 'sm7':
-        df7 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/',
-            RGI_input = 'y',
-            scale = 'g',
-        )
-        dataset = df7
-        dataset.name = 'df7'
-        res = 'sr7'
-        
-    if module == 'sm8':
-        df8 = gl.data_loader(
-            root_dir = '/home/prethicktor/data/',
-            RGI_input = 'y',
-            scale = 'g',
-        )
-        df8 = df8.drop('Zmed', axis = 1)
-        dataset = df8
-        dataset.name = 'df8'
-        res = 'sr8'
-        print(df8)
-        
-        
-        
-    # print(dataset.name)
-    # print(dataset)    
-    arch = str(layer_1_input) + '-' + str(layer_2_input)
-    dropout_input_list = ('y', 'n')
-    for dropout_input_iter in dropout_input_list:
-        dropout_input = dropout_input_iter
-        if dropout_input == 'y':
-            dropout = True
-        elif dropout_input == 'n':
-            dropout = False
-        print('')
-        print(
-            'Running multi-variable DNN regression on ' + 
-            str(dataset.name) + 
-            ' dataset with parameters: Learning Rate = ' + 
-            str(lr_input) + 
-            ', Layer Architechture = ' +
-            arch +
-            ', dropout = ' + 
-            str(dropout) +
-            ', Validation split = ' + 
-            str(0.2) + 
-            ', Epochs = ' + 
-            str(ep_input) 
-        )
 
-        for rs in tqdm(RS):
-#             for lr in LR:
+                        for rs in tqdm(RS):
+                #             for lr in LR:
 
-            gl.build_and_train_model(
-                dataset, 
-                learning_rate = float(lr_input), 
-                random_state = rs, 
-                epochs = int(ep_input), 
-                module = module, 
-                res = res,
-                layer_1 = layer_1_input,
-                layer_2 = layer_2_input,
-                dropout = dropout
-            )    
-    
+                            gl.build_and_train_model(
+                                dataset, 
+                                learning_rate = float(lr_input), 
+                                random_state = rs, 
+                                epochs = int(ep_input), 
+                                module = module, 
+                                res = res,
+                                layer_1 = layer_1_input,
+                                layer_2 = layer_2_input,
+                                dropout = dropout
+                            )
+
+        if module == 'sm6' and region_selection == '19':
+            raise SystemExit
+
+        if module == 'sm7':
+            df7 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'y',
+                scale = 'g',
+            )
+            df7 = df7.drop(['region'], axis = 1)
+            dataset = df7
+            dataset.name = 'df7'
+            res = 'sr7'
+            layer_1_list = ['50', '64']
+            layer_2_list = ['28', '48']
+        if module == 'sm8':
+            df8 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'y',
+                scale = 'g',
+            )
+            df8 = df8.drop('Zmed', axis = 1)
+            df8 = df8.drop(['region'], axis = 1)
+            dataset = df8
+            dataset.name = 'df8'
+            res = 'sr8'
+            layer_1_list = ['60']
+            layer_2_list = ['46']
+
+
+        # print(dataset.name)
+        # print(dataset)   
+        for layer_1, layer_2 in zip(layer_1_list,layer_2_list):
+#                 arch = arch_item
+            layer_1_input = layer_1
+            layer_2_input = layer_2
+            arch = str(layer_1_input) + '-' + str(layer_2_input)
+#                 print(arch)
+#                 print(arch.type())
+#             arch = str(layer_1_input) + '-' + str(layer_2_input)
+            dropout_input_list = ('y', 'n')
+            for dropout_input_iter in dropout_input_list:
+                dropout_input = dropout_input_iter
+                if dropout_input == 'y':
+                    dropout = True
+                elif dropout_input == 'n':
+                    dropout = False
+                print('')
+                print(
+                    'Running multi-variable DNN regression on ' + 
+                    str(dataset.name) + 
+                    ' dataset with parameters: Learning Rate = ' + 
+                    str(lr_input) + 
+                    ', Layer Architechture = ' +
+                    arch +
+                    ', dropout = ' + 
+                    str(dropout) +
+                    ', Validation split = ' + 
+                    str(0.2) + 
+                    ', Epochs = ' + 
+                    str(ep_input) 
+                )
+
+                for rs in tqdm(RS):
+        #             for lr in LR:
+
+                    gl.build_and_train_model(
+                        dataset, 
+                        learning_rate = float(lr_input), 
+                        random_state = rs, 
+                        epochs = int(ep_input), 
+                        module = module, 
+                        res = res,
+                        layer_1 = layer_1_input,
+                        layer_2 = layer_2_input,
+                        dropout = dropout
+                    )    
+
 
 if __name__ == "__main__":
     main()

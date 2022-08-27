@@ -16,13 +16,14 @@ pd.set_option('mode.chained_assignment', None)
 
 print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
 
-dir_list = ('sm01', 'sm02', 'sm1', 'sm2', 'sm031', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7', 'sm8')
+dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm7', 'sm8')
 
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
     print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
     chosen_dir = input()    
+
 
 if chosen_dir == 'sm1':
     df1 = gl.data_loader(
@@ -48,6 +49,7 @@ if chosen_dir == 'sm2':
         area_scrubber = 'off'
 #                 anomaly_input = 5
     )
+    df2 = df2.drop(['region'], axis = 1)
     dataset = df2
     dataset.name = 'df2'
     res = 'sr2'
@@ -61,9 +63,11 @@ if chosen_dir == 'sm3':
         area_scrubber = 'on',
         anomaly_input = 1
     )
+    df3 = df3.drop(['RGIId', 'region'], axis = 1)
     dataset = df3
     dataset.name = 'df3'
     res = 'sr3'
+
 
 if chosen_dir == 'sm4':
     df4 = gl.data_loader(
@@ -74,10 +78,11 @@ if chosen_dir == 'sm4':
         area_scrubber = 'on',
         anomaly_input = 5
     )
+    df4 = df4.drop(['RGIId', 'region'], axis = 1)
     dataset = df4
     dataset.name = 'df4'
     res = 'sr4'
-    
+
 # replicate df2 and change Area to sq m
 if chosen_dir == 'sm5':
     df5 = gl.data_loader(
@@ -88,13 +93,14 @@ if chosen_dir == 'sm5':
         area_scrubber = 'off',
         # anomaly_input = 5
     )
+    df5 = df5.drop(['region'], axis = 1)
     df5 = df5.drop('Zmed', axis = 1)
     dataset = df5
     dataset.name = 'df5'
     res = 'sr5'
 
 
-        
+
 if chosen_dir == 'sm7':
     df7 = gl.data_loader(
         root_dir = '/home/prethicktor/data/',
@@ -104,11 +110,12 @@ if chosen_dir == 'sm7':
         area_scrubber = 'off'
 #                 anomaly_input = 5
     )
+    df7 = df7.drop(['region'], axis = 1)
     dataset = df7
     dataset.name = 'df7'
     res = 'sr7'
 #     print(df7)
-        
+
 if chosen_dir == 'sm8':
     df8 = gl.data_loader(
         root_dir = '/home/prethicktor/data/',
@@ -118,7 +125,7 @@ if chosen_dir == 'sm8':
         area_scrubber = 'off'
 #                 anomaly_input = 5
     )
-    df8 = df8.drop(['Zmed', ], axis = 1)
+    df8 = df8.drop(['Zmed', 'region'], axis = 1)
     dataset = df8
     dataset.name = 'df8'
     res = 'sr8'
@@ -128,11 +135,17 @@ deviations = pd.concat([deviations_1, deviations_2])
 deviations = deviations.reset_index()
 rootdir = '/home/prethicktor/data/RGI/rgi60-attribs/'
 
+RGI = gl.RGI_loader(
+    pth = '/home/prethicktor/data/RGI/rgi60-attribs/'
+)
+RGI = RGI.drop(['RGIId','region'], axis = 1)
+
 
 
 
 
 if chosen_dir == 'sm1':
+
     RGI = RGI.rename(columns = {
         'CenLat':'Lat',
         'CenLon':'Lon',
@@ -158,9 +171,9 @@ if chosen_dir == 'sm5':
         'Aspect',
         'Lmax'
     ]]       
-    
-    
-    
+
+
+
 
 deviations = deviations [[
 'layer architecture',
@@ -188,7 +201,7 @@ while type(selected_model) != int:
 
 
 
-        
+
 for region_selection in range(1,20,1):
     RGI = gl.RGI_loader(
         pth = '/home/prethicktor/data/RGI/rgi60-attribs/',
@@ -199,7 +212,7 @@ for region_selection in range(1,20,1):
         region_selection = str(region_selection).zfill(N + len(str(region_selection)))
     else:
         region_selection = region_selection
-        
+
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.drop('RGIId', axis = 1)    
     RGI = RGI.reset_index()

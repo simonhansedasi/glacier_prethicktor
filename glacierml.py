@@ -54,6 +54,27 @@ def RGI_loader(
         'Aspect',
         'Lmax'
     ]]
+    RGI['region'] = RGI['RGIId'].str[6:8]
+    
+    for region_number in (range(1,20,1)):
+        if len(str(region_number)) == 1:
+            N = 1
+            region_number = str(region_number).zfill(N + len(str(region_number)))
+        else:
+            region_number == str(region_number)
+
+
+        if region_number != 19:
+            drops = RGI[
+                ((RGI['region'] == str(region_number)) & (RGI['Zmin'] < 0)) |
+                ((RGI['region'] == str(region_number)) & (RGI['Zmed'] < 0)) |
+                ((RGI['region'] == str(region_number)) & (RGI['Zmax'] < 0)) |
+                ((RGI['region'] == str(region_number)) & (RGI['Slope'] < 0)) |
+                ((RGI['region'] == str(region_number)) & (RGI['Aspect'] < 0))
+            ].index
+
+            if not drops.empty:
+                RGI = RGI.drop(drops)
     return RGI
 
 def data_loader(
@@ -128,7 +149,7 @@ def data_loader(
         # reset indexes for merge
         glacier = glacier.reset_index()
         RGI = RGI.reset_index()
-        
+        RGI['region'] = RGI['RGIId'].str[6:8]
         # rename RGI area to differentiate from glathida area.
         # important for area scrubbing
         # don't forget to change the name back from area_r to Area when exiting function with df
@@ -174,7 +195,8 @@ def data_loader(
             'Aspect',
             'Lmax',
             'Thickness',
-            'area_g'
+            'area_g',
+            'region'
         ]]
         df = df.dropna()
         
@@ -221,6 +243,7 @@ def data_loader(
                     'Aspect',
                     'Lmax',
                     'Thickness',
+                    'region'
                 ]]
                 
             elif area_scrubber == 'off':
@@ -983,19 +1006,16 @@ def predictions_loader(
     for file in tqdm(os.listdir(root_dir)):
         # print(file)
         if 'RGI_predicted' in file and 'df' + training_module + '_' in file and architecture in file and learning_rate in file and epochs in file:
-            # print(file)
             file_reader = pd.read_csv(root_dir + file)
-            # print(file_reader)
             file_reader['volume km3'] = (
                 file_reader['avg predicted thickness'] / 1e3
             ) * file_reader['Area']
-    #         print(file_reader)
             file_reader = file_reader.dropna()
         
             sum_volume = sum(file_reader['volume km3'])
             total_volume = pd.Series(sum_volume, name = 'total volume')
             RGI_predicted = pd.concat([RGI_predicted, total_volume], ignore_index = True)    
-            
+            print(RGI_predicted)
             file_reader['variance'] = file_reader['predicted thickness std dev'] **2 
             variance = sum(file_reader['variance'])
             
@@ -1479,7 +1499,7 @@ def predictions_loader(
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '40'
             if '_100' in file:
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'
-                
+    print(RGI_predicted)
     RGI_predicted = RGI_predicted.rename(columns = {
         0:'vol'
     })
