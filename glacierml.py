@@ -1015,7 +1015,7 @@ def predictions_loader(
             sum_volume = sum(file_reader['volume km3'])
             total_volume = pd.Series(sum_volume, name = 'total volume')
             RGI_predicted = pd.concat([RGI_predicted, total_volume], ignore_index = True)    
-            print(RGI_predicted)
+#             print(RGI_predicted)
             file_reader['variance'] = file_reader['predicted thickness std dev'] **2 
             variance = sum(file_reader['variance'])
             
@@ -1499,7 +1499,7 @@ def predictions_loader(
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '40'
             if '_100' in file:
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'
-    print(RGI_predicted)
+#     print(RGI_predicted)
     RGI_predicted = RGI_predicted.rename(columns = {
         0:'vol'
     })
@@ -1664,3 +1664,82 @@ def glathida_stats_adder(
     df['vol_from_zero'] = abs(1 - df['vol_ratio'])
 
     return df
+
+
+
+
+
+
+'''
+'''
+def predictions_finder():
+    root_dir = 'zults/'
+    prethicked = pd.DataFrame()
+    for file in tqdm(os.listdir(root_dir)):
+    # print(file)
+        if 'RGI_predicted' in file:
+            file_reader = pd.read_csv(root_dir + file)
+#             print(file)
+            str_1 = '_1_'
+            str_2 = '-'
+            str_3 = '_0_'
+            str_4 = '_0.'
+            str_7 = '.csv'
+            str_8 = 'df'
+            str_8_idx = file.index(str_8)
+            str_7_idx = file.index(str_7)
+            str_2_idx = file.index(str_2)
+            str_4_idx = file.index(str_4)
+            if str_1 in file:
+
+                str_1_idx = file.index(str_1)
+                layer_1_start = (str_1_idx + 3)
+                layer_2_start = str_2_idx + 1
+                layer_1_length = str_2_idx - layer_1_start
+                layer_2_length = str_4_idx - (str_2_idx + 1)
+
+
+            if str_3 in file :
+                str_3_idx = file.index(str_3)
+
+                layer_1_start = (str_3_idx + 3)
+                layer_2_start = str_2_idx + 1
+                layer_1_length = str_2_idx - layer_1_start
+                layer_2_length = str_4_idx - (str_2_idx + 1)
+
+
+            layer_1 = file[layer_1_start:(layer_1_start + layer_1_length)]
+            layer_2 = file[layer_2_start:(layer_2_start + layer_2_length)]
+
+            arch = pd.Series(str(layer_1) + '-' + str(layer_2), name = 'architecture')
+            prethicked = pd.concat([prethicked, arch])
+
+            # epochs = 100
+            if file[str_7_idx - 3] == str(1):
+
+                learning_rate = file[
+                    layer_2_start + layer_2_length + 1 : str_7_idx - 4
+                ]
+                epochs = file[
+                    str_7_idx - 3 : str_7_idx
+                ]
+
+                    # epochs < 100
+            if file[str_7_idx - 3] == '_':
+
+                learning_rate = file[
+                    layer_2_start + layer_2_length + 1 : str_7_idx - 4
+                ]
+
+                epochs = file[
+                    str_7_idx - 2 : str_7_idx
+                ]
+            prethicked.loc[prethicked.index[-1], 'learning rate'] = learning_rate
+            prethicked.loc[prethicked.index[-1], 'epochs'] = epochs
+            prethicked.loc[prethicked.index[-1], 'training module'] = file[str_8_idx + 2]
+    #         break
+    prethicked = prethicked.rename(columns = {
+        0:'architecture'
+    })
+    prethicked = prethicked.drop_duplicates()
+    return prethicked
