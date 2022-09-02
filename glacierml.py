@@ -10,6 +10,15 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 import geopy.distance
+import matplotlib.patches as mpatches
+import plotly.express as px
+from sklearn.cluster import KMeans
+from yellowbrick.cluster import KElbowVisualizer
+from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, silhouette_samples
+import matplotlib.ticker as ticker
+
+
 pd.set_option('mode.chained_assignment',None)
 
 '''
@@ -1725,7 +1734,7 @@ def predictions_finder():
                 ]
 
                     # epochs < 100
-            if file[str_7_idx - 3] == '_':
+            elif file[str_7_idx - 3] == '_':
 
                 learning_rate = file[
                     layer_2_start + layer_2_length + 1 : str_7_idx - 4
@@ -1734,6 +1743,8 @@ def predictions_finder():
                 epochs = file[
                     str_7_idx - 2 : str_7_idx
                 ]
+            prethicked = prethicked.reset_index()
+            prethicked = prethicked.drop('index', axis = 1)
             prethicked.loc[prethicked.index[-1], 'learning rate'] = learning_rate
             prethicked.loc[prethicked.index[-1], 'epochs'] = epochs
             prethicked.loc[prethicked.index[-1], 'training module'] = file[str_8_idx + 2]
@@ -1743,3 +1754,174 @@ def predictions_finder():
     })
     prethicked = prethicked.drop_duplicates()
     return prethicked
+
+
+'''
+cluster functions
+'''
+# define functions
+
+def silhouette_plot(X, model, ax, colors):
+    y_lower = 10
+    y_tick_pos_ = []
+    sh_samples = silhouette_samples(X, model.labels_)
+    sh_score = silhouette_score(X, model.labels_)
+    
+    for idx in range(model.n_clusters):
+        values = sh_samples[model.labels_ == idx]
+        values.sort()
+        size = values.shape[0]
+        y_upper = y_lower + size
+        ax.fill_betweenx(np.arange(y_lower, y_upper),0,values,
+                         facecolor=colors[idx],edgecolor=colors[idx]
+        )
+        y_tick_pos_.append(y_lower + 0.5 * size)
+        y_lower = y_upper + 10
+
+    ax.axvline(x=sh_score, color="red", linestyle="--", label="Avg Silhouette Score")
+    ax.set_title("Silhouette Plot for {} clusters".format(model.n_clusters))
+    l_xlim = max(-1, min(-0.1, round(min(sh_samples) - 0.1, 1)))
+    u_xlim = min(1, round(max(sh_samples) + 0.1, 1))
+    ax.set_xlim([l_xlim, u_xlim])
+    ax.set_ylim([0, X.shape[0] + (model.n_clusters + 1) * 10])
+    ax.set_xlabel("silhouette coefficient values")
+    ax.set_ylabel("cluster label")
+    ax.set_yticks(y_tick_pos_)
+    ax.set_yticklabels(str(idx) for idx in range(model.n_clusters))
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+    ax.legend(loc="best")
+    return ax
+
+
+
+def rgb_to_hex(rgb):
+    return '%02x%02x%02x' % rgb
+
+
+
+
+def cluster_comparison_bar(df_std, RGI_comparison, colors, deviation=True ,title="Cluster results"):
+    
+    features = RGI_comparison.index
+    ncols = 3
+    # calculate number of rows
+    nrows = len(features) // ncols + (len(features) % ncols > 0)
+    # set figure size
+    fig = plt.figure(figsize=(15,15), dpi=200)
+    #interate through every feature
+    for n, feature in enumerate(features):
+        # create chart
+
+#     plt.show()    
+        ax = plt.subplot(nrows, ncols, n + 1)
+        RGI_comparison[RGI_comparison.index==feature].plot(
+            kind='bar', 
+            ax=ax, 
+            title=feature,
+            color=colors[0:df_std['cluster'].nunique()],
+            legend=False
+                                                            )
+        plt.axhline(y=0)
+        x_axis = ax.axes.get_xaxis()
+        x_axis.set_visible(False)
+
+    c_labels = RGI_comparison.columns.to_list()
+    c_colors = colors[0:3]
+    mpats = [mpatches.Patch(color=c, label=l) for c,l in list(zip(
+        colors[0:df_std['cluster'].nunique()],
+        RGI_comparison.columns.to_list()
+    ))]
+
+    fig.legend(handles=mpats,
+               ncol=ncols,
+               loc="upper center",
+               fancybox=True,
+               bbox_to_anchor=(0.5, 0.98)
+              )
+    axes = fig.get_axes()
+    
+    fig.suptitle(title, fontsize=18, y=1)
+    fig.supylabel('Deviation from overall mean in %')
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.93)
+    plt.show()
+    
+    
+    
+    
+class Radar(object):
+    def __init__(self, figure, title, labels, rect=None):
+        if rect is None:
+            rect = [0.05, 0.05, 0.9, 0.9]
+
+        self.n = len(title)
+        self.angles = np.arange(0, 360, 360.0/self.n)
+        
+        self.axes = [
+            figure.add_axes(
+                rect, projection='polar', label='axes%d' % i
+            ) for i in range(self.n)
+        ]
+        
+        self.ax = self.axes[0]
+        self.ax.set_thetagrids(
+            self.angles, 
+            labels=title, 
+            fontsize=14, 
+            backgroundcolor="white",
+            zorder=999
+        ) 
+        # Feature names
+        self.ax.set_yticklabels([])
+#         self.ax.set_xscale('log')
+#         self.ax.set_yscale('log')
+        for ax in self.axes[1:]:
+            ax.xaxis.set_visible(False)
+            ax.set_yticklabels([])
+            ax.set_zorder(-99)
+            
+        for ax, angle, label in zip(self.axes, self.angles, labels):
+            ax.spines['polar'].set_color('black')
+            ax.spines['polar'].set_zorder(-99)
+                     
+            ax.set_rscale('symlog')
+#             ax.set_yscale('log')
+    def plot(self, values, *args, **kw):
+        angle = np.deg2rad(np.r_[self.angles, self.angles[0]])
+        values = np.r_[values, values[0]]
+        self.ax.plot(angle, values, *args, **kw)
+        kw['label'] = '_noLabel'
+        self.ax.fill(angle, values,*args,**kw)
+
+
+def color_grabber(
+    n_colors = 6,
+    color_map = 'viridis'
+):
+    
+
+    cluster_colors = px.colors.sample_colorscale(
+        color_map, 
+        [n/(n_colors -1) for n in range(n_colors)]
+    )
+    colors = pd.Series()
+    for i in cluster_colors:
+        color_1 = i[4:]
+        color_2 = color_1[:-1]
+    #     print(i[4:])
+    #     print(i[:-1])
+        numbers = color_2.split(',')
+        rgb_1 = int(numbers[0])
+        rgb_2 = int(numbers[1])
+        rgb_3 = int(numbers[2])
+        colors = colors.append(pd.Series('#' + rgb_to_hex((rgb_1, rgb_2, rgb_3))))
+    #     print(color)
+    #     colors = pd.concat([colors, color], ignore_index = True)
+    # cluster_colors
+
+    colors = colors.T
+    colors = colors.reset_index()
+    colors = colors.drop('index', axis = 1)
+    colors = colors.squeeze()
+    return colors
+
