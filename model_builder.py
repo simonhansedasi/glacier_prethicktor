@@ -24,9 +24,9 @@ def main():
     # select either to train on all available data, or break up training by regions
     
     
-    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7', 'sm8')
-    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6','sm7', 'sm8')
-#     module = input()
+    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7', 'sm8', 'sm9')
+    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6','sm7', 'sm8', 'sm9')
+    module = input()
 
 #     while module not in module_list:
 #         print('please select valid module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
@@ -200,63 +200,80 @@ def main():
                 root_dir = '/home/prethicktor/data/',
                 RGI_input = 'y',
                 scale = 'g',
+                area_scrubber = 'on',
+                anomaly_input = 5
             )
-            df8 = df8.drop('Zmed', axis = 1)
-            df8 = df8.drop(['region'], axis = 1)
+            df8 = df8.drop(['RGIId', 'Zmed', 'region'], axis = 1)
             dataset = df8
             dataset.name = 'df8'
             res = 'sr8'
-            layer_1_list = ['60']
-            layer_2_list = ['46']
-
-
+            layer_1_list = ['10','60']
+            layer_2_list = ['5','46']
+        if module == 'sm9':
+            df9 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'y',
+                scale = 'g',
+                area_scrubber = 'on',
+                anomaly_input = 1
+            )
+            df9 = df9.drop(['RGIId','region'], axis = 1)
+            df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
+            module = 'sm9'
+            res = 'sr9'
+            dataset = df9 
+            dataset.name = 'df9'
+            layer_1_list = ['10','40','60']
+            layer_2_list = ['5','20','30']
         # print(dataset.name)
-        # print(dataset)   
-        for layer_1, layer_2 in zip(layer_1_list,layer_2_list):
-#                 arch = arch_item
-            layer_1_input = layer_1
-            layer_2_input = layer_2
-            arch = str(layer_1_input) + '-' + str(layer_2_input)
-#                 print(arch)
-#                 print(arch.type())
-#             arch = str(layer_1_input) + '-' + str(layer_2_input)
-            dropout_input_list = ('y', 'n')
-            for dropout_input_iter in dropout_input_list:
-                dropout_input = dropout_input_iter
-                if dropout_input == 'y':
-                    dropout = True
-                elif dropout_input == 'n':
-                    dropout = False
-                print('')
-                print(
-                    'Running multi-variable DNN regression on ' + 
-                    str(dataset.name) + 
-                    ' dataset with parameters: Learning Rate = ' + 
-                    str(lr_input) + 
-                    ', Layer Architechture = ' +
-                    arch +
-                    ', dropout = ' + 
-                    str(dropout) +
-                    ', Validation split = ' + 
-                    str(0.2) + 
-                    ', Epochs = ' + 
-                    str(ep_input) 
-                )
+        # print(dataset)  
+        for lr in lr_list:
+            lr_input = lr
+            for layer_1, layer_2 in zip(layer_1_list,layer_2_list):
+    #                 arch = arch_item
+                layer_1_input = layer_1
+                layer_2_input = layer_2
+                arch = str(layer_1_input) + '-' + str(layer_2_input)
+    #                 print(arch)
+    #                 print(arch.type())
+    #             arch = str(layer_1_input) + '-' + str(layer_2_input)
+                dropout_input_list = ('y', 'n')
+                for dropout_input_iter in dropout_input_list:
+                    dropout_input = dropout_input_iter
+                    if dropout_input == 'y':
+                        dropout = True
+                    elif dropout_input == 'n':
+                        dropout = False
+                    print('')
+                    print(
+                        'Running multi-variable DNN regression on ' + 
+                        str(dataset.name) + 
+                        ' dataset with parameters: Learning Rate = ' + 
+                        str(lr_input) + 
+                        ', Layer Architechture = ' +
+                        arch +
+                        ', dropout = ' + 
+                        str(dropout) +
+                        ', Validation split = ' + 
+                        str(0.2) + 
+                        ', Epochs = ' + 
+                        str(ep_input) 
+                    )
 
-                for rs in tqdm(RS):
-        #             for lr in LR:
+                    for rs in tqdm(RS):
+            #             for lr in LR:
 
-                    gl.build_and_train_model(
-                        dataset, 
-                        learning_rate = float(lr_input), 
-                        random_state = rs, 
-                        epochs = int(ep_input), 
-                        module = module, 
-                        res = res,
-                        layer_1 = layer_1_input,
-                        layer_2 = layer_2_input,
-                        dropout = dropout
-                    )    
+                        gl.build_and_train_model(
+                            dataset, 
+                            learning_rate = float(lr_input), 
+                            random_state = rs, 
+                            epochs = int(ep_input), 
+                            module = module, 
+                            res = res,
+                            layer_1 = layer_1_input,
+                            layer_2 = layer_2_input,
+                            dropout = dropout
+                        )    
 
 
 if __name__ == "__main__":

@@ -129,6 +129,26 @@ if chosen_dir == 'sm8':
     dataset = df8
     dataset.name = 'df8'
     res = 'sr8'
+    
+    
+    
+if chosen_dir == 'sm9':
+    df9 = gl.data_loader(
+        root_dir = '/home/prethicktor/data/',
+        RGI_input = 'y',
+        scale = 'g',
+        area_scrubber = 'on',
+        anomaly_input = 1
+    )
+    df9 = df9.drop(['RGIId', 'region'], axis = 1)
+    df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
+    dataset = df9
+    dataset.name = 'df9'
+    res = 'sr9'
+    
+    
+    
+    
 deviations_1 = pd.read_csv('zults/deviations_' + dataset.name + '_1.csv')
 deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')
 deviations = pd.concat([deviations_1, deviations_2])
@@ -144,20 +164,7 @@ RGI = RGI.drop(['RGIId','region'], axis = 1)
 
 
 
-if chosen_dir == 'sm1':
 
-    RGI = RGI.rename(columns = {
-        'CenLat':'Lat',
-        'CenLon':'Lon',
-        'Area':'Area',
-        'Slope':'Mean Slope'
-    })
-    RGI = RGI[[
-        'Lat',
-        'Lon',
-        'Area',
-        'Mean Slope'
-    ]]
 
 if chosen_dir == 'sm5':
     RGI = RGI[[
@@ -232,7 +239,33 @@ for region_selection in range(1,20,1):
             RGI = RGI.drop(drops)
     RGI = RGI.drop('region', axis = 1)
     print(RGI['Zmed'].min())
+    if chosen_dir == 'sm1':
 
+        RGI = RGI.rename(columns = {
+            'CenLat':'Lat',
+            'CenLon':'Lon',
+            'Area':'Area',
+            'Slope':'Mean Slope'
+        })
+        RGI = RGI[[
+            'Lat',
+            'Lon',
+            'Area',
+            'Mean Slope'
+        ]]
+        
+    if chosen_dir == 'sm5':
+        RGI = RGI[[
+            'CenLat',
+            'CenLon',
+            'Slope',
+            'Zmin',
+            # 'Zmed',
+            'Zmax',
+            'Area',
+            'Aspect',
+            'Lmax'
+        ]] 
     deviations = deviations [[
         'layer architecture',
         'dropout',

@@ -86,33 +86,48 @@ for dir_item in dir_list:
         res = 'sr5'
 
     if chosen_dir == 'sm7':
-        for region_selection in range(1,20,1):
-            df7 = gl.data_loader(
-                root_dir = '/home/prethicktor/data/',
-                RGI_input = 'y',
-                scale = 'g',
-        #                 region_selection = 1,
-                area_scrubber = 'off'
-        #                 anomaly_input = 5
-            )
-            df7 = df7.drop(['region'], axis = 1)
-            dataset = df7
-            dataset.name = 'df7'
-            res = 'sr7'
+        df7 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+    #                 region_selection = 1,
+            area_scrubber = 'off'
+    #                 anomaly_input = 5
+        )
+        df7 = df7.drop(['region'], axis = 1)
+        dataset = df7
+        dataset.name = 'df7'
+        res = 'sr7'
 
 
     if chosen_dir == 'sm8':
-        for region_selection in range(1,20,1):
-            df8 = gl.data_loader(
-                root_dir = '/home/prethicktor/data/',
-                RGI_input = 'y',
-                scale = 'g',
-            )
-            df8 = df8.drop(['Zmed', 'region'], axis = 1)
-            dataset = df8
-            dataset.name = 'df8'
-            res = 'sr8'
-            print(df8)
+        df8 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = 5
+        )
+        df8 = df8.drop(['Zmed', 'region'], axis = 1)
+        dataset = df8
+        dataset.name = 'df8'
+        res = 'sr8'
+            
+            
+            
+    if chosen_dir == 'sm9':
+        df9 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = 1
+        )
+        df9 = df9.drop(['RGIId', 'region'], axis = 1)
+        df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
+        dataset = df9
+        dataset.name = 'df9'
+        res = 'sr9'
 
     rootdir = 'saved_models/' + chosen_dir + '/'
     (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
