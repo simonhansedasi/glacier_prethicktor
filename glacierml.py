@@ -570,8 +570,16 @@ output = loss plots for desired model
 '''
 def plot_loss(history):
 #     plt.subplots(figsize=(10,5))
-    plt.plot(history['loss'], label='loss')
-    plt.plot(history['val_loss'], label='val_loss')
+    plt.plot(
+        history['loss'], 
+         label='loss',
+#         color = 'orange'
+    )
+    plt.plot(
+        history['val_loss'], 
+        label='val_loss',
+#         color = 'blue'
+    )
     #   plt.ylim([0, 10])
     plt.xlabel('Epoch')
     plt.ylabel('Error')
