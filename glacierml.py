@@ -1047,7 +1047,7 @@ def regional_predictions_loader(
                 RGI_predicted.index[-1], 'area'
             ] = area
             
-            for i in range(1,9,1):
+            for i in range(1,10,1):
                 if ('df' + str(i) + '_1_') in file or ('df' + str(i) + '_0_'):
                     RGI_predicted.loc[
                             RGI_predicted.index[-1], 'volf'
@@ -1490,7 +1490,7 @@ def regional_predictions_loader(
                 ] = '64-48'
                 
                 
-            for i in range(1,9,1):
+            for i in range(1,10,1):
                  if ('df' + str(i) + '_') in file:
                     RGI_predicted.loc[
                         RGI_predicted.index[-1], 'dataframe'
@@ -1533,6 +1533,7 @@ def regional_predictions_loader(
         (RGI_predicted['vol'] * 1e3) / RGI_predicted['area']
     ) * 1e3
     RGI_predicted['voldiff'] = (RGI_predicted['vol']) - RGI_predicted['volf'] 
+    RGI_predicted['vol_ratio'] = RGI_predicted['vol'] / RGI_predicted['volf']
     RGI_predicted = RGI_predicted.reset_index()
     RGI_predicted = RGI_predicted.drop('index', axis = 1)
     RGI_predicted = RGI_predicted.sort_values([
