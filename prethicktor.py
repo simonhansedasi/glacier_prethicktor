@@ -14,7 +14,7 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 tf.random.set_seed(42)
-
+print('currently running tensorflow version: ' + tf.__version__)
 print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8', 'sm9')
 
 dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm7', 'sm8', 'sm9')
@@ -355,7 +355,7 @@ for region_selection in range(1,20,1):
     RGI_prethicked = RGI.copy() 
     RGI_prethicked['avg predicted thickness'] = 'NaN'
     RGI_prethicked['predicted thickness std dev'] = 'NaN'
-
+    RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
 
     print('calculating average thickness across random state ensemble...')
     # loop through predictions df and find average across each ensemble of 25 random states
