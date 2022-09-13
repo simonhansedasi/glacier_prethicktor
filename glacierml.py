@@ -17,6 +17,7 @@ from yellowbrick.cluster import KElbowVisualizer
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import silhouette_score, silhouette_samples
 import matplotlib.ticker as ticker
+tf.random.set_seed(42)
 
 
 pd.set_option('mode.chained_assignment',None)
@@ -1011,7 +1012,7 @@ def random_state_finder(
 '''
 predictions_loader
 '''
-def predictions_loader(
+def regional_predictions_loader(
     training_module,
     architecture,
     learning_rate,
@@ -1462,7 +1463,12 @@ def predictions_loader(
                 RGI_predicted.loc[
                     RGI_predicted.index[-1], 'architecture'
                 ] = '59-28'
-                                
+                
+            if '60-30' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '60-30'
+                
             if '60-46' in file:
                 RGI_predicted.loc[
                     RGI_predicted.index[-1], 'architecture'
@@ -1537,6 +1543,36 @@ def predictions_loader(
     ], ascending = True)
                         
     return RGI_predicted
+
+
+
+def global_predictions_loader(
+    training_module,
+    architecture,
+    learning_rate,
+    epochs,
+):
+    root_dir = 'zults/'
+    RGI_predicted = pd.DataFrame()
+    for file in tqdm(os.listdir(root_dir)):
+            # print(file)
+        if ('RGI_predicted' in file and 
+            'df' + training_module + '_' in file and 
+            architecture in file and 
+            learning_rate in file and 
+            epochs in file):
+            file_reader = pd.read_csv(root_dir + file)
+            file_reader['volume km3'] = (
+                file_reader['avg predicted thickness'] / 1e3
+            ) * file_reader['Area']
+            file_reader = file_reader.dropna()
+            RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
+
+    RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
+    RGI_predicted
+
+    return RGI_predicted
+
 
 '''
 '''
@@ -1677,8 +1713,8 @@ def glathida_stats_adder(
             df[df['dataframe'].str[4:] == region_number].index, 'ratio trainable'
         ] = trainable_ratio
 
-    df['vol_ratio'] = df['vol'] / df['volf']
-    df['vol_from_zero'] = abs(1 - df['vol_ratio'])
+#     df['vol_ratio'] = df['vol'] / df['volf']
+#     df['vol_from_zero'] = abs(1 - df['vol_ratio'])
 
     return df
 

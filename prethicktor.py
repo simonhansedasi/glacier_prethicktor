@@ -13,15 +13,16 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
+tf.random.set_seed(42)
 
-print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
+print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8', 'sm9')
 
-dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm7', 'sm8')
+dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm7', 'sm8', 'sm9')
 
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
-    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
+    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8', 'sm9')
     chosen_dir = input()    
 
 
@@ -266,6 +267,9 @@ for region_selection in range(1,20,1):
             'Aspect',
             'Lmax'
         ]] 
+        
+    if chosen_dir == 'sm9':
+        RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']  
     deviations = deviations [[
         'layer architecture',
         'dropout',

@@ -14,6 +14,7 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
+tf.random.set_seed(42)
 
 print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8', 'sm9')
 # print(' ')
