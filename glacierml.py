@@ -93,7 +93,7 @@ def data_loader(
     scale = 'g',
     region_selection = 1,
     area_scrubber = 'off',
-    anomaly_input = 5
+    anomaly_input = 0.5
 ):        
     
     pth_1 = root_dir + 'T_data/'
@@ -224,7 +224,9 @@ def data_loader(
                     'BgnDate':'date_r',
                     'date':'date_g'
                 })
-                df['size_anomaly'] = abs(df['area_g'] - df['area_r'])
+                df['size_anomaly'] = abs(
+                    ( (df['area_g'] - df['area_r']) / df['area_g'] ) * 100
+                )                
                 df = df[df['size_anomaly'] <= anomaly_input]
                 df = df.drop([
                     'size_anomaly',
@@ -326,7 +328,9 @@ def data_loader(
                     'BgnDate':'date_r',
                     'date':'date_g'
                 })
-                df['size_anomaly'] = abs(df['area_g'] - df['area_r'])
+                df['size_anomaly'] = abs(
+                    ( (df['area_g'] - df['area_r']) / df['area_g'] ) * 100
+                )
                 df = df[df['size_anomaly'] <= anomaly_input]
                 df = df.drop([
                     'size_anomaly',

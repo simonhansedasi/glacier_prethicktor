@@ -25,8 +25,8 @@ def main():
     # select either to train on all available data, or break up training by regions
     
     
-    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7', 'sm8', 'sm9')
-    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6','sm7', 'sm8', 'sm9')
+    print('please select module: sm1, sm2, sm3, sm4', 'sm5, sm6, sm7', 'sm8', 'sm9', 'sm10')
+    module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6','sm7', 'sm8', 'sm9', 'sm10')
     module = input()
 
 #     while module not in module_list:
@@ -226,6 +226,25 @@ def main():
             dataset.name = 'df9'
             layer_1_list = ['10','40','60']
             layer_2_list = ['5','20','30']
+            
+            
+            
+        if module == 'sm10':
+            df10 = gl.data_loader(
+                root_dir = '/home/prethicktor/data/',
+                RGI_input = 'y',
+                scale = 'g',
+                area_scrubber = 'on',
+                anomaly_input = 0.25
+            )
+            df10 = df10.drop(['RGIId','region'], axis = 1)
+            df10['Zdelta'] = df10['Zmax'] - df10['Zmin']
+            module = 'sm10'
+            res = 'sr10'
+            dataset = df10 
+            dataset.name = 'df10'
+            layer_1_list = ['10','25','35']
+            layer_2_list = ['5','12','22']
         # print(dataset.name)
         # print(dataset)  
         for lr in lr_list:
