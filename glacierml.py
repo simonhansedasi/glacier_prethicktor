@@ -657,12 +657,24 @@ def build_and_train_model(dataset,
 
     # set up model with  normalized data and defined layer architecture
     dnn_model = build_dnn_model(normalizer['ALL'], learning_rate, layer_1, layer_2, dropout)
-
+    
+    # set up callback function to cut off training when performance reaches peak
+    callback = tf.keras.callbacks.EarlyStopping(
+        monitor = 'val_loss',
+        min_delta = 1,
+        patience = 10,
+        verbose = 1,
+        mode = 'auto',
+        baseline = None,
+        restore_best_weights = True
+    )
+    
     # train model on previously selected and splitdata
     dnn_history['MULTI'] = dnn_model.fit(
         train_features,
         train_labels,
         validation_split=validation_split,
+        callbacks = [callback],
         verbose=0, 
         epochs=epochs
     )
@@ -799,7 +811,8 @@ def predictions_maker(
         df.loc[df.index[-1], 'learning rate'] = '0.01'
     if '0.001' in folder:
         df.loc[df.index[-1], 'learning rate']= '0.001'
-
+    if '_2_' in folder:
+        df.loc[df.index[-1], 'epochs']= '2 '
     if '10' in folder:
         df.loc[df.index[-1], 'epochs']= '10'
     if '15' in folder:
@@ -808,44 +821,11 @@ def predictions_maker(
         df.loc[df.index[-1], 'epochs']= '20' 
     if '25' in folder:
         df.loc[df.index[-1], 'epochs']= '25'
-    if '30' in folder:
-        df.loc[df.index[-1], 'epochs']= '30'
-    if '35' in folder:
-        df.loc[df.index[-1], 'epochs']= '35'
-    if '40' in folder:
-        df.loc[df.index[-1], 'epochs']= '40'
-    if '45' in folder:
-        df.loc[df.index[-1], 'epochs']= '45'
-    if '50' in folder:
-        df.loc[df.index[-1], 'epochs']= '50'
-    if '55' in folder:
-        df.loc[df.index[-1], 'epochs']= '55'
-    if '60' in folder:
-        df.loc[df.index[-1], 'epochs']= '60'
-    if '65' in folder:
-        df.loc[df.index[-1], 'epochs']= '65'
-    if '70' in folder:
-        df.loc[df.index[-1], 'epochs']= '70'
-    if '75' in folder:
-        df.loc[df.index[-1], 'epochs']= '75'
-    if '80' in folder:
-        df.loc[df.index[-1], 'epochs']= '80'
-    if '85' in folder:
-        df.loc[df.index[-1], 'epochs']= '85'
-    if '90' in folder:
-        df.loc[df.index[-1], 'epochs']= '90'
-    if '95' in folder:
-        df.loc[df.index[-1], 'epochs']= '95'
     if '100' in folder:
         df.loc[df.index[-1], 'epochs']= '100'
-    if '150' in folder:
-        df.loc[df.index[-1], 'epochs']= '150'
-    if '200' in folder:
-        df.loc[df.index[-1], 'epochs']= '200'       
-    if '300' in folder:
-        df.loc[df.index[-1], 'epochs']= '300'
-    if '400' in folder:
-        df.loc[df.index[-1], 'epochs']= '400'
+    if '999' in folder:
+        df.loc[df.index[-1], 'epochs']= '999'
+
 
     return df
     
@@ -1541,6 +1521,9 @@ def regional_predictions_loader(
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '40'
             if '_100' in file:
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'
+                
+            if '_999' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '999'
 #     print(RGI_predicted)
     RGI_predicted = RGI_predicted.rename(columns = {
         0:'vol'
@@ -1659,69 +1642,66 @@ def glathida_stats_adder(
         GlaThiDa_std_slope = glathida_regional['Slope'].std(ddof=0)
         GlaThiDa_std_zmin = glathida_regional['Zmin'].std(ddof=0)
         GlaThiDa_std_zmax = glathida_regional['Zmax'].std(ddof=0)
-        if [df['dataframe'].str.contains('df10')]:
-            string_number = 5
-        else:
-            string_number = 4
+
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Area_GlaThiDa_mean'
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_mean'
         ] = GlaThiDa_mean_area
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Aspect_GlaThiDa_mean'
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_mean'
         ] = GlaThiDa_mean_aspect
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Lmax_GlaThiDa_mean'
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_mean'
         ] = GlaThiDa_mean_lmax
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Slope_GlaThiDa_mean'
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_mean'
         ] = GlaThiDa_mean_slope
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmin_GlaThiDa_mean'
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_mean'
         ] = GlaThiDa_mean_zmin
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmax_GlaThiDa_mean'
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_mean'
         ] = GlaThiDa_mean_zmax
 
 
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Area_GlaThiDa_median'
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_median'
         ] = GlaThiDa_median_area
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Aspect_GlaThiDa_median'
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_median'
         ] = GlaThiDa_median_aspect
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Lmax_GlaThiDa_median'
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_median'
         ] = GlaThiDa_median_lmax
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Slope_GlaThiDa_median'
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_median'
         ] = GlaThiDa_median_slope
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmin_GlaThiDa_median'
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_median'
         ] = GlaThiDa_median_zmin
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmax_GlaThiDa_median'
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_median'
         ] = GlaThiDa_median_zmax
 
 
 
 
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Area_GlaThiDa_std'
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_std'
         ] = GlaThiDa_std_area
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Aspect_GlaThiDa_std'
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_std'
         ] = GlaThiDa_std_aspect
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Lmax_GlaThiDa_std'
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_std'
         ] = GlaThiDa_std_lmax
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Slope_GlaThiDa_std'
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_std'
         ] = GlaThiDa_std_slope
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmin_GlaThiDa_std'
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_std'
         ] = GlaThiDa_std_zmin
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmax_GlaThiDa_std'
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_std'
         ] = GlaThiDa_std_zmax
 
 
@@ -1733,7 +1713,7 @@ def glathida_stats_adder(
         percent_trainable = trainable_ratio * 100
 
         df.loc[
-            df[df['dataframe'].str[string_number:] == region_number].index, 'ratio trainable'
+            df[df['dataframe'].str[4:] == region_number].index, 'ratio trainable'
         ] = trainable_ratio
 
 #     df['vol_ratio'] = df['vol'] / df['volf']
@@ -1791,7 +1771,7 @@ def predictions_finder():
             prethicked = pd.concat([prethicked, arch])
 
             # epochs = 100
-            if file[str_7_idx - 3] == str(1):
+            if file[str_7_idx - 3] == str(1) or file[str_7_idx - 3] == str(9):
 
                 learning_rate = file[
                     layer_2_start + layer_2_length + 1 : str_7_idx - 4
