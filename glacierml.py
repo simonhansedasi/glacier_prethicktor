@@ -1394,7 +1394,7 @@ def regional_predictions_loader(
             
             
             
-            if 'df1' not in file:
+            if 'df1_' not in file:
                 att_list = [
                     'Area',
                     'Aspect',
@@ -1448,6 +1448,12 @@ def regional_predictions_loader(
                     RGI_predicted.index[-1], 'architecture'
                 ] = '37-20'
                 
+                
+            if '45-30' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '45-30'
+                
             if '47-21' in file:
                 RGI_predicted.loc[
                     RGI_predicted.index[-1], 'architecture'
@@ -1488,13 +1494,22 @@ def regional_predictions_loader(
                     RGI_predicted.index[-1], 'architecture'
                 ] = '64-42'
                 
+            if '64-32' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '64-32'
+                
             if '64-48' in file:
                 RGI_predicted.loc[
                     RGI_predicted.index[-1], 'architecture'
                 ] = '64-48'
+            if '64-40' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '64-40'
                 
                 
-            for i in range(1,10,1):
+            for i in range(1,11,1):
                  if ('df' + str(i) + '_') in file:
                     RGI_predicted.loc[
                         RGI_predicted.index[-1], 'dataframe'
@@ -1541,9 +1556,9 @@ def regional_predictions_loader(
     RGI_predicted = RGI_predicted.reset_index()
     RGI_predicted = RGI_predicted.drop('index', axis = 1)
     RGI_predicted = RGI_predicted.sort_values([
-    #     'mean thickness (km)',
-    #     'architecture',
-    #     'learning rate',
+#         'mean thickness (km)',
+        'architecture',
+        'learning rate',
         'dataframe'
     ], ascending = True)
                         
@@ -1574,7 +1589,7 @@ def global_predictions_loader(
             RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
 
     RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
-    RGI_predicted
+    RGI_predicted['dataframe' ] = 'df'+ training_module
 
     return RGI_predicted
 
@@ -1644,66 +1659,69 @@ def glathida_stats_adder(
         GlaThiDa_std_slope = glathida_regional['Slope'].std(ddof=0)
         GlaThiDa_std_zmin = glathida_regional['Zmin'].std(ddof=0)
         GlaThiDa_std_zmax = glathida_regional['Zmax'].std(ddof=0)
-
+        if [df['dataframe'].str.contains('df10')]:
+            string_number = 5
+        else:
+            string_number = 4
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_mean'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Area_GlaThiDa_mean'
         ] = GlaThiDa_mean_area
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_mean'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Aspect_GlaThiDa_mean'
         ] = GlaThiDa_mean_aspect
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_mean'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Lmax_GlaThiDa_mean'
         ] = GlaThiDa_mean_lmax
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_mean'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Slope_GlaThiDa_mean'
         ] = GlaThiDa_mean_slope
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_mean'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmin_GlaThiDa_mean'
         ] = GlaThiDa_mean_zmin
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_mean'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmax_GlaThiDa_mean'
         ] = GlaThiDa_mean_zmax
 
 
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_median'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Area_GlaThiDa_median'
         ] = GlaThiDa_median_area
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_median'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Aspect_GlaThiDa_median'
         ] = GlaThiDa_median_aspect
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_median'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Lmax_GlaThiDa_median'
         ] = GlaThiDa_median_lmax
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_median'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Slope_GlaThiDa_median'
         ] = GlaThiDa_median_slope
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_median'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmin_GlaThiDa_median'
         ] = GlaThiDa_median_zmin
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_median'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmax_GlaThiDa_median'
         ] = GlaThiDa_median_zmax
 
 
 
 
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_std'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Area_GlaThiDa_std'
         ] = GlaThiDa_std_area
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_std'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Aspect_GlaThiDa_std'
         ] = GlaThiDa_std_aspect
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_std'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Lmax_GlaThiDa_std'
         ] = GlaThiDa_std_lmax
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_std'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Slope_GlaThiDa_std'
         ] = GlaThiDa_std_slope
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_std'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmin_GlaThiDa_std'
         ] = GlaThiDa_std_zmin
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_std'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'Zmax_GlaThiDa_std'
         ] = GlaThiDa_std_zmax
 
 
@@ -1715,7 +1733,7 @@ def glathida_stats_adder(
         percent_trainable = trainable_ratio * 100
 
         df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'ratio trainable'
+            df[df['dataframe'].str[string_number:] == region_number].index, 'ratio trainable'
         ] = trainable_ratio
 
 #     df['vol_ratio'] = df['vol'] / df['volf']
@@ -1786,7 +1804,7 @@ def predictions_finder():
             elif file[str_7_idx - 3] == '_':
 
                 learning_rate = file[
-                    layer_2_start + layer_2_length + 1 : str_7_idx - 4
+                    layer_2_start + layer_2_length + 1 : str_7_idx - 3
                 ]
 
                 epochs = file[
@@ -1796,7 +1814,14 @@ def predictions_finder():
             prethicked = prethicked.drop('index', axis = 1)
             prethicked.loc[prethicked.index[-1], 'learning rate'] = learning_rate
             prethicked.loc[prethicked.index[-1], 'epochs'] = epochs
-            prethicked.loc[prethicked.index[-1], 'training module'] = file[str_8_idx + 2]
+            if file[str_8_idx + 3] == '_':
+                prethicked.loc[prethicked.index[-1], 'training module'] = file[str_8_idx + 2]
+                
+            elif file[str_8_idx + 3] !='_':
+                prethicked.loc[prethicked.index[-1], 'training module'] = (
+                    file[str_8_idx + 2] + file[str_8_idx + 3]
+                )
+            
     #         break
     prethicked = prethicked.rename(columns = {
         0:'architecture'

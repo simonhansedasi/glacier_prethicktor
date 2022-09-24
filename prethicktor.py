@@ -15,14 +15,14 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 tf.random.set_seed(42)
 print('currently running tensorflow version: ' + tf.__version__)
-print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8', 'sm9')
+print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8, sm9, sm10')
 
-dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm7', 'sm8', 'sm9')
+dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm7', 'sm8', 'sm9', 'sm10')
 
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
-    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8', 'sm9')
+    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8, sm9, sm10')
     chosen_dir = input()    
 
 
@@ -62,7 +62,7 @@ if chosen_dir == 'sm3':
         scale = 'g',
 #                 region_selection = 1,
         area_scrubber = 'on',
-        anomaly_input = 1
+        anomaly_input = 25
     )
     df3 = df3.drop(['RGIId', 'region'], axis = 1)
     dataset = df3
@@ -77,7 +77,7 @@ if chosen_dir == 'sm4':
         scale = 'g',
 #                 region_selection = 1,
         area_scrubber = 'on',
-        anomaly_input = 5
+        anomaly_input = 75
     )
     df4 = df4.drop(['RGIId', 'region'], axis = 1)
     dataset = df4
@@ -94,13 +94,27 @@ if chosen_dir == 'sm5':
         area_scrubber = 'off',
         # anomaly_input = 5
     )
-    df5 = df5.drop(['region'], axis = 1)
-    df5 = df5.drop('Zmed', axis = 1)
+    df5 = df5.drop(['RGIId', 'Zmed','region'], axis = 1)
     dataset = df5
     dataset.name = 'df5'
     res = 'sr5'
 
 
+
+if chosen_dir == 'sm6':
+    df6 = gl.data_loader(
+        root_dir = '/home/prethicktor/data/',
+        RGI_input = 'y',
+        scale = 'g',
+#                 region_selection = 1,
+        area_scrubber = 'off'
+#                 anomaly_input = 5
+    )
+    df6 = df6.drop(['RGIId','region'], axis = 1)
+    dataset = df6
+    dataset.name = 'df6'
+    res = 'sr6'
+#     print(df7)
 
 if chosen_dir == 'sm7':
     df7 = gl.data_loader(
@@ -108,30 +122,29 @@ if chosen_dir == 'sm7':
         RGI_input = 'y',
         scale = 'g',
 #                 region_selection = 1,
-        area_scrubber = 'off'
-#                 anomaly_input = 5
+        area_scrubber = 'on',
+        anomaly_input = 75
     )
-    df7 = df7.drop(['region'], axis = 1)
+    df7 = df7.drop(['RGIId','Zmed', 'region'], axis = 1)
     dataset = df7
     dataset.name = 'df7'
     res = 'sr7'
-#     print(df7)
-
+    
+    
+    
 if chosen_dir == 'sm8':
     df8 = gl.data_loader(
         root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',
         scale = 'g',
-#                 region_selection = 1,
-        area_scrubber = 'off'
-#                 anomaly_input = 5
+        area_scrubber = 'on',
+        anomaly_input = 25
     )
-    df8 = df8.drop(['Zmed', 'region'], axis = 1)
+    df8 = df8.drop(['RGIId', 'region'], axis = 1)
+    df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
     dataset = df8
     dataset.name = 'df8'
     res = 'sr8'
-    
-    
     
 if chosen_dir == 'sm9':
     df9 = gl.data_loader(
@@ -139,7 +152,7 @@ if chosen_dir == 'sm9':
         RGI_input = 'y',
         scale = 'g',
         area_scrubber = 'on',
-        anomaly_input = 1
+        anomaly_input = 75
     )
     df9 = df9.drop(['RGIId', 'region'], axis = 1)
     df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
@@ -268,7 +281,7 @@ for region_selection in range(1,20,1):
             'Lmax'
         ]] 
         
-    if chosen_dir == 'sm9':
+    if chosen_dir == 'sm9' or chosen_dir == 'sm10':
         RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']  
     deviations = deviations [[
         'layer architecture',

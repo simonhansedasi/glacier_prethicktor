@@ -16,10 +16,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 tf.random.set_seed(42)
 
-print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8', 'sm9')
+print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8, sm9')
 # print(' ')
-dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm7', 'sm8', 'sm9')
+dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7', 'sm8', 'sm9')
 chosen_dir = input()
+
+
 
 # while chosen_dir not in dir_list:
 #     print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7', 'sm8')
@@ -52,7 +54,7 @@ if chosen_dir == 'sm3':
         RGI_input = 'y',
         scale = 'g',
         area_scrubber = 'on',
-        anomaly_input = 1
+        anomaly_input = 25
     )
     df3 = df3.drop(['RGIId', 'region'], axis = 1)
     dataset = df3
@@ -65,7 +67,7 @@ if chosen_dir == 'sm4':
         RGI_input = 'y',
         scale = 'g',
         area_scrubber = 'on',
-        anomaly_input = 5
+        anomaly_input = 75
     )
     df4 = df4.drop(['RGIId', 'region'], axis = 1)
     dataset = df4
@@ -85,8 +87,8 @@ if chosen_dir == 'sm5':
     dataset.name = 'df5'
     res = 'sr5'
 
-if chosen_dir == 'sm7':
-    df7 = gl.data_loader(
+if chosen_dir == 'sm6':
+    df6 = gl.data_loader(
         root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',
         scale = 'g',
@@ -94,10 +96,25 @@ if chosen_dir == 'sm7':
         area_scrubber = 'off'
 #                 anomaly_input = 5
     )
-    df7 = df7.drop(['region'], axis = 1)
+    df6 = df6.drop(['region'], axis = 1)
+    dataset = df6
+    dataset.name = 'df6'
+    res = 'sr6'
+
+
+if chosen_dir == 'sm7':
+    df7 = gl.data_loader(
+        root_dir = '/home/prethicktor/data/',
+        RGI_input = 'y',
+        scale = 'g',
+        area_scrubber = 'on',
+        anomaly_input = 75
+    )
+    df7 = df7.drop(['RGIId','Zmed', 'region'], axis = 1)
     dataset = df7
     dataset.name = 'df7'
     res = 'sr7'
+
 
 
 if chosen_dir == 'sm8':
@@ -106,13 +123,13 @@ if chosen_dir == 'sm8':
         RGI_input = 'y',
         scale = 'g',
         area_scrubber = 'on',
-        anomaly_input = 5
+        anomaly_input = 25
     )
-    df8 = df8.drop(['Zmed', 'region'], axis = 1)
+    df8 = df8.drop(['RGIId', 'region'], axis = 1)
+    df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
     dataset = df8
     dataset.name = 'df8'
     res = 'sr8'
-
 
 
 if chosen_dir == 'sm9':
@@ -121,9 +138,9 @@ if chosen_dir == 'sm9':
         RGI_input = 'y',
         scale = 'g',
         area_scrubber = 'on',
-        anomaly_input = 1
+        anomaly_input = 50
     )
-    df9 = df9.drop(['RGIId', 'region'], axis = 1)
+    df9= df9.drop(['RGIId', 'region'], axis = 1)
     df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
     dataset = df9
     dataset.name = 'df9'
@@ -257,168 +274,3 @@ for dropout_input_iter in dropout_input_list:
         dropout + 
         '.csv'
     )
-    
-# if chosen_dir == 'sm6':
-#     for region_selection in range(1,20,1):
-#         if len(str(region_selection)) == 1:
-#             N = 1
-#             region_selection = str(region_selection).zfill(N + len(str(region_selection)))
-#         else:
-#             region_selection = region_selection
-#         print(region_selection)
-#         region_selection = region_selection
-        
-#         df6 = gl.data_loader(
-#             root_dir = '/home/prethicktor/data/',
-#             RGI_input = 'y',
-#             scale = 'r',
-#             region_selection = int(region_selection),
-#             area_scrubber = 'off'
-#         )
-#         if len(df6) < 3:
-#             pass
-#         if len(df6) >= 3:
-#             df6 = df6.drop('region', axis=1)
-#             dataset = df6
-#             dataset.name = str('df6_' + str(region_selection))
-#             res = 'sr6'
-
-#             rootdir = 'saved_models/' + chosen_dir + '/'
-#             (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
-#             dnn_model = {}
-#             print(' ')
-
-#             print('loading and evaluating models...')
-#             dropout_input_list = ('y', 'n')
-#             for dropout_input_iter in dropout_input_list:
-#                 predictions = pd.DataFrame()
-#                 deviations = pd.DataFrame()
-#                 dropout_input = dropout_input_iter
-
-#                 if dropout_input == 'y':
-#                     dropout = '1'
-
-#                 elif dropout_input == 'n':
-#                     dropout = '0'
-
-#                 for arch in os.listdir(rootdir):        
-#                     if dropout == '1':
-#                         print(
-#                             'layer architecture: ' + arch[3:] + 
-#                             ' dropout = True, ' + 
-#                             'dataset: ' + 
-#                             dataset.name
-#                         )
-
-#                     elif dropout == '0':
-#                         print(
-#                             'layer architecture: ' + arch[3:] + 
-#                             ' dropout = False, ' + 
-#                             'dataset: ' + dataset.name
-#                         )
-
-#                     for folder in tqdm(os.listdir(rootdir + arch)):
-#                         if '_' + dropout + '_' in folder and dataset.name + '_' in folder:
-#                             model_loc = (
-#                                 rootdir + 
-#                                 arch + 
-#                                 '/' + 
-#                                 folder
-#                             )
-
-#                             model_name = arch[3:] + '_' + folder
-
-#                             rs = gl.random_state_finder(folder)
-
-#                             df = gl.predictions_maker(
-#                                 rs = rs,
-#                                 dropout = dropout,
-#                                 arch = arch,
-#                                 dataset = dataset,
-#                                 folder = str(folder),
-#                                 model_loc = model_loc,
-#                                 model_name = model_name
-#                             )
-
-#                             predictions = pd.concat([predictions, df], ignore_index = True)
-
-#                 predictions.rename(columns = {0:'avg train thickness'},inplace = True)
-#                 predictions.to_csv('zults/predictions_' + dataset.name + '_' + dropout + '.csv')
-#                 # calculate statistics
-#                 print('calculating statistics...')
-#                 dnn_model = {}
-#                 for epochs in list(predictions['epochs'].unique()):
-#                     df = predictions[predictions['epochs'] == epochs]
-
-#                     for dataframe in list(df['dataset'].unique()):
-#                         dfs = df[df['dataset'] == dataframe]
-
-#                         for arch in list(dfs['architecture'].unique()):
-#                             dfsr = dfs[dfs['architecture'] == arch]
-
-#                             if dfsr.empty:
-#                                 pass
-
-#                             for lr in list(dfsr['learning rate'].unique()):
-#                                 dfsrq = dfsr[dfsr['learning rate'] == lr]
-
-#                                 if dfsrq.empty:
-#                                     pass
-
-#                                 if not dfsrq.empty:
-#                                         # find mean and std dev of test mae
-#                                     model_name = (
-#                                             arch + 
-#                                             '_' + 
-#                                             dataset.name + 
-#                                             '_' +
-#                                             dropout +
-#                                             '_dnn_MULTI_' +
-#                                             str(lr) +
-#                                             '_0.2_' +
-#                                             str(100) +
-#                                             '_0'
-#                                     )
-
-#                                     model_loc = (
-#                                         rootdir + 
-#                                         'sm_' +
-#                                         arch + 
-#                                         '/' + 
-#                                         dataset.name + 
-#                                         '_' +
-#                                         dropout +
-#                                         '_dnn_MULTI_' +
-#                                         str(lr) +
-#                                         '_0.2_' +
-#                                         str(100) +
-#                                         '_0'
-#                                     )
-
-#                                     df = gl.deviations_calculator(
-#                                         model_loc = model_loc,
-#                                         model_name = model_name,
-#                                         ep = epochs,
-#                                         arch = arch,
-#                                         lr = lr,
-#                                         dropout = dropout,
-#                                         dataframe = dataframe,
-#                                         dataset = dataset,
-#                                         dfsrq = dfsrq
-#                                     )
-
-#                                     deviations = pd.concat(
-#                                         [deviations, df], ignore_index = True
-#                                     )
-
-#                 deviations.to_csv(
-#                     'zults/deviations_' + 
-#                     dataset.name + 
-#                     '_' + 
-#                     dropout + 
-#                     '.csv'
-#                 )
-            
-# if chosen_dir == 'sm6' and region_selection == 19:
-#     raise SystemExit
-    
