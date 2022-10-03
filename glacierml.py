@@ -261,7 +261,7 @@ def data_loader(
             elif area_scrubber == 'off':
                 df = df.drop([
                     'area_g', 
-                    'RGIId'
+#                     'RGIId'
                              ], axis = 1)
                 df = df.rename(columns = {
                     'area_r':'Area'
@@ -340,7 +340,7 @@ def data_loader(
                     'area_r':'Area'
                 })
                 df = df[[
-#                     'RGIId'
+                    'RGIId'
 #                     'Lat',
 #                     'Lon',
                     'CenLat',
@@ -359,7 +359,7 @@ def data_loader(
                 
             elif area_scrubber == 'off':
                 df = df[[
-#                     'RGIId'
+                    'RGIId'
 #                     'Lat',
 #                     'Lon',
                     'CenLat',
@@ -578,12 +578,12 @@ def plot_loss(history):
     plt.plot(
         history['loss'], 
          label='loss',
-#         color = 'orange'
+        color = 'blue'
     )
     plt.plot(
         history['val_loss'], 
         label='val_loss',
-#         color = 'blue'
+        color = 'orange'
     )
     #   plt.ylim([0, 10])
     plt.xlabel('Epoch')
@@ -661,9 +661,9 @@ def build_and_train_model(dataset,
     # set up callback function to cut off training when performance reaches peak
     callback = tf.keras.callbacks.EarlyStopping(
         monitor = 'val_loss',
-        min_delta = 1,
+        min_delta = 0.001,
         patience = 10,
-        verbose = 1,
+        verbose = 0,
         mode = 'auto',
         baseline = None,
         restore_best_weights = True
@@ -800,27 +800,12 @@ def predictions_maker(
     df.loc[df.index[-1], 'dataset'] = dataset.name
     df.loc[df.index[-1], 'dropout'] = dropout
 
-#                 if chosen_dir in global_list:
-#                     predictions.loc[predictions.index[-1], 'region'] = 'g'
-#                 if chosen_dir in region_list:
-#                     predictions.loc[predictions.index[-1], 'region'] = int(reg)
-
     if '0.1' in folder:
         df.loc[df.index[-1], 'learning rate'] = '0.1'
     if '0.01' in folder:
         df.loc[df.index[-1], 'learning rate'] = '0.01'
     if '0.001' in folder:
         df.loc[df.index[-1], 'learning rate']= '0.001'
-    if '_2_' in folder:
-        df.loc[df.index[-1], 'epochs']= '2 '
-    if '10' in folder:
-        df.loc[df.index[-1], 'epochs']= '10'
-    if '15' in folder:
-        df.loc[df.index[-1], 'epochs']= '15'               
-    if '20' in folder:
-        df.loc[df.index[-1], 'epochs']= '20' 
-    if '25' in folder:
-        df.loc[df.index[-1], 'epochs']= '25'
     if '100' in folder:
         df.loc[df.index[-1], 'epochs']= '100'
     if '999' in folder:
@@ -1422,7 +1407,10 @@ def regional_predictions_loader(
                 RGI_predicted.loc[
                     RGI_predicted.index[-1], 'architecture'
                 ] = '24-12'
-                
+            if '32-18' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '32-18'    
             if '37-20' in file:
                 RGI_predicted.loc[
                     RGI_predicted.index[-1], 'architecture'
@@ -1505,23 +1493,8 @@ def regional_predictions_loader(
                 RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.010'
             if '0.001' in file:
                 RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.001'
-            if '_20' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '20'
-            if '_25' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '25'
-            if '_50' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '50'
-            if '_60' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '60'
-            if '_15' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '15'
-            if '_30' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '30'
-            if '_40' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '40'
             if '_100' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'
-                
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'           
             if '_999' in file:
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '999'
 #     print(RGI_predicted)
@@ -1538,12 +1511,12 @@ def regional_predictions_loader(
     RGI_predicted['vol_ratio'] = RGI_predicted['vol'] / RGI_predicted['volf']
     RGI_predicted = RGI_predicted.reset_index()
     RGI_predicted = RGI_predicted.drop('index', axis = 1)
-    RGI_predicted = RGI_predicted.sort_values([
-#         'mean thickness (km)',
-        'architecture',
-        'learning rate',
-        'dataframe'
-    ], ascending = True)
+#     RGI_predicted = RGI_predicted.sort_values([
+# #         'mean thickness (km)',
+#         'architecture',
+#         'learning rate',
+#         'dataframe'
+#     ], ascending = True)
                         
     return RGI_predicted
 
@@ -1735,6 +1708,17 @@ def predictions_finder():
     # print(file)
         if 'RGI_predicted' in file:
             file_reader = pd.read_csv(root_dir + file)
+            file_reader = file_reader.rename(columns = {
+                0:'vol'
+            })
+
+            file_reader['volume km3'] = (
+                file_reader['avg predicted thickness'] / 1e3
+            ) * file_reader['Area']
+            
+            file_reader['pred std dev'] = (
+                (file_reader['predicted thickness std dev'] / 1e3) * file_reader['Area']
+            )
 #             print(file)
             str_1 = '_1_'
             str_2 = '-'
@@ -1794,6 +1778,11 @@ def predictions_finder():
             prethicked = prethicked.drop('index', axis = 1)
             prethicked.loc[prethicked.index[-1], 'learning rate'] = learning_rate
             prethicked.loc[prethicked.index[-1], 'epochs'] = epochs
+            prethicked.loc[prethicked.index[-1], 'volume'] = sum(file_reader['volume km3'])
+            
+            prethicked.loc[prethicked.index[-1], 'std dev'] = sum(
+                file_reader['pred std dev']
+            )
             if file[str_8_idx + 3] == '_':
                 prethicked.loc[prethicked.index[-1], 'training module'] = file[str_8_idx + 2]
                 
@@ -1801,13 +1790,33 @@ def predictions_finder():
                 prethicked.loc[prethicked.index[-1], 'training module'] = (
                     file[str_8_idx + 2] + file[str_8_idx + 3]
                 )
+            predicted = pd.DataFrame()
             
     #         break
     prethicked = prethicked.rename(columns = {
         0:'architecture'
     })
+    for arch in prethicked['architecture'].unique():
+        for lr in prethicked['learning rate'].unique():
+            dft = prethicked[
+                (prethicked['architecture'] == arch) & 
+                (prethicked['learning rate'] == lr)
+            ]
+            dft['predicted volume'] = sum(dft['volume']) / 1e3
+            dft['std dev'] = sum(dft['std dev']) / 1e3
+    #         print(dft.iloc[-1])
+            predicted = pd.concat([predicted,dft],ignore_index = True)
+    predicted = predicted[[
+        'architecture',
+        'epochs',
+        'learning rate',
+        'training module',
+        'predicted volume',
+        'std dev'
+    ]]
+    predicted = predicted.drop_duplicates()
     prethicked = prethicked.drop_duplicates()
-    return prethicked
+    return predicted
 
 
 '''
@@ -1978,4 +1987,3 @@ def color_grabber(
     colors = colors.drop('index', axis = 1)
     colors = colors.squeeze()
     return colors
-
