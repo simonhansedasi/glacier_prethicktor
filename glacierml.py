@@ -1784,10 +1784,10 @@ def predictions_finder():
                 file_reader['pred std dev']
             )
             if file[str_8_idx + 3] == '_':
-                prethicked.loc[prethicked.index[-1], 'training module'] = file[str_8_idx + 2]
+                prethicked.loc[prethicked.index[-1], 'coregistration'] = file[str_8_idx + 2]
                 
             elif file[str_8_idx + 3] !='_':
-                prethicked.loc[prethicked.index[-1], 'training module'] = (
+                prethicked.loc[prethicked.index[-1], 'coregistration'] = (
                     file[str_8_idx + 2] + file[str_8_idx + 3]
                 )
             predicted = pd.DataFrame()
@@ -1810,7 +1810,7 @@ def predictions_finder():
         'architecture',
         'epochs',
         'learning rate',
-        'training module',
+        'coregistration',
         'predicted volume',
         'std dev'
     ]]
