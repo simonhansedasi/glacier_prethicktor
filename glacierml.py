@@ -1808,7 +1808,7 @@ def predictions_finder():
             predicted = pd.concat([predicted,dft],ignore_index = True)
     predicted = predicted[[
         'architecture',
-        'epochs',
+#         'epochs',
         'learning rate',
         'coregistration',
         'predicted volume',
