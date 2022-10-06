@@ -1393,6 +1393,10 @@ def regional_predictions_loader(
                     ] = iqr
 
 
+            if '9-9' in file:
+                RGI_predicted.loc[
+                    RGI_predicted.index[-1], 'architecture'
+                ] = '9-9'
             if '10-5' in file:
                 RGI_predicted.loc[
                     RGI_predicted.index[-1], 'architecture'
