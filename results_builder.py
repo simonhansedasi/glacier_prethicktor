@@ -43,7 +43,7 @@ if chosen_dir == 'sm2':
         scale = 'g',
         area_scrubber = 'off'
     )
-    df2 = df2.drop(['region'], axis = 1)
+    df2 = df2.drop(['RGIId', 'region'], axis = 1)
     dataset = df2
     dataset.name = 'df2'
     res = 'sr2'
@@ -82,7 +82,8 @@ if chosen_dir == 'sm5':
         scale = 'g',
         area_scrubber = 'off',
     )
-    df5 = df5.drop(['Zmed', 'region'], axis = 1)
+    df5 = df5.drop(['RGIId', 'region'], axis = 1)
+    df5['Zdelta'] = df5['Zmax'] - df5['Zmin']
     dataset = df5
     dataset.name = 'df5'
     res = 'sr5'
@@ -92,11 +93,11 @@ if chosen_dir == 'sm6':
         root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',
         scale = 'g',
-#                 region_selection = 1,
-        area_scrubber = 'off'
-#                 anomaly_input = 5
+        area_scrubber = 'on',
+        anomaly_input = 25
     )
-    df6 = df6.drop(['region'], axis = 1)
+    df6 = df6.drop(['RGIId','region'], axis = 1)
+    df6['Zdelta'] = df6['Zmax'] - df6['Zmin']
     dataset = df6
     dataset.name = 'df6'
     res = 'sr6'
@@ -110,42 +111,17 @@ if chosen_dir == 'sm7':
         area_scrubber = 'on',
         anomaly_input = 75
     )
-    df7 = df7.drop(['RGIId','Zmed', 'region'], axis = 1)
+    df7 = df7.drop(['RGIId','region'], axis = 1)
+    df7['Zdelta'] = df7['Zmax'] - df7['Zmin']
     dataset = df7
     dataset.name = 'df7'
     res = 'sr7'
 
 
+    
+    
 
-if chosen_dir == 'sm8':
-    df8 = gl.data_loader(
-        root_dir = '/home/prethicktor/data/',
-        RGI_input = 'y',
-        scale = 'g',
-        area_scrubber = 'on',
-        anomaly_input = 25
-    )
-    df8 = df8.drop(['RGIId', 'region'], axis = 1)
-    df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
-    dataset = df8
-    dataset.name = 'df8'
-    res = 'sr8'
-
-
-if chosen_dir == 'sm9':
-    df9 = gl.data_loader(
-        root_dir = '/home/prethicktor/data/',
-        RGI_input = 'y',
-        scale = 'g',
-        area_scrubber = 'on',
-        anomaly_input = 50
-    )
-    df9= df9.drop(['RGIId', 'region'], axis = 1)
-    df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
-    dataset = df9
-    dataset.name = 'df9'
-    res = 'sr9'
-
+print(dataset)
 rootdir = 'saved_models/' + chosen_dir + '/'
 (train_features, test_features, train_labels, test_labels) = gl.data_splitter(dataset)
 dnn_model = {}
@@ -197,7 +173,7 @@ for dropout_input_iter in dropout_input_list:
 
     predictions.rename(columns = {0:'avg train thickness'},inplace = True)
     predictions.to_csv('zults/predictions_' + dataset.name + '_' + dropout + '.csv')
-
+    print(predictions)
     # calculate statistics
 
     print('calculating statistics...')
@@ -227,7 +203,7 @@ for dropout_input_iter in dropout_input_list:
                             '_dnn_MULTI_' +
                             str(lr) +
                             '_0.2_' +
-                            str(100) +
+                            str(epochs) +
                             '_0'
                     )
 
@@ -242,7 +218,7 @@ for dropout_input_iter in dropout_input_list:
                         '_dnn_MULTI_' +
                         str(lr) +
                         '_0.2_' +
-                        str(100) +
+                        str(epochs) +
                         '_0'
                     )
 
