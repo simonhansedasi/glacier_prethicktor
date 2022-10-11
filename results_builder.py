@@ -9,7 +9,6 @@ import logging
 import seaborn as sns
 from tqdm import tqdm
 tf.get_logger().setLevel(logging.ERROR)
-tf.logging.set_verbosity(tf.logging.ERROR)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
