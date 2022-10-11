@@ -8,6 +8,7 @@ from tensorflow.python.util import deprecation
 import logging
 import warnings
 tf.get_logger().setLevel(logging.ERROR)
+tf.logging.set_verbosity(tf.logging.ERROR)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
