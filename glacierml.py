@@ -799,7 +799,7 @@ def predictions_maker(
     df.loc[df.index[-1], 'validation split'] = '0.2'
     df.loc[df.index[-1], 'dataset'] = dataset.name
     df.loc[df.index[-1], 'dropout'] = dropout
-
+    df.loc[df.index[-1], 'total parameters'] = dnn_model[model_name].count_params() 
     if '0.1' in folder:
         df.loc[df.index[-1], 'learning rate'] = '0.1'
     if '0.01' in folder:
@@ -810,7 +810,8 @@ def predictions_maker(
         df.loc[df.index[-1], 'epochs']= '100'
     if '999' in folder:
         df.loc[df.index[-1], 'epochs']= '999'
-
+    if '2000' in folder:
+        df.loc[df.index[-1], 'epochs']= '2000'
 
     return df
     
@@ -1391,96 +1392,42 @@ def regional_predictions_loader(
                     RGI_predicted.loc[
                         RGI_predicted.index[-1], att + '_RGI_iqr'
                     ] = iqr
+            str_1 = '_1_'
+            str_2 = '-'
+            str_3 = '_0_'
+            str_4 = '_0.'
+            str_7 = '.csv'
+            str_8 = 'df'
+            str_8_idx = file.index(str_8)
+            str_7_idx = file.index(str_7)
+            str_2_idx = file.index(str_2)
+            str_4_idx = file.index(str_4)
+            if str_1 in file:
+
+                str_1_idx = file.index(str_1)
+                layer_1_start = (str_1_idx + 3)
+                layer_2_start = str_2_idx + 1
+                layer_1_length = str_2_idx - layer_1_start
+                layer_2_length = str_4_idx - (str_2_idx + 1)
 
 
-            if '9-9' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '9-9'
-            if '10-5' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '10-5'
-                
-            if '16-8' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '16-8'
-                
-            if '24-12' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '24-12'
-            if '32-18' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '32-18'    
-            if '37-20' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '37-20'
-                
-                
-            if '45-30' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '45-30'
-                
-            if '47-21' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '47-21'
-                
-            if '50-28' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '50-28'
-                
-            if '50-25' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '50-25'
-                
-            if '59-28' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '59-28'
-                
-            if '60-30' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '60-30'
-                
-            if '60-46' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '60-46'
-                
-            if '64-36' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '64-36'
-                
-            if '64-42' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '64-42'
-                
-            if '64-32' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '64-32'
-                
-            if '64-48' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '64-48'
-            if '64-40' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'architecture'
-                ] = '64-40'
-                
-                
+            if str_3 in file :
+                str_3_idx = file.index(str_3)
+
+                layer_1_start = (str_3_idx + 3)
+                layer_2_start = str_2_idx + 1
+                layer_1_length = str_2_idx - layer_1_start
+                layer_2_length = str_4_idx - (str_2_idx + 1)
+
+
+            layer_1 = file[layer_1_start:(layer_1_start + layer_1_length)]
+            layer_2 = file[layer_2_start:(layer_2_start + layer_2_length)]
+
+            arch = pd.Series(str(layer_1) + '-' + str(layer_2), name = 'architecture')
+            RGI_predicted.loc[
+                RGI_predicted.index[-1], 'architecture'
+            ] = arch
+
             for i in range(1,11,1):
                  if ('df' + str(i) + '_') in file:
                     RGI_predicted.loc[
@@ -1822,6 +1769,8 @@ def predictions_finder():
     prethicked = prethicked.drop_duplicates()
     return predicted
 
+
+    
 
 '''
 cluster functions
