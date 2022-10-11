@@ -141,15 +141,6 @@ deviations_1 = pd.read_csv('zults/deviations_' + dataset.name + '_1.csv')
 deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')
 deviations = pd.concat([deviations_1, deviations_2])
 deviations = deviations.reset_index()
-rootdir = '/home/prethicktor/data/RGI/rgi60-attribs/'
-
-RGI = gl.RGI_loader(
-    pth = '/home/prethicktor/data/RGI/rgi60-attribs/'
-)
-RGI = RGI.drop(['RGIId','region'], axis = 1)
-
-
-
 
 deviations = deviations[deviations['learning rate'] == 0.01]
 
@@ -202,7 +193,6 @@ for index in deviations.index:
             region_selection = region_selection
 
         RGI['region'] = RGI['RGIId'].str[6:8]
-        RGI = RGI.drop('RGIId', axis = 1)    
         RGI = RGI.reset_index()
         RGI = RGI.drop('index', axis=1)
         print(region_selection)
@@ -218,37 +208,24 @@ for index in deviations.index:
             if not drops.empty:
                 print('dropping bad data')
                 RGI = RGI.drop(drops)
-        RGI = RGI.drop('region', axis = 1)
+        RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
         print(RGI['Zmed'].min())
         if chosen_dir == 'sm1':
 
-            RGI = RGI.rename(columns = {
+            RGI_for_predictions = RGI_for_predictions.rename(columns = {
                 'CenLat':'Lat',
                 'CenLon':'Lon',
                 'Area':'Area',
                 'Slope':'Mean Slope'
             })
-            RGI = RGI[[
+            RGI_for_predictions = RGI_for_predictions[[
                 'Lat',
                 'Lon',
                 'Area',
                 'Mean Slope'
             ]]
 
-        RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']
-        deviations = deviations [[
-            'layer architecture',
-            'dropout',
-            # 'model parameters',
-            # 'total inputs',
-            'learning rate',
-            'epochs',
-            # 'test mae avg',
-            # 'train mae avg',
-            # 'test mae std dev',
-            # 'train mae std dev'
-        ]]
-
+        RGI_for_predictions['Zdelta'] = RGI_for_predictions['Zmax'] - RGI_for_predictions['Zmin']
 
         print(
             'layer architecture: ' + arch + 
@@ -297,17 +274,17 @@ for index in deviations.index:
                 str(rs)
             )
             rootdir_1 = 'saved_results/' + res + '/sr_' + arch + '/'
-            dnn_history = {}
-            history_name = (
+            dnn_history_1 = {}
+            history_name_1 = (
                 arch + 
                 '_' +
                 dataset.name +
                 '_' +
                 str(dropout) +
                 '_dnn_history_MULTI_' +
-                str(top_learning_rate) +
+                str(lr) +
                 '_0.2_' +
-                str(epochs) + 
+                str(ep) + 
                 '_' + 
                 str(rs)
 
@@ -323,6 +300,7 @@ for index in deviations.index:
                 '_' + 
                 str(rs)
             )
+            dnn_history ={}
             dnn_history[history_name] = pd.read_csv(rootdir_1 + history_name)
             
             if abs((
@@ -334,42 +312,41 @@ for index in deviations.index:
                 dnn_model[model] = tf.keras.models.load_model(path)
 
                 s = pd.Series(
-                    dnn_model[model].predict(RGI, verbose=0).flatten(), 
+                    dnn_model[model].predict(RGI_for_predictions, verbose=0).flatten(), 
                     name = rs
                 )
 
                 dfs[rs] = s
 
 
-                # make a copy of RGI to add predicted thickness and their statistics
-                RGI_prethicked = RGI.copy() 
-                RGI_prethicked['avg predicted thickness'] = 'NaN'
-                RGI_prethicked['predicted thickness std dev'] = 'NaN'
-                RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
+        # make a copy of RGI to add predicted thickness and their statistics
+        RGI_prethicked = RGI.copy() 
+        RGI_prethicked['avg predicted thickness'] = 'NaN'
+        RGI_prethicked['predicted thickness std dev'] = 'NaN'
+        RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
 
-                print('calculating average thickness across random state ensemble...')
-                # loop through predictions df and find average across each ensemble of 25 random states
-                for i in tqdm(dfs.index):
-                    avg_predicted_thickness = np.mean(dfs.loc[i])
-                    RGI_prethicked['avg predicted thickness'].loc[i] = avg_predicted_thickness
+        print('calculating average thickness across random state ensemble...')
+        # loop through predictions df and find average across each ensemble of 25 random states
+        for i in tqdm(dfs.index):
+            RGI_prethicked['avg predicted thickness'].loc[i] = np.mean(dfs.loc[i])
 
 
-                print('computing standard deviations and variances for RGI predicted thicknesses')
-                # loop through predictions df and find std dev across each ensemble of 25 random states
-                for i in tqdm(dfs.index):
-                    RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
-                print(' ')
+        print('computing standard deviations and variances for RGI predicted thicknesses')
+        # loop through predictions df and find std dev across each ensemble of 25 random states
+        for i in tqdm(dfs.index):
+            RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
+        print(' ')
 
-                RGI_prethicked.to_csv(
-                    'zults/RGI_predicted_' +
-                    dataset.name + '_' + str(region_selection) +
-                    '_' + 
-                    str(dropout) + 
-                    '_' + 
-                    arch + 
-                    '_' + 
-                    str(lr) + 
-                    '_' + 
-                    str(ep) + 
-                    '.csv'
-                )    
+        RGI_prethicked.to_csv(
+            'zults/RGI_predicted_' +
+            dataset.name + '_' + str(region_selection) +
+            '_' + 
+            str(dropout) + 
+            '_' + 
+            arch + 
+            '_' + 
+            str(lr) + 
+            '_' + 
+            str(ep) + 
+            '.csv'
+        )    

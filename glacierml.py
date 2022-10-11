@@ -1423,7 +1423,7 @@ def regional_predictions_loader(
             layer_1 = file[layer_1_start:(layer_1_start + layer_1_length)]
             layer_2 = file[layer_2_start:(layer_2_start + layer_2_length)]
 
-            arch = pd.Series(str(layer_1) + '-' + str(layer_2), name = 'architecture')
+            arch = (str(layer_1) + '-' + str(layer_2))
             RGI_predicted.loc[
                 RGI_predicted.index[-1], 'architecture'
             ] = arch
@@ -1709,7 +1709,17 @@ def predictions_finder():
             if file[str_7_idx - 3] == str(1) or file[str_7_idx - 3] == str(9):
 
                 learning_rate = file[
-                    layer_2_start + layer_2_length + 1 : str_7_idx - 4
+                    layer_2_start + layer_2_length + 1 : str_7_idx - 5
+                ]
+                epochs = file[
+                    str_7_idx - 3 : str_7_idx
+                ]
+                
+            # epochs = 1000
+            if file[str_7_idx - 4] == str(2) or file[str_7_idx - 3] == str(9):
+
+                learning_rate = file[
+                    layer_2_start + layer_2_length + 1 : str_7_idx - 5
                 ]
                 epochs = file[
                     str_7_idx - 3 : str_7_idx
