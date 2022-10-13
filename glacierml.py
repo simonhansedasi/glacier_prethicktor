@@ -1448,6 +1448,8 @@ def regional_predictions_loader(
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'           
             if '_999' in file:
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '999'
+            if '_2000' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '2000'
 #     print(RGI_predicted)
     RGI_predicted = RGI_predicted.rename(columns = {
         0:'vol'
