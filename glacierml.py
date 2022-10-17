@@ -1483,7 +1483,7 @@ def global_predictions_loader(
 ):
     root_dir = 'zults/'
     RGI_predicted = pd.DataFrame()
-    for file in tqdm(os.listdir(root_dir)):
+    for file in (os.listdir(root_dir)):
             # print(file)
         if ('RGI_predicted' in file and 
             'df' + training_module + '_' in file and 

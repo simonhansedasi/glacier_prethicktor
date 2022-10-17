@@ -138,13 +138,13 @@ if chosen_dir == 'sm7':
     
     
 deviations_1 = pd.read_csv('zults/deviations_' + dataset.name + '_1.csv')
-deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')
-deviations = pd.concat([deviations_1, deviations_2])
-deviations = deviations.reset_index()
+# deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')
+# deviations = pd.concat([deviations_1, deviations_2])
+deviations_1 = deviations_1.reset_index()
 
-deviations = deviations[deviations['learning rate'] == 0.01]
+deviations_1 = deviations_1[deviations_1['learning rate'] == 0.01]
 
-deviations = deviations [[
+deviations = deviations_1[[
 'layer architecture',
 'dropout',
 # 'model parameters',
