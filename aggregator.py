@@ -39,26 +39,34 @@ df = df[[
         '22','23','24',
 ]]
 
-agg = df.groupby(['RGIId'])[
+compiled_raw = df.groupby('RGIId')[
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
         '22','23','24',
-].agg([np.mean, np.std, np.var])
+]
 
-agg.to_csv('sermeq_agg.csv')
 dft = pd.DataFrame()
-for rgi in tqdm(agg.index):
-    dft = pd.concat([dft, pd.Series(rgi, name = 'RGIId')])
-    mean_thickness = agg[[
+for this_rgi_id, obj in tqdm(compiled_raw):
+    rgi_id = pd.Series(this_rgi_id, name = 'RGIId')
+#     print(f"Data associated with RGI_ID = {this_rgi_id}:")
+#     print(this_rgi_id)
+#     break
+    dft = pd.concat([dft, rgi_id])
+    dft = dft.reset_index()
+    dft = dft.drop('index', axis = 1)
+    dft.loc[dft.index[-1], 'Mean Thickness'] = obj[[
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
-        '22','23','24']].loc[rgi].mean()
-    thickness_std = agg[[
+        '22','23','24',
+    ]].mean().mean()
+    dft.loc[dft.index[-1],'Thickness Std Dev'] = obj[[
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
-        '22','23','24']].loc[rgi].std()
-    dft.loc[dft.index[-1], 'RGIId'] = agg['RGIId'].loc[rgi]
-    dft.loc[dft.index[-1], 'Mean Thickness'] = mean_thickness
-    dft.loc[dft.index[-1], 'Thickness std dev'] = thickness_std
+        '22','23','24',
+    ]].stack().std()
+    
+dft = dft.rename(columns = {
+    0:'RGIId'
+})
 dft = dft.drop_duplicates()
 dft.to_csv('sermeq_aggregated_bootstrap_predictions.csv')
