@@ -69,4 +69,4 @@ dft = dft.rename(columns = {
     0:'RGIId'
 })
 dft = dft.drop_duplicates()
-dft.to_csv('sermeq_aggregated_bootstrap_predictions.csv')
+dft.to_csv('aggregated/sermeq_aggregated_bootstrap_predictions.csv')
