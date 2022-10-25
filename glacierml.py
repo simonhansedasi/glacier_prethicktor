@@ -1448,6 +1448,8 @@ def regional_predictions_loader(
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'           
             if '_999' in file:
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '999'
+            if '_2000' in file:
+                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '2000'
 #     print(RGI_predicted)
     RGI_predicted = RGI_predicted.rename(columns = {
         0:'vol'
@@ -1481,7 +1483,7 @@ def global_predictions_loader(
 ):
     root_dir = 'zults/'
     RGI_predicted = pd.DataFrame()
-    for file in tqdm(os.listdir(root_dir)):
+    for file in (os.listdir(root_dir)):
             # print(file)
         if ('RGI_predicted' in file and 
             'df' + training_module + '_' in file and 

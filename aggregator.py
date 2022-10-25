@@ -13,7 +13,8 @@ df = pd.DataFrame(columns = {
         '11','12','13','14','15','16','17','18','19','20','21',
         '22','23','24',
 })
-for index in predictions.index:
+
+for index in tqdm(predictions.index):
     idx = index
 #     print(idx)
 
@@ -28,28 +29,44 @@ for index in predictions.index:
         epochs = epochs
 
     )
+    
+
     df = pd.concat([df,df_glob])
-dfr = pd.DataFrame()
-for rgi in tqdm(df['RGIId'].unique()):
-    dft = df[df['RGIId'] == rgi]
-    dfr = pd.concat([dfr, dft['RGIId'].index[-1]])
-    dft = dft.drop([
-        'RGIId',
-        'CenLat',
-        'CenLon',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Area',
-        'Aspect',
-        'Lmax',
-        'region',
-        'avg predicted thickness',
-        'predicted thickness std dev',
-        'volume km3', 
-        'dataframe'
-    ], axis = 1)
-    dfr.loc[dfr.index[-1], 'Mean Thickness'] = dft.mean().mean()
-    dfr.loc[dfr.index[-1], 'Thickness Std Dev'] = dft.stack().std()
-dfr.to_csv('zults/aggregated_bootstrap_predictions.csv')
+
+df = df[[
+        'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+        '11','12','13','14','15','16','17','18','19','20','21',
+        '22','23','24',
+]]
+
+compiled_raw = df.groupby('RGIId')[
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+        '11','12','13','14','15','16','17','18','19','20','21',
+        '22','23','24',
+]
+
+dft = pd.DataFrame()
+for this_rgi_id, obj in tqdm(compiled_raw):
+    rgi_id = pd.Series(this_rgi_id, name = 'RGIId')
+#     print(f"Data associated with RGI_ID = {this_rgi_id}:")
+#     print(this_rgi_id)
+#     break
+    dft = pd.concat([dft, rgi_id])
+    dft = dft.reset_index()
+    dft = dft.drop('index', axis = 1)
+    dft.loc[dft.index[-1], 'Mean Thickness'] = obj[[
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+        '11','12','13','14','15','16','17','18','19','20','21',
+        '22','23','24',
+    ]].mean().mean()
+    dft.loc[dft.index[-1],'Thickness Std Dev'] = obj[[
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+        '11','12','13','14','15','16','17','18','19','20','21',
+        '22','23','24',
+    ]].stack().std()
+    
+dft = dft.rename(columns = {
+    0:'RGIId'
+})
+dft = dft.drop_duplicates()
+dft.to_csv('aggregated/sermeq_aggregated_bootstrap_predictions.csv')
