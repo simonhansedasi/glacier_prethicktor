@@ -12,12 +12,12 @@ digraph G {
         node [style=solid,color=blue4, shape=circle, xlabel = "Area"] x3;
         node [style=solid,color=blue4, shape=circle, xlabel = "Length"] x4;
         node [style=solid,color=blue4, shape=circle, xlabel = "Aspect"] x5;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Min"] x6;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Mid"] x7;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Max"] x8;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Minimum"] x6;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Median"] x7;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Maximum"] x8;
         node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Change"] x9;
         node [style=solid,color=blue4, shape=circle, xlabel = "Slope"] x10;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Thickness"] x11;
+
         label = "Input and Normalization layer";
     }
 
@@ -47,7 +47,7 @@ digraph G {
         color=white;
         node [style=solid,color=orange2, shape=circle];
         c11;
-        label = "Output";
+        label = "Thickness";
     }
 
         x1 -> a12;
@@ -151,15 +151,7 @@ digraph G {
         x10 -> a82;
         x10 -> a92;
 
-        x11 -> a12;
-        x11 -> a22;
-        x11 -> a32;
-        x11 -> a42;
-        x11 -> a52;
-        x11 -> a62;
-        x11 -> a72;
-        x11 -> a82;
-        x11 -> a92;
+
 
 
 
