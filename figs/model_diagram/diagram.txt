@@ -7,17 +7,26 @@ digraph G {
 
         subgraph cluster_0 {
         color=white;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Latitude"] x1;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Longitude"] x2;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Area"] x3;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Length"] x4;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Aspect"] x5;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Minimum"] x6;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Median"] x7;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Maximum"] x8;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Change"] x9;
-        node [style=solid,color=blue4, shape=circle, xlabel = "Slope"] x10;
 
+        node [style=solid,color=blue4, shape=circle, xlabel = "Area"] x2;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Length"] x3;
+	node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Minimum"] x5;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Median"] x6;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Maximum"] x7;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Change"] x8;
+
+        node [style=solid,color=blue4, shape=circle, xlabel = "Slope"] x1;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Aspect"] x4;
+	node [style=solid,color=blue4, shape=circle, xlabel = "Latitude"] x9;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Longitude"] x10;
+
+
+
+        
+        
+        
+        
+        
         label = "Input and Normalization layer";
     }
 
