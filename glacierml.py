@@ -62,7 +62,9 @@ def RGI_loader(
         'Zmax',
         'Area',
         'Aspect',
-        'Lmax'
+        'Lmax',
+        'Name',
+        'GLIMSId',
     ]]
     RGI['region'] = RGI['RGIId'].str[6:8]
     

@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from tqdm import tqdm
 import glacierml as gl
+from scipy.stats import shapiro
 
 predictions = gl.predictions_finder()
 predictions = predictions.reset_index()
@@ -54,16 +55,34 @@ for this_rgi_id, obj in tqdm(compiled_raw):
     dft = pd.concat([dft, rgi_id])
     dft = dft.reset_index()
     dft = dft.drop('index', axis = 1)
-    dft.loc[dft.index[-1], 'Mean Thickness'] = obj[[
+    
+    stacked_object = obj[[
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
         '22','23','24',
-    ]].mean().mean()
-    dft.loc[dft.index[-1],'Thickness Std Dev'] = obj[[
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-        '11','12','13','14','15','16','17','18','19','20','21',
-        '22','23','24',
-    ]].stack().std()
+    ]].stack()
+    
+    dft.loc[dft.index[-1], 'Mean Thickness'] = stacked_object.mean()
+    dft.loc[dft.index[-1], 'Median Thickness'] = stacked_object.median()
+    dft.loc[dft.index[-1],'Thickness Std Dev'] = stacked_object.std()
+    
+    statistic, p_value = shapiro(stacked_object)    
+    dft.loc[dft.index[-1],'Shapiro-Wilk statistic'] = statistic
+    dft.loc[dft.index[-1],'Shapiro-Wilk p_value'] = p_value
+
+    
+    q75, q25 = np.percentile(stacked_object, [75, 25])    
+    dft.loc[dft.index[-1],'IQR'] = q75 - q25 
+    
+    lower_bound = np.percentile(stacked_object, 50 - 34.1)
+    median = np.percentile(stacked_object, 50)
+    upper_bound = np.percentile(stacked_object, 50 + 34.1)
+    
+    dft.loc[dft.index[-1],'Lower Bound'] = lower_bound
+    dft.loc[dft.index[-1],'Upper Bound'] = upper_bound
+    dft.loc[dft.index[-1],'Median Value'] = median
+    
+    
     
 dft = dft.rename(columns = {
     0:'RGIId'
