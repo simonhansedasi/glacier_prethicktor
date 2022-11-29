@@ -25,7 +25,7 @@ def main():
     # select either to train on all available data, or break up training by regions
     
     
-    print('please select data registration method: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
+    print('please select data registration method: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8')
 #     module_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5','sm6','sm7')
     module = input()
 #     for module_item in module_list:
@@ -138,6 +138,22 @@ def main():
         layer_1_list = ['10', '42', '64']
         layer_2_list = ['5',  '26', '40']
 
+        
+    if module == 'sm8':
+        df8 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = 25,
+            data_version = 'v2'
+        )
+        df8 = df8.drop(['RGIId', 'region'], axis = 1)
+        df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+        dataset = df8
+        dataset.name = 'df8'
+        res = 'sr8'
+        
 
     print(dataset.name)
     print(dataset)  

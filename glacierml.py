@@ -95,25 +95,45 @@ def data_loader(
     scale = 'g',
     region_selection = 1,
     area_scrubber = 'off',
-    anomaly_input = 0.5
+    anomaly_input = 0.5,
+    data_version = 'v1'
 ):        
     
     pth_1 = root_dir + 'T_data/'
     pth_2 = root_dir + 'RGI/rgi60-attribs/'
-    pth_3 = root_dir + 'matched_indexes/'
-    pth_4 = root_dir + 'regional_data/training_data/'
+    pth_3 = root_dir + 'matched_indexes/' + data_version + '/'
+    pth_4 = root_dir + 'regional_data/training_data/' + data_version + '/'
     
     
-    # load glacier GlaThiDa data
-    glacier = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)    
-    glacier = glacier.rename(columns = {
-        'lat':'Lat',
-        'lon':'Lon',
-        'area':'area_g',
-        'mean_slope':'Mean Slope',
-        'mean_thickness':'Thickness'
-    })   
-    
+    # load glacier GlaThiDa data v1
+    if data_version == 'v1':
+        glacier = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)    
+        glacier = glacier.rename(columns = {
+            'lat':'Lat',
+            'lon':'Lon',
+            'area':'area_g',
+            'mean_slope':'Mean Slope',
+            'mean_thickness':'Thickness'
+        })   
+        glacier = glacier.dropna(subset = ['Thickness'])
+        print('# of raw thicknesses: ' + str(len(glacier)))
+                                 
+                                 
+    # load glacier GlaThiDa data v2
+    if data_version == 'v2':
+        glacier = pd.read_csv(pth_1 + 'T.csv', low_memory = False)    
+        glacier = glacier.rename(columns = {
+            'LAT':'Lat',
+            'LON':'Lon',
+            'AREA':'area_g',
+            'MEAN_SLOPE':'Mean Slope',
+            'MEAN_THICKNESS':'Thickness'
+        })   
+        glacier = glacier.dropna(subset = ['Thickness'])
+
+        print('# of raw thicknesses: ' + str(len(glacier)))
+        
+        
     # keep it just GlaThiDa
     if RGI_input == 'n':
         df = glacier.rename(columns = {
@@ -146,11 +166,23 @@ def data_loader(
         
         # read csv of combined GlaThiDa and RGI indexes, matched glacier for glacier
         comb = pd.read_csv(
-                pth_3 + 'GlaThiDa_RGI_matched_indexes.csv'
+                pth_3 + 'GlaThiDa_RGI_matched_indexes_' + data_version + '.csv'
         )
+        
+        idx = comb[comb['GlaThiDa_index'] == 203].index
+        comb = comb.drop(idx)
         # force indexes to be integers rather than floats, and drop duplicates
         comb['GlaThiDa_index'] = comb['GlaThiDa_index'].astype(int)
         comb['RGI_index'] = comb['RGI_index'].astype(int)
+        
+        rgi_matches = len(comb['RGI_index'])
+        rgi_matches_unique = len(comb['RGI_index'].unique())
+        
+        print(f'# of raw thickness matched to RGI = {rgi_matches}, {rgi_matches_unique} unique')
+        
+        
+
+        
         comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
         
         # locate data in both datasets and line them up
@@ -177,22 +209,94 @@ def data_loader(
             right_index = True
         )
         
+        
+        
+#         df = df.rename(columns = {
+#             'name':'name_g',
+#             'Name':'name_r',
+
+#             'BgnDate':'date_r',
+#             'date':'date_g'
+#         })
+
+        # make a temp df for the duplicated entries
+        
+        # calculate the difference in size as a percentage
+        df['size difference'] = abs(
+            ( (df['area_g'] - df['area_r']) / df['area_g'] ) * 100
+        )                
+        
+        # go by unique glacier. If more than one shows up, keep the min size difference.
+        while len(df) > len(df['RGIId'].unique()):
+            for glacier in df['RGIId'].unique():
+                if len(df[df['RGIId'] == glacier]) > 1:
+                    idx = df[df['RGIId'] == glacier]['size difference'].idxmax()
+                    df = df.drop(idx)
+                elif len(df[df['RGIId'] == glacier]) == 1:
+                    pass
+        
+        
+        
+        
+        
+        
+        
+        
+
+#         df = df.rename(columns = {
+#             'area_r':'Area'
+#         })
+#         df = df.drop(df.loc[df['Zmed']<0].index)
+#         df = df.drop(df.loc[df['Lmax']<0].index)
+#         df = df.drop(df.loc[df['Slope']<0].index)
+# #                 df = df.drop(df.loc[df['Aspect']<0].index)
+#         df = df.reset_index()
+#         df = df.drop('index', axis=1)
+#         df = df[[
+#             'RGIId',
+# #                     'Lat',
+# #                     'Lon',
+#             'CenLat',
+#             'CenLon',
+#             'Slope',
+#             'Zmin',
+#             'Zmed',
+#             'Zmax',
+#             'Area',
+#             'Aspect',
+#             'Lmax',
+#             'Thickness',
+#             'region'
+#         ]]
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         # drop bad data
-        if region_selection == 19:
-            df = df
+#         if region_selection == 19:
+#             df = df
 #             df = df.drop(df.loc[df['Zmed']<0].index)
 #             df = df.drop(df.loc[df['Lmax']<0].index)
 #             df = df.drop(df.loc[df['Slope']<0].index)
 #             df = df.drop(df.loc[df['Aspect']<0].index)
 #             df = df.dropna(subset = ['Thickness'])
 
-        elif region_selection != 19:
-            df = df.drop(df.loc[df['Zmed']<0].index)
-            df = df.drop(df.loc[df['Lmax']<0].index)
-            df = df.drop(df.loc[df['Slope']<0].index)
-#             df = df.drop(df.loc[df['Aspect']<0].index)
-            df = df.dropna(subset = ['Thickness'])
-            
+#         elif region_selection != 19:
+#             df = df.drop(df.loc[df['Zmed']<0].index)
+#             df = df.drop(df.loc[df['Lmax']<0].index)
+#             df = df.drop(df.loc[df['Slope']<0].index)
+# #             df = df.drop(df.loc[df['Aspect']<0].index)
+#             df = df.dropna(subset = ['Thickness'])
+        
+        
         df = df[[
             'RGIId',
             'CenLat',
@@ -208,9 +312,14 @@ def data_loader(
             'Lmax',
             'Thickness',
             'area_g',
-            'region'
+            'region',
+            'index_x',
+            'index_y'
         ]]
-        df = df.dropna()
+        
+        # archive error right here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # somehow drops non null df entries. Unknown myster bug located here
+#         df = df.dropna()
         
         # global scale 
         if scale == 'g':
@@ -409,12 +518,16 @@ def data_loader(
 GlaThiDa_RGI_index_matcher:
 '''
 def GlaThiDa_RGI_index_matcher(
-    pth_1 = '/data/fast1/glacierml/data/T_data/',
-    pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
-    pth_3 = '/data/fast1/glacierml/data/matched_indexes/'
+#     pth_1 = '/data/fast1/glacierml/data/T_data/',
+#     pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
+#     pth_3 = '/data/fast1/glacierml/data/matched_indexes/'
+
+    pth_1 = '/home/prethicktor/data/T_data/',
+    pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
+    pth_3 = '/home/prethicktor/data/matched_indexes/v2/'
 ):
-    glathida = pd.read_csv(pth_1 + 'glacier.csv')
-    glathida = glathida.dropna(subset = ['mean_thickness'])
+    glathida = pd.read_csv(pth_1 + 'T.csv')
+    glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
 
     RGI = pd.DataFrame()
     for file in os.listdir(pth_2):
@@ -426,7 +539,7 @@ def GlaThiDa_RGI_index_matcher(
     #iterate over each glathida index
     for i in tqdm(glathida.index):
         #obtain lat and lon from glathida 
-        glathida_ll = (glathida.loc[i].lat,glathida.loc[i].lon)
+        glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
         
         # find distance between selected glathida glacier and all RGI
         distances = RGI.apply(
@@ -446,7 +559,7 @@ def GlaThiDa_RGI_index_matcher(
         df['RGI_index'].iloc[-1] = RGI_index
 
 
-        df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_live.csv')
+    df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_v2.csv')
         
         
 '''

@@ -16,9 +16,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 tf.random.set_seed(42)
 
-print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8, sm9')
+print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8')
 # print(' ')
-dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7', 'sm8', 'sm9')
+dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7', 'sm8')
 chosen_dir = input()
 
 
@@ -117,8 +117,21 @@ if chosen_dir == 'sm7':
     dataset.name = 'df7'
     res = 'sr7'
 
+if module == 'sm8':
+    df8 = gl.data_loader(
+        root_dir = '/home/prethicktor/data/',
+        RGI_input = 'y',
+        scale = 'g',
+        area_scrubber = 'on',
+        anomaly_input = 25,
+        data_version = 'v2'
+    )
+    df8 = df8.drop(['RGIId', 'region'], axis = 1)
+    df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+    dataset = df8
+    dataset.name = 'df8'
+    res = 'sr8'
 
-    
     
 
 print(dataset)

@@ -22,7 +22,7 @@ dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7')
 chosen_dir = input()
 
 while chosen_dir not in dir_list:
-    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
+    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8')
     chosen_dir = input()    
 
 
@@ -133,6 +133,21 @@ if chosen_dir == 'sm7':
     dataset.name = 'df7'
     res = 'sr7'
     
+    
+if module == 'sm8':
+    df8 = gl.data_loader(
+        root_dir = '/home/prethicktor/data/',
+        RGI_input = 'y',
+        scale = 'g',
+        area_scrubber = 'on',
+        anomaly_input = 25,
+        data_version = 'v2'
+    )
+    df8 = df8.drop(['RGIId', 'region'], axis = 1)
+    df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+    dataset = df8
+    dataset.name = 'df8'
+    res = 'sr8'
 
     
     
