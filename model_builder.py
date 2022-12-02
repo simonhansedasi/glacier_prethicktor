@@ -17,6 +17,8 @@ pd.set_option('mode.chained_assignment', None)
 tf.random.set_seed(42)
 
 def main():
+#     module = 'sm1'
+# ):
     # define range for learning rate and random state. 
     # learning rate no longer varied 
     # LR = 0.1, 0.01, 0.001

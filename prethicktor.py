@@ -15,15 +15,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 tf.random.set_seed(42)
 print('currently running tensorflow version: ' + tf.__version__)
-print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
+# print('please select module: sm1, sm2, sm3, sm4, sm5, sm6, sm7')
 
-dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7')
+# dir_list = ('sm1', 'sm2', 'sm3', 'sm4', 'sm5', 'sm6', 'sm7')
 
 chosen_dir = input()
 
-while chosen_dir not in dir_list:
-    print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8')
-    chosen_dir = input()    
+# while chosen_dir not in dir_list:
+#     print('Please enter valid module selection: sm1, sm2, sm3, sm4, sm5, sm6, sm7, sm8')
+#     chosen_dir = input()    
 
 
 if chosen_dir == 'sm1':
@@ -134,7 +134,7 @@ if chosen_dir == 'sm7':
     res = 'sr7'
     
     
-if module == 'sm8':
+if chosen_dir == 'sm8':
     df8 = gl.data_loader(
         root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',

@@ -63,8 +63,8 @@ def RGI_loader(
         'Area',
         'Aspect',
         'Lmax',
-        'Name',
-        'GLIMSId',
+#         'Name',
+#         'GLIMSId',
     ]]
     RGI['region'] = RGI['RGIId'].str[6:8]
     
@@ -912,7 +912,7 @@ def predictions_maker(
     df.loc[df.index[-1], 'train mae'] = mae_train
     df.loc[df.index[-1], 'architecture'] = arch[3:]
     df.loc[df.index[-1], 'validation split'] = '0.2'
-    df.loc[df.index[-1], 'dataset'] = dataset.name
+    df.loc[df.index[-1], 'coregistration'] = dataset.name
     df.loc[df.index[-1], 'dropout'] = dropout
     df.loc[df.index[-1], 'total parameters'] = dnn_model[model_name].count_params() 
     if '0.1' in folder:
@@ -1591,7 +1591,7 @@ def regional_predictions_loader(
 
 
 def global_predictions_loader(
-    training_module,
+    coregistration,
     architecture,
     learning_rate,
     epochs,
@@ -1601,11 +1601,13 @@ def global_predictions_loader(
     for file in (os.listdir(root_dir)):
             # print(file)
         if ('RGI_predicted' in file and 
-            'df' + training_module + '_' in file and 
+            coregistration in file and 
             architecture in file and 
             learning_rate in file and 
             epochs in file):
+#             print(file)
             file_reader = pd.read_csv(root_dir + file)
+#             print(file_reader)
             file_reader['volume km3'] = (
                 file_reader['avg predicted thickness'] / 1e3
             ) * file_reader['Area']
@@ -1613,7 +1615,7 @@ def global_predictions_loader(
             RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
 
     RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
-    RGI_predicted['dataframe' ] = 'df'+ training_module
+    RGI_predicted['dataframe' ] = 'df'+ coregistration
 
     return RGI_predicted
 
@@ -1769,12 +1771,14 @@ def glathida_stats_adder(
 
 '''
 '''
-def predictions_finder():
+def predictions_finder(
+    coregistration = 'df8'
+):
     root_dir = 'zults/'
     prethicked = pd.DataFrame()
     for file in tqdm(os.listdir(root_dir)):
     # print(file)
-        if 'RGI_predicted' in file:
+        if 'RGI_predicted' in file and coregistration in file:
             file_reader = pd.read_csv(root_dir + file)
             file_reader = file_reader.rename(columns = {
                 0:'vol'
@@ -1829,17 +1833,17 @@ def predictions_finder():
                     layer_2_start + layer_2_length + 1 : str_7_idx - 5
                 ]
                 epochs = file[
-                    str_7_idx - 3 : str_7_idx
+                    str_7_idx - 4 : str_7_idx
                 ]
                 
-            # epochs = 1000
+            # epochs = 2000
             if file[str_7_idx - 4] == str(2) or file[str_7_idx - 3] == str(9):
 
                 learning_rate = file[
                     layer_2_start + layer_2_length + 1 : str_7_idx - 5
                 ]
                 epochs = file[
-                    str_7_idx - 3 : str_7_idx
+                    str_7_idx - 4 : str_7_idx
                 ]
 
                     # epochs < 100
@@ -1857,20 +1861,19 @@ def predictions_finder():
             prethicked.loc[prethicked.index[-1], 'learning rate'] = learning_rate
             prethicked.loc[prethicked.index[-1], 'epochs'] = epochs
             prethicked.loc[prethicked.index[-1], 'volume'] = sum(file_reader['volume km3'])
-            
             prethicked.loc[prethicked.index[-1], 'std dev'] = sum(
                 file_reader['pred std dev']
             )
             if file[str_8_idx + 3] == '_':
-                prethicked.loc[prethicked.index[-1], 'coregistration'] = file[str_8_idx + 2]
-                
+                prethicked.loc[prethicked.index[-1], 'coregistration'] = file[
+                    str_8_idx : str_8_idx + 3]                
             elif file[str_8_idx + 3] !='_':
                 prethicked.loc[prethicked.index[-1], 'coregistration'] = (
                     file[str_8_idx + 2] + file[str_8_idx + 3]
                 )
             predicted = pd.DataFrame()
             
-    #         break
+#             break
     prethicked = prethicked.rename(columns = {
         0:'architecture'
     })

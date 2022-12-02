@@ -117,7 +117,7 @@ if chosen_dir == 'sm7':
     dataset.name = 'df7'
     res = 'sr7'
 
-if module == 'sm8':
+if chosen_dir == 'sm8':
     df8 = gl.data_loader(
         root_dir = '/home/prethicktor/data/',
         RGI_input = 'y',
@@ -140,7 +140,10 @@ rootdir = 'saved_models/' + chosen_dir + '/'
 dnn_model = {}
 print(' ')
 
-dropout_input_list = ('y', 'n')
+dropout_input_list = (
+    'y', 
+#     'n'
+)
 for dropout_input_iter in dropout_input_list:
     predictions = pd.DataFrame()
     deviations = pd.DataFrame()
@@ -195,8 +198,8 @@ for dropout_input_iter in dropout_input_list:
     for epochs in list(predictions['epochs'].unique()):
         df = predictions[predictions['epochs'] == epochs]
 
-        for dataframe in list(df['dataset'].unique()):
-            dfs = df[df['dataset'] == dataframe]
+        for dataframe in list(df['coregistration'].unique()):
+            dfs = df[df['coregistration'] == dataframe]
 
             for arch in list(dfs['architecture'].unique()):
                 dfsr = dfs[dfs['architecture'] == arch]
