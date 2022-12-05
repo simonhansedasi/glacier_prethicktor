@@ -8,7 +8,7 @@ digraph G {
         subgraph cluster_0 {
         color=white;
 
-        node [style=solid,color=blue4, shape=circle, xlabel = "Area", fontsize = "15"] x2;
+        node [style=solid,color=blue4, shape=circle, xlabel = "Area", fontsize = "18"] x2;
         node [style=solid,color=blue4, shape=circle, xlabel = "Length"] x3;
 	node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Minimum"] x5;
         node [style=solid,color=blue4, shape=circle, xlabel = "Elevation Median"] x6;
@@ -28,7 +28,7 @@ digraph G {
         
         
         label = "Input and Normalization layer";
-        fontsize="17pt";
+        fontsize="20pt";
     }
 
     subgraph cluster_1 {
@@ -36,12 +36,12 @@ digraph G {
         node [style=solid,color=red2, shape=circle];
         a12 a22 a32 a42 a52 a62 a72 a82 a92;
         label = "Layer 1 \n m neurons &#8712; [3,20]";
-        fontsize="17pt";
+        fontsize="20pt";
     }
 
     subgraph cluster_2 {
         color=white;
-        node [fixedsize = false, style=solid,color=seagreen2, shape=oval, label = "Dropout Layer", fontsize = "15"];
+        node [fixedsize = false, style=solid,color=seagreen2, shape=oval, label = "Dropout Layer", fontsize = "18"];
         O;
 
 
@@ -52,7 +52,7 @@ digraph G {
         node [style=solid,color=red2, shape=circle];
         b13 b23 b33 b43 b53;
         label = "Layer 2 \n n neurons &#8712; [2,15]";
-        fontsize="17pt";
+        fontsize="20pt";
     }
 
     subgraph cluster_4 {
@@ -60,7 +60,7 @@ digraph G {
         node [style=solid,color=orange2, shape=circle];
         c11;
         label = "Thickness";
-        fontsize="15";
+        fontsize="18";
     }
 
         x1 -> a12;
