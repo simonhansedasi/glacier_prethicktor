@@ -43,7 +43,7 @@ if chosen_dir == 'sm2':
         scale = 'g',
         area_scrubber = 'off'
     )
-    df2 = df2.drop(['RGIId', 'region'], axis = 1)
+    df2 = df2.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
     dataset = df2
     dataset.name = 'df2'
     res = 'sr2'
@@ -56,7 +56,7 @@ if chosen_dir == 'sm3':
         area_scrubber = 'on',
         anomaly_input = 25
     )
-    df3 = df3.drop(['RGIId', 'region'], axis = 1)
+    df3 = df3.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
     dataset = df3
     dataset.name = 'df3'
     res = 'sr3'
@@ -69,7 +69,7 @@ if chosen_dir == 'sm4':
         area_scrubber = 'on',
         anomaly_input = 75
     )
-    df4 = df4.drop(['RGIId', 'region'], axis = 1)
+    df4 = df4.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
     dataset = df4
     dataset.name = 'df4'
     res = 'sr4'
@@ -82,7 +82,7 @@ if chosen_dir == 'sm5':
         scale = 'g',
         area_scrubber = 'off',
     )
-    df5 = df5.drop(['RGIId', 'region'], axis = 1)
+    df5 = df5.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
     df5['Zdelta'] = df5['Zmax'] - df5['Zmin']
     dataset = df5
     dataset.name = 'df5'
@@ -96,7 +96,7 @@ if chosen_dir == 'sm6':
         area_scrubber = 'on',
         anomaly_input = 25
     )
-    df6 = df6.drop(['RGIId','region'], axis = 1)
+    df6 = df6.drop(['RGIId','region', 'Centroid Distance'], axis = 1)
     df6['Zdelta'] = df6['Zmax'] - df6['Zmin']
     dataset = df6
     dataset.name = 'df6'
@@ -111,7 +111,7 @@ if chosen_dir == 'sm7':
         area_scrubber = 'on',
         anomaly_input = 75
     )
-    df7 = df7.drop(['RGIId','region'], axis = 1)
+    df7 = df7.drop(['RGIId','region', 'Centroid Distance'], axis = 1)
     df7['Zdelta'] = df7['Zmax'] - df7['Zmin']
     dataset = df7
     dataset.name = 'df7'
@@ -126,7 +126,7 @@ if chosen_dir == 'sm8':
         anomaly_input = 25,
         data_version = 'v2'
     )
-    df8 = df8.drop(['RGIId', 'region'], axis = 1)
+    df8 = df8.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
     df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
     dataset = df8
     dataset.name = 'df8'

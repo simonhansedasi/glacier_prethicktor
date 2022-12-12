@@ -235,67 +235,7 @@ def data_loader(
                 elif len(df[df['RGIId'] == glacier]) == 1:
                     pass
         
-        
-        
-        
-        
-        
-        
-        
-
-#         df = df.rename(columns = {
-#             'area_r':'Area'
-#         })
-#         df = df.drop(df.loc[df['Zmed']<0].index)
-#         df = df.drop(df.loc[df['Lmax']<0].index)
-#         df = df.drop(df.loc[df['Slope']<0].index)
-# #                 df = df.drop(df.loc[df['Aspect']<0].index)
-#         df = df.reset_index()
-#         df = df.drop('index', axis=1)
-#         df = df[[
-#             'RGIId',
-# #                     'Lat',
-# #                     'Lon',
-#             'CenLat',
-#             'CenLon',
-#             'Slope',
-#             'Zmin',
-#             'Zmed',
-#             'Zmax',
-#             'Area',
-#             'Aspect',
-#             'Lmax',
-#             'Thickness',
-#             'region'
-#         ]]
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        # drop bad data
-#         if region_selection == 19:
-#             df = df
-#             df = df.drop(df.loc[df['Zmed']<0].index)
-#             df = df.drop(df.loc[df['Lmax']<0].index)
-#             df = df.drop(df.loc[df['Slope']<0].index)
-#             df = df.drop(df.loc[df['Aspect']<0].index)
-#             df = df.dropna(subset = ['Thickness'])
-
-#         elif region_selection != 19:
-#             df = df.drop(df.loc[df['Zmed']<0].index)
-#             df = df.drop(df.loc[df['Lmax']<0].index)
-#             df = df.drop(df.loc[df['Slope']<0].index)
-# #             df = df.drop(df.loc[df['Aspect']<0].index)
-#             df = df.dropna(subset = ['Thickness'])
-        
+               
         
         df = df[[
             'RGIId',
@@ -314,7 +254,8 @@ def data_loader(
             'area_g',
             'region',
             'index_x',
-            'index_y'
+            'index_y',
+            'Centroid Distance'
         ]]
         
         # archive error right here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -366,7 +307,8 @@ def data_loader(
                     'Aspect',
                     'Lmax',
                     'Thickness',
-                    'region'
+                    'region',
+                    'Centroid Distance'
                 ]]
                 
             elif area_scrubber == 'off':
@@ -464,7 +406,8 @@ def data_loader(
                     'Aspect',
                     'Lmax',
                     'Thickness',
-                    'region'
+                    'region',
+                    'Centroid Distance'
                 ]]
                 return df
                 
@@ -483,7 +426,8 @@ def data_loader(
                     'Aspect',
                     'Lmax',
                     'Thickness',
-                    'region'
+                    'region',
+                    'Centroid Distance'
                 ]]
                 df = df.rename(columns = {'area_r':'Area'})
                 return df
@@ -557,6 +501,7 @@ def GlaThiDa_RGI_index_matcher(
     #     df = df.append(GlaThiDa_and_RGI, ignore_index = True)
         df['GlaThiDa_index'].iloc[-1] = i
         df['RGI_index'].iloc[-1] = RGI_index
+        df['Centroid Distance'] = np.min(distances)
 
 
     df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_v2.csv')
