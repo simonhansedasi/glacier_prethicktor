@@ -479,7 +479,7 @@ def GlaThiDa_RGI_index_matcher(
         file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
         RGI = pd.concat([RGI, file_reader], ignore_index = True)
     RGI = RGI.reset_index()
-    df = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index'])
+    df = pd.DataFrame(columns = ['GlaThiDa_index', 'RGI_index', 'Centroid Distance'])
     #iterate over each glathida index
     for i in tqdm(glathida.index):
         #obtain lat and lon from glathida 
@@ -501,7 +501,7 @@ def GlaThiDa_RGI_index_matcher(
     #     df = df.append(GlaThiDa_and_RGI, ignore_index = True)
         df['GlaThiDa_index'].iloc[-1] = i
         df['RGI_index'].iloc[-1] = RGI_index
-        df['Centroid Distance'] = np.min(distances)
+        df['Centroid Distance'].iloc[-1] = np.min(distances)
 
 
     df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_v2.csv')
