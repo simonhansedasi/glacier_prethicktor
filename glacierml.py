@@ -179,17 +179,11 @@ def data_loader(
         rgi_matches_unique = len(comb['RGI_index'].unique())
         
         print(f'# of raw thickness matched to RGI = {rgi_matches}, {rgi_matches_unique} unique')
-        
-        
 
-        
         comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
-        
         # locate data in both datasets and line them up
         glacier = glacier.loc[comb['GlaThiDa_index']]
-        
         RGI = RGI.loc[comb['RGI_index']]
-        
         # reset indexes for merge
         glacier = glacier.reset_index()
         RGI = RGI.reset_index()
@@ -208,7 +202,23 @@ def data_loader(
             left_index = True,
             right_index = True
         )
+        df['Centroid Distance'] = np.nan
+        for i in df.index:
+            df['Centroid Distance'].loc[i] = geopy.distance.geodesic(
+                (RGI['CenLat'].loc[i], RGI['CenLon'].loc[i]),
+                (glacier['Lat'].loc[i], glacier['Lon'].loc[i])
+            ).km
         
+        
+#         for i in tqdm(glathida.index):
+#             #obtain lat and lon from glathida 
+#             glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
+
+#             # find distance between selected glathida glacier and all RGI
+#             distances = RGI.apply(
+#                 lambda row: geopy.distance.geodesic((row.CenLat,row.CenLon),glathida_ll),
+#                 axis = 1
+#             )
         
         
 #         df = df.rename(columns = {
