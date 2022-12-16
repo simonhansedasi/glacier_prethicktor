@@ -1,7 +1,8 @@
 # glacier_prethicktor
 A machine learning approach to predicting glacier thicknesses.
 
-### Table of Contents:
+We treat estimating glacier thickness as a regression problem as opposed to ice velocity flow models. We train machine learning models with Glacier Thickness Database thickness measurements as an independent variable co-registered with surface attributes from the Randolph Glacier Inventory as dependent variables to estimate thickness.
+<!-- ### Table of Contents:
 
 #### 1. Project Description
 #### 2. Detailed description
@@ -247,3 +248,4 @@ GlaThiDa thickness data combined with RGI surface features on a global scale. No
 total inputs: 3834
 
 <table border="1" class="dataframe">   <thead>     <tr style="text-align: right;">       <th>total parameters</th>       <th>layer architecture</th>       <th>dropout</th>       <th>learning rate</th>       <th>epochs</th>       <th>test mae avg</th>       <th>test mae std dev</th>       <th>train mae avg</th>       <th>train mae std dev</th>       <th>test predicted thickness std dev</th>       <th>train predicted thickness std dev</th>     </tr>   </thead>   <tbody>     <tr>       <td>3410</td>       <td>60-46</td>       <td>0</td>       <td>0.01</td>       <td>100</td>       <td>22.703015</td>       <td>3.369912</td>       <td>21.109498</td>       <td>0.850142</td>       <td>4.438800</td>       <td>3.086532</td>     </tr>     <tr>       <td>3410</td>       <td>60-46</td>       <td>1</td>       <td>0.01</td>       <td>100</td>       <td>22.506482</td>       <td>3.215159</td>       <td>20.969790</td>       <td>0.944770</td>       <td>4.384205</td>       <td>2.093761</td>     </tr>   </tbody> </table>
+ -->
