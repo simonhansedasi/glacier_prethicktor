@@ -149,7 +149,7 @@ def data_loader(
         df = df.rename(columns = {
             'area_g':'Area'
         })
-        df = df.dropna()        
+#         df = df.dropna()        
         return df
 
     
@@ -403,7 +403,7 @@ def data_loader(
                     'area_r':'Area'
                 })
                 df = df[[
-                    'RGIId'
+#                     'RGIId',
 #                     'Lat',
 #                     'Lon',
                     'CenLat',
@@ -417,7 +417,7 @@ def data_loader(
                     'Lmax',
                     'Thickness',
                     'region',
-                    'Centroid Distance'
+#                     'Centroid Distance'
                 ]]
                 return df
                 
@@ -1063,13 +1063,13 @@ def regional_predictions_loader(
 
     for file in tqdm(os.listdir(root_dir)):
         # print(file)
-        if 'RGI_predicted' in file and 'df' + training_module + '_' in file and architecture in file and learning_rate in file and epochs in file:
+        if 'RGI_predicted' in file and training_module + '_' in file and architecture in file and learning_rate in file and epochs in file:
             file_reader = pd.read_csv(root_dir + file)
             file_reader['volume km3'] = (
                 file_reader['avg predicted thickness'] / 1e3
             ) * file_reader['Area']
             file_reader = file_reader.dropna()
-        
+            print(file_reader)
             sum_volume = sum(file_reader['volume km3'])
             total_volume = pd.Series(sum_volume, name = 'total volume')
             RGI_predicted = pd.concat([RGI_predicted, total_volume], ignore_index = True)    
@@ -1432,12 +1432,14 @@ def regional_predictions_loader(
             
             if 'df1_' not in file:
                 att_list = [
+                    'CenLat',
+                    'CenLon',
                     'Area',
                     'Aspect',
                     'Lmax',
                     'Slope',
                     'Zmin',
-                    'Zmax'
+                    'Zmax',
                 ]
                 for att in att_list:
                     mean = file_reader[att].mean()
@@ -1520,7 +1522,7 @@ def regional_predictions_loader(
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '999'
             if '_2000' in file:
                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '2000'
-#     print(RGI_predicted)
+    print(RGI_predicted)
     RGI_predicted = RGI_predicted.rename(columns = {
         0:'vol'
     })
@@ -1617,6 +1619,7 @@ def glathida_stats_adder(
         dfc = dfa[dfa['region'] == region_number]
 
         for file in os.listdir(pth_3):
+            print(file)
             if file[:2] == region_number:
                 glathida_regional = pd.read_csv(pth_3 + file)
 
@@ -2025,3 +2028,92 @@ def color_grabber(
     colors = colors.drop('index', axis = 1)
     colors = colors.squeeze()
     return colors
+
+
+
+
+def notebook_data_loader():
+    df = pd.read_csv(
+            'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_df8.csv'
+        )
+    df['region'] = df['RGIId'].str[6:8]
+
+
+    RGI = RGI_loader()
+    RGI = RGI[[
+        'RGIId',
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+
+    RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']
+
+    df = pd.merge(df, RGI, on = 'RGIId')
+
+    df['Upper Bound'] = df['Upper Bound'] - df['Mean Thickness']
+    df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
+    df['UB'] = (df['Upper Bound'] / 1e3) * df['Area']
+    df['LB'] = (df['Lower Bound'] / 1e3) * df['Area']
+
+    upper_bound = np.round(
+        sum(df['UB']) / 1e3, 2)
+
+    lower_bound = np.round(
+        sum(df['LB']) / 1e3 , 2) 
+
+    volume = np.round(
+        sum(df['Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
+
+    std = np.round(
+        sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
+
+
+    print(f'Global Volume: {volume}, UB: {upper_bound}, LB: {lower_bound}, STD: {std}')
+    df['Edasi Volume'] = df['Mean Thickness'] / 1e3 * df['Area']
+    df['Volume Std Dev'] = df['Thickness Std Dev'] / 1e3 * df['Area']
+    
+    ref = pd.read_csv('reference_thicknesses/farinotti_mean_thickness_rgi_id.csv')
+    ref = ref[[
+        'RGIId',
+        'Farinotti Mean Thickness'
+    ]]
+    ref['region'] = ref['RGIId'].str[6:8]
+    ref = ref.sort_values('RGIId')
+    ref = ref.dropna()
+
+    ref = pd.merge(ref, df, 
+    #                left_index = True, right_index = True)
+    on = [
+        'RGIId'
+    ])
+    ref = ref.rename(columns = {
+        'Mean Thickness':'Edasi Mean Thickness'
+    })
+
+    ref['Farinotti Volume'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
+
+    ref['region'] = ref['RGIId'].str[6:8]
+    ref['Edasi Volume'] = (ref['Edasi Mean Thickness'] / 1e3) * ref['Area']
+    ref['Volume Std Dev'] = (ref['Thickness Std Dev'] / 1e3 )* ref['Area']
+    ref = ref.reset_index()
+    ref = ref.drop('index', axis = 1)
+    ref = ref.dropna()
+    ref['VE / VF'] = ref['Edasi Mean Thickness'] / ref['Farinotti Mean Thickness']
+    ref = ref.drop_duplicates()
+    # sum(ref['volume km3'])
+
+    ref['Upper Bound'] = ref['Upper Bound'] - ref['Edasi Mean Thickness']
+    ref['Lower Bound'] = ref['Edasi Mean Thickness'] - ref['Lower Bound']
+    ref
+
+    ref['UB'] = (ref['Upper Bound'] / 1e3) * ref['Area']
+    ref['LB'] = (ref['Lower Bound'] / 1e3) * ref['Area']
+
+    return df, ref
