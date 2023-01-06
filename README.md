@@ -34,6 +34,7 @@ TL;DR
     <li> open glacierml.py and modify the first function module_selection_tool()
     <li> Copy the most recent module and modify to fit your needs.
         <li> EX: Change this
+            ```python3
             if module == 'sm8':
                 df8 = gl.data_loader(
                     root_dir = '/home/prethicktor/data/',
@@ -48,9 +49,9 @@ TL;DR
                 dataset = df8
                 dataset.name = 'df8'
                 res = 'sr8'
-            
+                ```
                 To this:
-            
+                ```python3
                 if module == 'sm9':
                     df9 = gl.data_loader(
                         root_dir = '/data/fast1/glacierml/data/',
@@ -64,7 +65,7 @@ TL;DR
                     dataset = df9
                     dataset.name = 'df9'
                     res = 'sr9'
-            
+                ```
 </ul>
 First we need to configure some variables with our data-set coregistration method. The first function in the main python file glacierml.py is a tool used to define the coregistration method as well as paths to save models and results, as well as details to the naming convention of the files themselves. This grew out of a tangled rats nest of code that I have yet to streamline. Anyway the function is called module_selection_tool(). This function defines a variable called 'module' which determines where the models are saved. The 'module code' which the function asks for as an input is 'sm' and the numeric for the coregistration method. For instance, the most recent module code is sm8, corresponding to df8, the training data set for coregistration method 8. The most recent module setup looks like this:
 
