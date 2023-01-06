@@ -34,6 +34,7 @@ TL;DR
     <li> open glacierml.py and modify the first function module_selection_tool()
     <li> Copy the most recent module and modify to fit your needs.
         <li> EX: Change this
+            
             ```python3
             if module == 'sm8':
                 df8 = gl.data_loader(
@@ -50,7 +51,9 @@ TL;DR
                 dataset.name = 'df8'
                 res = 'sr8'
                 ```
+            
                 To this:
+            
                 ```python3
                 if module == 'sm9':
                     df9 = gl.data_loader(
