@@ -30,44 +30,44 @@ df9 = gl.data_loader(
 
 ### Configure glacierml
 TL;DR
-<!-- <ul>
+<ul>
     <li> open glacierml.py and modify the first function "module_selection_tool()"
     <li> Copy the most recent module and modify to fit your needs.
-        <li> EX: Change this -->
+        <li> EX: Change this
             
-```
+```python3
 if module == 'sm8':
-df8 = gl.data_loader(
-root_dir = '/home/prethicktor/data/',
-RGI_input = 'y',
-scale = 'g',
-area_scrubber = 'on',
-anomaly_input = 25,
-data_version = 'v2'
-)
-df8 = df8.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
-dataset = df8
-dataset.name = 'df8'
-res = 'sr8'
+    df8 = gl.data_loader(
+    root_dir = '/home/prethicktor/data/',
+    RGI_input = 'y',
+    scale = 'g',
+    area_scrubber = 'on',
+    anomaly_input = 25,
+    data_version = 'v2'
+    )
+    df8 = df8.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+    df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+    dataset = df8
+    dataset.name = 'df8'
+    res = 'sr8'
 ```
 
 To this:
 
-```
+```python
 if module == 'sm9':
-df9 = gl.data_loader(
-    root_dir = '/data/fast1/glacierml/data/',
-    RGI_input = 'y',
-    area_scrubber = 'on',
-    anomaly_input = 0.15,
-    data_version = 'v2'
-)
-df9 = df9.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
-dataset = df9
-dataset.name = 'df9'
-res = 'sr9'
+    df9 = gl.data_loader(
+        root_dir = '/data/fast1/glacierml/data/',
+        RGI_input = 'y',
+        area_scrubber = 'on',
+        anomaly_input = 0.15,
+        data_version = 'v2'
+    )
+    df9 = df9.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+    df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
+    dataset = df9
+    dataset.name = 'df9'
+    res = 'sr9'
 ```
 </ul>
 First we need to configure some variables with our data-set coregistration method. The first function in the main python file glacierml.py is a tool used to define the coregistration method as well as paths to save models and results, as well as details to the naming convention of the files themselves. This grew out of a tangled rats nest of code that I have yet to streamline. Anyway the function is called module_selection_tool(). This function defines a variable called 'module' which determines where the models are saved. The 'module code' which the function asks for as an input is 'sm' and the numeric for the coregistration method. For instance, the most recent module code is sm8, corresponding to df8, the training data set for coregistration method 8. The most recent module setup looks like this:
