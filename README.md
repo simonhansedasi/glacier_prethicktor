@@ -2,6 +2,117 @@
 A machine learning approach to predicting glacier thicknesses.
 
 We treat estimating glacier thickness as a regression problem as opposed to ice velocity flow models. We train machine learning models with Glacier Thickness Database thickness measurements as an independent variable co-registered with surface attributes from the Randolph Glacier Inventory as dependent variables to estimate thickness.
+
+## Workflow:
+
+### Define Data Set Coregistration
+First we must decide how to coregister GlaThiDa data with RGI information. We use the data_loader() function in glacierml.py to define our training dataset.
+
+inputs:
+root_dir = home data directory. Default = '/data/fast1/glacierml/data/',
+RGI_input = 'y' - Include RGI information, 'no' - Just GlaThiDa data with no RGI info
+area_scrubber = 'off', - Enables threshold for size difference between glaciers.
+anomaly_input = 0.5, - Sets threshold for size difference as a percentage.
+data_version = 'v1' - Which version of GlaThiDa. Most recent coregistration uses 'v2'
+
+Each coregistration is identified as dfn, where n is the consecutive attempts at coregistration. The most recent is df8 which attained the lowest MAE with the most up to date in situ measurements.
+
+Example of a new coregistration:
+
+df9 = gl.data_loader(
+    root_dir = '/data/fast1/glacierml/data/',
+    RGI_input = 'y',
+    area_scrubber = 'on',
+    anomaly_input = 0.15,
+    data_version = 'v2'
+)
+
+
+### Configure glacierml
+TL;DR
+<ul>
+    <li> open glacierml.py and modify the first function module_selection_tool()
+    <li> Copy the most recent module and modify to fit your needs.
+        <li> EX: Change this
+            if module == 'sm8':
+                df8 = gl.data_loader(
+                    root_dir = '/home/prethicktor/data/',
+                    RGI_input = 'y',
+                    scale = 'g',
+                    area_scrubber = 'on',
+                    anomaly_input = 25,
+                    data_version = 'v2'
+                )
+                df8 = df8.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+                df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+                dataset = df8
+                dataset.name = 'df8'
+                res = 'sr8'
+            
+                To this:
+            
+                if module == 'sm9':
+                    df9 = gl.data_loader(
+                        root_dir = '/data/fast1/glacierml/data/',
+                        RGI_input = 'y',
+                        area_scrubber = 'on',
+                        anomaly_input = 0.15,
+                        data_version = 'v2'
+                    )
+                    df9 = df9.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+                    df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
+                    dataset = df9
+                    dataset.name = 'df9'
+                    res = 'sr9'
+            
+</ul>
+First we need to configure some variables with our data-set coregistration method. The first function in the main python file glacierml.py is a tool used to define the coregistration method as well as paths to save models and results, as well as details to the naming convention of the files themselves. This grew out of a tangled rats nest of code that I have yet to streamline. Anyway the function is called module_selection_tool(). This function defines a variable called 'module' which determines where the models are saved. The 'module code' which the function asks for as an input is 'sm' and the numeric for the coregistration method. For instance, the most recent module code is sm8, corresponding to df8, the training data set for coregistration method 8. The most recent module setup looks like this:
+
+if module == 'sm8':
+    df8 = gl.data_loader(
+        root_dir = '/home/prethicktor/data/',
+        RGI_input = 'y',
+        scale = 'g',
+        area_scrubber = 'on',
+        anomaly_input = 25,
+        data_version = 'v2'
+    )
+    df8 = df8.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+    df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+    dataset = df8
+    dataset.name = 'df8'
+    res = 'sr8'
+    
+This module can be copied and pasted and modified to create a new module code. Be sure to update everything to match the new coregistration method, as the names and variables are used to identify saved models. An example of a new module looks like this:
+
+if module == 'sm9':
+    df9 = gl.data_loader(
+        root_dir = '/data/fast1/glacierml/data/',
+        RGI_input = 'y',
+        area_scrubber = 'on',
+        anomaly_input = 0.15,
+        data_version = 'v2'
+    )
+    df9 = df9.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+    df9['Zdelta'] = df9['Zmax'] - df9['Zmin']
+    dataset = df9
+    dataset.name = 'df9'
+    res = 'sr9'
+
+
+
+
+#### 2. results_builder.py
+
+
+
+
+#### 3. prethicktor.py
+#### 4. aggregator.py
+
+
+
+
 <!-- ### Table of Contents:
 
 #### 1. Project Description
