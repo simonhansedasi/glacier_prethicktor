@@ -22,6 +22,135 @@ tf.random.set_seed(42)
 
 pd.set_option('mode.chained_assignment',None)
 
+def module_selection_tool():
+    print('please input module code:')
+
+    module = input()
+
+    if module == 'sm1':
+        df1 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'n'
+        )
+        dataset = df1
+        dataset.name = 'df1'
+        res = 'sr1'
+        layer_1_list = ['10','16', '24']
+        layer_2_list = ['5', '8',  '12']
+
+    if module == 'sm2':
+        df2 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+        )
+        df2 = df2.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+        dataset = df2
+        dataset.name = 'df2'
+        res = 'sr2'
+        layer_1_list = ['10','50', '64']
+        layer_2_list = ['5', '28', '48']
+
+    if module == 'sm3':
+        df3 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = 25
+        )
+        df3 = df3.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+        dataset = df3
+        dataset.name = 'df3'
+        res = 'sr3'
+        layer_1_list = ['10', '32', '45']
+        layer_2_list = ['5',  '17', '28']
+
+    if module == 'sm4':
+        df4 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = 75
+        )
+        df4 = df4.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+        dataset = df4
+        dataset.name = 'df4'
+        res = 'sr4'
+        layer_1_list = ['10', '47', '64']
+        layer_2_list = ['5',  '21', '36']
+
+    if module == 'sm5':
+        df5 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+        )
+        df5 = df5.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+        df5['Zdelta'] = df5['Zmax'] - df5['Zmin']
+        res = 'sr5'
+        dataset = df5
+        dataset.name = 'df5'
+        layer_1_list = ['10','48', '64']
+        layer_2_list = ['5', '32', '52']
+
+
+    if module == 'sm6':
+        df6 = gl.data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = 25
+        )
+        df6 = df6.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+        df6['Zdelta'] = df6['Zmax'] - df6['Zmin']
+        dataset = df6
+        dataset.name = 'df6'
+        res = 'sr6'
+        layer_1_list = ['10', '32', '48']
+        layer_2_list = ['5',  '18', '28']
+
+    if module == 'sm7':
+        df7 = data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = 75
+        )
+        df7 = df7.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+        df7['Zdelta'] = df7['Zmax'] - df7['Zmin']
+        dataset = df7
+        dataset.name = 'df7'
+        res = 'sr7'
+        layer_1_list = ['10', '42', '64']
+        layer_2_list = ['5',  '26', '40']
+
+        
+    if module == 'sm8':
+        df8 = data_loader(
+            root_dir = '/home/prethicktor/data/',
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = 25,
+            data_version = 'v2'
+        )
+        df8 = df8.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+        df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+        dataset = df8
+        dataset.name = 'df8'
+        res = 'sr8'
+        
+
+        
+        
+    return module, dataset, dataset.name, res
+
+
+
 '''
 RGI_loader
 
@@ -1527,7 +1656,7 @@ def regional_predictions_loader(
         0:'vol'
     })
 
-    RGI_predicted['vol'] = RGI_predicted['vol'] / 1e3
+#     RGI_predicted['vol'] = RGI_predicted['vol'] / 1e3
 
     RGI_predicted['mean thickness'] = (
         (RGI_predicted['vol'] * 1e3) / RGI_predicted['area']
