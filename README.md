@@ -19,7 +19,8 @@ inputs:
 Each coregistration is identified as dfn, where n is the consecutive attempts at coregistration. The most recent is df8 which attained the lowest MAE with the most up to date in situ measurements.
 
 Example of a new coregistration:
-```
+
+```python3
 df9 = gl.data_loader(
     root_dir = '/data/fast1/glacierml/data/',
     RGI_input = 'y',
@@ -56,7 +57,7 @@ if module == 'sm8':
 
 To this:
 
-```python
+```python3
 if module == 'sm9':
     df9 = gl.data_loader(
         root_dir = '/data/fast1/glacierml/data/',
@@ -105,17 +106,6 @@ if module == 'sm9':
     dataset.name = 'df9'
     res = 'sr9'
 ```
-
-
-
-#### 2. results_builder.py
-
-
-
-
-#### 3. prethicktor.py
-#### 4. aggregator.py
-
 
 
 
