@@ -2,6 +2,13 @@
 A machine learning approach to predicting glacier thicknesses.
 
 We treat estimating glacier thickness as a regression problem as opposed to ice velocity flow models. We train machine learning models with Glacier Thickness Database thickness measurements as an independent variable co-registered with surface attributes from the Randolph Glacier Inventory as dependent variables to estimate thickness.
+## Requirements
+<ul>
+    <li> Docker
+    <li> tensorflow v. 2.8.0
+</ul>
+
+
 
 ## Workflow:
 
@@ -31,7 +38,7 @@ df9 = gl.data_loader(
 ```
 
 ### Configure glacierml
-TL;DR
+##### TL;DR
 <ul>
     <li> Module code is 'sm' and the number corresponding to the coregistration method
     <li> Open glacierml.py and modify the first function "module_selection_tool()"
@@ -73,6 +80,8 @@ if module == 'sm9':
     res = 'sr9'
 ```
 </ul>
+
+##### Long Version:
 First we need to configure some variables with our data-set coregistration method. The first function in the main python file glacierml.py is a tool used to define the coregistration method as well as paths to save models and results, as well as details to the naming convention of the files themselves. This grew out of a tangled rats nest of code that I have yet to streamline. Anyway the function is called module_selection_tool(). This function defines a variable called 'module' which determines where the models are saved. The 'module code' which the function asks for as an input is 'sm' and the numeric for the coregistration method. For instance, the most recent module code is sm8, corresponding to df8, the training data set for coregistration method 8. The most recent module setup looks like this:
 
 ```python3
@@ -110,6 +119,41 @@ if module == 'sm9':
     res = 'sr9'
 ```
 
+### Configure aggregator
+Simply open aggregator.py and change the coregistration df string (line 10) to match whichever coregistration associated with the estimates needing aggregation. In other words, change this:
+
+```python3
+coregistrattion = 'df8'
+```
+
+to this:
+
+```python3
+coregistration = 'df9'
+```
+
+
+### Build models
+With everything configured, the glacier_prethicktor is ready to go. Ideally, this model should be running in a Docker container on a GPU. The container on sermeq is called 'prethicktor' and it is already configured.
+
+With the container loaded and in the glacier_prethicktor directory, run model_builder.py. Input the module code for your coregistration method and the file will build and train models and save them in a directory pertaining to your chosen module code.
+
+### Collect results
+
+With the container loaded and in the glacier_prethicktor directory, run results_builder.py. Input the module code for your coregistration method and the file will load models and evaluate them, saving results and other information to be used in making thickness estimates.
+
+### Make thickness estimates
+
+With the container loaded and in the glacier_prethicktor directory, run prethicktor.py. Input the module code for your coregistration method and the file will load the model and make predictions based on RGI features.
+
+### Aggregate statistics
+
+With the container loaded and in the glacier_prethicktor directory, run aggregator.py. This file will go glacier by glacier and compute statistics for each glacier's distribution of estimates.
+
+
+### Workflow complete
+
+When aggregator.py is finished, the workflow is complete and it's time to start making figures with the notebooks! Yay!
 
 
 <!-- ### Table of Contents:
