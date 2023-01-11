@@ -42,11 +42,6 @@ df = pd.DataFrame(columns = {
 
 print('Predictions loaded')
 
-
-
-
-
-
 print('Compiling predictions...')
 for index in tqdm(predictions.index):
     idx = index
