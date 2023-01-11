@@ -19,7 +19,7 @@ tf.random.set_seed(42)
 def main():
     
     
-    module, dataset, dataset.name, res = gl.module_selection_tool()
+    parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration()
     
     
     RS = range(0,25,1)
@@ -65,7 +65,7 @@ def main():
                         learning_rate = float(lr_input), 
                         random_state = rs, 
                         epochs = int(ep_input), 
-                        module = module, 
+                        parameterization = parameterization, 
                         res = res,
                         layer_1 = layer_1_input,
                         layer_2 = layer_2_input,

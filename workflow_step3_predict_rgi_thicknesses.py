@@ -17,7 +17,7 @@ tf.random.set_seed(42)
 print('currently running tensorflow version: ' + tf.__version__)
 
 
-module, dataset, dataset.name, res = gl.module_selection_tool()
+parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration()
 
     
     
@@ -109,7 +109,7 @@ for index in deviations.index:
                 'Mean Slope'
             ]]
 
-        RGI_for_predictions['Zdelta'] = RGI_for_predictions['Zmax'] - RGI_for_predictions['Zmin']
+#         RGI_for_predictions['Zdelta'] = RGI_for_predictions['Zmax'] - RGI_for_predictions['Zmin']
 
         print(
             'layer architecture: ' + arch + 

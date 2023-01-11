@@ -22,13 +22,13 @@ tf.random.set_seed(42)
 
 pd.set_option('mode.chained_assignment',None)
 
-def module_selection_tool():
+def select_dataset_coregistration():
     print('please input module code:')
 
-    module = input()
+    parameterization = input()
 
-    if module == 'sm1':
-        df1 = gl.data_loader(
+    if parameterization == 'sm1':
+        df1 = load_training_data(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'n'
         )
@@ -38,8 +38,8 @@ def module_selection_tool():
         layer_1_list = ['10','16', '24']
         layer_2_list = ['5', '8',  '12']
 
-    if module == 'sm2':
-        df2 = gl.data_loader(
+    if parameterization == 'sm2':
+        df2 = load_training_data(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
@@ -51,8 +51,8 @@ def module_selection_tool():
         layer_1_list = ['10','50', '64']
         layer_2_list = ['5', '28', '48']
 
-    if module == 'sm3':
-        df3 = gl.data_loader(
+    if parameterization == 'sm3':
+        df3 = load_training_data(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
@@ -66,8 +66,8 @@ def module_selection_tool():
         layer_1_list = ['10', '32', '45']
         layer_2_list = ['5',  '17', '28']
 
-    if module == 'sm4':
-        df4 = gl.data_loader(
+    if parameterization == 'sm4':
+        df4 = load_training_data(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
@@ -81,14 +81,14 @@ def module_selection_tool():
         layer_1_list = ['10', '47', '64']
         layer_2_list = ['5',  '21', '36']
 
-    if module == 'sm5':
-        df5 = gl.data_loader(
+    if parameterization == 'sm5':
+        df5 = load_training_data(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
         )
         df5 = df5.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-        df5['Zdelta'] = df5['Zmax'] - df5['Zmin']
+#         df5['Zdelta'] = df5['Zmax'] - df5['Zmin']
         res = 'sr5'
         dataset = df5
         dataset.name = 'df5'
@@ -96,8 +96,8 @@ def module_selection_tool():
         layer_2_list = ['5', '32', '52']
 
 
-    if module == 'sm6':
-        df6 = gl.data_loader(
+    if parameterization == 'sm6':
+        df6 = load_training_data(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
@@ -105,15 +105,15 @@ def module_selection_tool():
             anomaly_input = 25
         )
         df6 = df6.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-        df6['Zdelta'] = df6['Zmax'] - df6['Zmin']
+#         df6['Zdelta'] = df6['Zmax'] - df6['Zmin']
         dataset = df6
         dataset.name = 'df6'
         res = 'sr6'
         layer_1_list = ['10', '32', '48']
         layer_2_list = ['5',  '18', '28']
 
-    if module == 'sm7':
-        df7 = data_loader(
+    if parameterization == 'sm7':
+        df7 = load_training_data(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
@@ -121,7 +121,7 @@ def module_selection_tool():
             anomaly_input = 75
         )
         df7 = df7.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-        df7['Zdelta'] = df7['Zmax'] - df7['Zmin']
+#         df7['Zdelta'] = df7['Zmax'] - df7['Zmin']
         dataset = df7
         dataset.name = 'df7'
         res = 'sr7'
@@ -129,8 +129,8 @@ def module_selection_tool():
         layer_2_list = ['5',  '26', '40']
 
         
-    if module == 'sm8':
-        df8 = data_loader(
+    if parameterization == 'sm8':
+        df8 = load_training_data(
             root_dir = '/home/prethicktor/data/',
             RGI_input = 'y',
             scale = 'g',
@@ -139,7 +139,7 @@ def module_selection_tool():
             data_version = 'v2'
         )
         df8 = df8.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-        df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+    #         df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
         dataset = df8
         dataset.name = 'df8'
         res = 'sr8'
@@ -147,16 +147,14 @@ def module_selection_tool():
 
         
         
-    return module, dataset, dataset.name, res
+    return parameterization, dataset, dataset.name, res
 
 
 
 '''
-RGI_loader
-
 
 '''
-def RGI_loader(
+def load_RGI(
     pth = '/data/fast1/glacierml/data/RGI/rgi60-attribs/', 
     region_selection = 'all'
 ):
@@ -218,7 +216,7 @@ def RGI_loader(
                 RGI = RGI.drop(drops)
     return RGI
 
-def data_loader(
+def load_training_data(
     root_dir = '/data/fast1/glacierml/data/',
     RGI_input = 'y',
     scale = 'g',
@@ -600,21 +598,27 @@ def data_loader(
 '''
 GlaThiDa_RGI_index_matcher:
 '''
-def GlaThiDa_RGI_index_matcher(
+def match_GlaThiDa_RGI_index(
 #     pth_1 = '/data/fast1/glacierml/data/T_data/',
 #     pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
 #     pth_3 = '/data/fast1/glacierml/data/matched_indexes/'
-
+    version = 'v2',
     pth_1 = '/home/prethicktor/data/T_data/',
     pth_2 = '/home/prethicktor/data/RGI/rgi60-attribs/',
-    pth_3 = '/home/prethicktor/data/matched_indexes/v2/'
+    
 ):
-    glathida = pd.read_csv(pth_1 + 'T.csv')
-    glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
+    version = version
+    pth_3 = '/home/prethicktor/data/matched_indexes/' + version + '/'
+    if version == 'v1':
+        glathida = pd.read_csv(pth_1 + 'glacier.csv')
+        glathida = glathida.dropna(subset = ['mean_thickness'])
+    if version == 'v2':
+        glathida = pd.read_csv(pth_1 + 'T.csv')
+        glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
 
     RGI = pd.DataFrame()
     for file in os.listdir(pth_2):
-        print(file)
+#         print(file)
         file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
         RGI = pd.concat([RGI, file_reader], ignore_index = True)
     RGI = RGI.reset_index()
@@ -636,24 +640,26 @@ def GlaThiDa_RGI_index_matcher(
         
         # concatonate two rows and append to dataframe with indexes for both glathida and RGI
         temp_df = pd.concat([RGI_match, glathida.loc[i]], axis = 0)
-        df = df.append(temp_df, ignore_index = True)
+        df = pd.concat([df, temp_df], ignore_index = True)
+#         df = df.append(temp_df, ignore_index = True)
     #     df = df.append(GlaThiDa_and_RGI, ignore_index = True)
         df['GlaThiDa_index'].iloc[-1] = i
         df['RGI_index'].iloc[-1] = RGI_index
         df['Centroid Distance'].iloc[-1] = np.min(distances)
 
 
-    df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_v2.csv')
+    df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_' + version + '.csv')
+    return version
         
         
 '''
-data_splitter
+split_data
 input = name of dataframe and selected random state.
 output = dataframe and series randomly selected and populated as either training or test features or labels
 '''
 # Randomly selects data from a df for a given random state (usually iterated over a range of 25)
 # Necessary variables for training and predictions
-def data_splitter(df, random_state = 0):
+def split_data(df, random_state = 0):
     train_dataset = df.sample(frac=0.8, random_state=random_state)
     test_dataset = df.drop(train_dataset.index)
 
@@ -667,39 +673,39 @@ def data_splitter(df, random_state = 0):
     return train_features, test_features, train_labels, test_labels
 
 
-'''
-prethicktor_inputs
-input = none
-output = hyperparameters and layer architecture for DNN model
-'''
-# designed to provide a CLI to the model for each run rather modifying code
-def prethicktor_inputs():
-    print('')
-    print('Please set neurons for first layer')
-    layer_1_input = input()
+# '''
+# prethicktor_inputs
+# input = none
+# output = hyperparameters and layer architecture for DNN model
+# '''
+# # designed to provide a CLI to the model for each run rather modifying code
+# def prethicktor_inputs():
+#     print('')
+#     print('Please set neurons for first layer')
+#     layer_1_input = input()
     
-    print('')
-    print('Please set neurons for second layer')
-    layer_2_input = input()
+#     print('')
+#     print('Please set neurons for second layer')
+#     layer_2_input = input()
     
-    print('')
-    print('Please set learning rate: 0.1, 0.01, 0.001')
-    lr_list = ('0.1, 0.01, 0.001')
-    lr_input = input()
-    while lr_input not in lr_list:
-        print('Please set valid learning rate: 0.1, 0.01, 0.001')
-        lr_input = input()
+#     print('')
+#     print('Please set learning rate: 0.1, 0.01, 0.001')
+#     lr_list = ('0.1, 0.01, 0.001')
+#     lr_input = input()
+#     while lr_input not in lr_list:
+#         print('Please set valid learning rate: 0.1, 0.01, 0.001')
+#         lr_input = input()
         
-    print('')
-    print('Please set epochs')
-    ep_input = int(input())
-    while type(ep_input) != int:
-        print('Please input an integer for epochs')
-        ep_input = input()
+#     print('')
+#     print('Please set epochs')
+#     ep_input = int(input())
+#     while type(ep_input) != int:
+#         print('Please input an integer for epochs')
+#         ep_input = input()
     
 
     
-    return layer_1_input, layer_2_input, lr_input, ep_input
+#     return layer_1_input, layer_2_input, lr_input, ep_input
 
 
 
@@ -803,7 +809,7 @@ def build_and_train_model(dataset,
                           validation_split = 0.2,
                           epochs = 100,
                           random_state = 0,
-                          module = 'sm',
+                          parameterization = 'sm',
                           res = 'sr',
                           layer_1 = 10,
                           layer_2 = 5,
@@ -812,7 +818,7 @@ def build_and_train_model(dataset,
                          ):
     # define paths
     arch = str(layer_1) + '-' + str(layer_2)
-    svd_mod_pth = 'saved_models/' + module + '/sm_' + arch + '/'
+    svd_mod_pth = 'saved_models/' + parameterization + '/sm_' + arch + '/'
     svd_res_pth = 'saved_results/' + res + '/sr_' + arch + '/'
 
     # code snippet to make folders for saved models and results if they do not already exist
@@ -835,7 +841,7 @@ def build_and_train_model(dataset,
 #     split data
     (
         train_features, test_features, train_labels, test_labels
-    ) = data_splitter(dataset)
+    ) = split_data(dataset)
 #         print(dataset.name)
 
 #     normalize data
@@ -926,7 +932,7 @@ def build_and_train_model(dataset,
 '''
 
 '''
-def predictions_maker(
+def make_predictions(
     rs,
     dropout,
     arch,
@@ -940,7 +946,7 @@ def predictions_maker(
     
     (
         train_features, test_features, train_labels, test_labels
-    ) = data_splitter(
+    ) = split_data(
         dataset, random_state = rs
     )
     dnn_model[model_name] = tf.keras.models.load_model(model_loc)
@@ -1015,7 +1021,7 @@ def predictions_maker(
     return df
     
 
-def deviations_calculator(
+def calculate_model_deviations(
     model_loc,
     model_name,
     ep,
@@ -1121,7 +1127,586 @@ def deviations_calculator(
     return df
     
     
-def random_state_finder(
+
+
+
+
+def load_global_predictions(
+    coregistration,
+    architecture,
+    learning_rate,
+    epochs,
+):
+    root_dir = 'zults/'
+    RGI_predicted = pd.DataFrame()
+    for file in (os.listdir(root_dir)):
+            # print(file)
+        if ('RGI_predicted' in file and 
+            coregistration in file and 
+            architecture in file and 
+            learning_rate in file and 
+            epochs in file):
+#             print(file)
+            file_reader = pd.read_csv(root_dir + file)
+#             print(file_reader)
+            file_reader['volume km3'] = (
+                file_reader['avg predicted thickness'] / 1e3
+            ) * file_reader['Area']
+            file_reader = file_reader.dropna()
+            RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
+            RGI_predicted['layer architecture'] =  architecture[1:]
+    RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
+    RGI_predicted['dataframe'] =  coregistration
+    
+
+    return RGI_predicted
+
+
+'''
+'''
+def add_glathida_stats(
+    df,
+    pth_1 = '/data/fast1/glacierml/data/regional_data/raw/',
+    pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
+    pth_3 = '/data/fast1/glacierml/data/regional_data/training_data/',
+    
+):
+    # finish building df
+
+    dfa = pd.DataFrame()
+    for file in tqdm(os.listdir(pth_1)):
+        dfb = pd.read_csv(pth_1 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        region_and_number = file[:-4]
+        region_number = region_and_number[:2]
+        region = region_and_number[3:]
+
+        dfb['geographic region'] = region
+        dfb['region'] = region_number
+        dfa = dfa.append(dfb, ignore_index=True)
+
+    dfa = dfa.reset_index()
+
+    dfa = dfa[[
+        'GlaThiDa_index',
+        'RGI_index',
+        'RGIId',
+        'region',
+        'geographic region'
+    ]]
+    RGI_extra = pd.DataFrame()
+    for file in os.listdir(pth_2):
+        f = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+        RGI_extra = pd.concat([RGI_extra, f], ignore_index = True)
+
+        region_and_number = file[:-4]
+        region_number = region_and_number[:2]
+        region = region_and_number[9:]
+        dfc = dfa[dfa['region'] == region_number]
+
+        for file in os.listdir(pth_3):
+            print(file)
+            if file[:2] == region_number:
+                glathida_regional = pd.read_csv(pth_3 + file)
+
+        GlaThiDa_mean_area = glathida_regional['Area'].mean()
+        GlaThiDa_mean_aspect = glathida_regional['Aspect'].mean()
+        GlaThiDa_mean_lmax = glathida_regional['Lmax'].mean()
+        GlaThiDa_mean_slope = glathida_regional['Slope'].mean()
+        GlaThiDa_mean_zmin = glathida_regional['Zmin'].mean()
+        GlaThiDa_mean_zmax = glathida_regional['Zmax'].mean()
+
+        GlaThiDa_median_area = glathida_regional['Area'].median()
+        GlaThiDa_median_aspect = glathida_regional['Aspect'].median()
+        GlaThiDa_median_lmax = glathida_regional['Lmax'].median()
+        GlaThiDa_median_slope = glathida_regional['Slope'].median()
+        GlaThiDa_median_zmin = glathida_regional['Zmin'].median()
+        GlaThiDa_median_zmax = glathida_regional['Zmax'].median()
+
+        GlaThiDa_std_area = glathida_regional['Area'].std(ddof=0)
+        GlaThiDa_std_aspect = glathida_regional['Aspect'].std(ddof=0)
+        GlaThiDa_std_lmax = glathida_regional['Lmax'].std(ddof=0)
+        GlaThiDa_std_slope = glathida_regional['Slope'].std(ddof=0)
+        GlaThiDa_std_zmin = glathida_regional['Zmin'].std(ddof=0)
+        GlaThiDa_std_zmax = glathida_regional['Zmax'].std(ddof=0)
+
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_mean'
+        ] = GlaThiDa_mean_area
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_mean'
+        ] = GlaThiDa_mean_aspect
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_mean'
+        ] = GlaThiDa_mean_lmax
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_mean'
+        ] = GlaThiDa_mean_slope
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_mean'
+        ] = GlaThiDa_mean_zmin
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_mean'
+        ] = GlaThiDa_mean_zmax
+
+
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_median'
+        ] = GlaThiDa_median_area
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_median'
+        ] = GlaThiDa_median_aspect
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_median'
+        ] = GlaThiDa_median_lmax
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_median'
+        ] = GlaThiDa_median_slope
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_median'
+        ] = GlaThiDa_median_zmin
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_median'
+        ] = GlaThiDa_median_zmax
+
+
+
+
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_std'
+        ] = GlaThiDa_std_area
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_std'
+        ] = GlaThiDa_std_aspect
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_std'
+        ] = GlaThiDa_std_lmax
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_std'
+        ] = GlaThiDa_std_slope
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_std'
+        ] = GlaThiDa_std_zmin
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_std'
+        ] = GlaThiDa_std_zmax
+
+
+
+
+
+
+        trainable_ratio = (len(dfc) / len(f))
+        percent_trainable = trainable_ratio * 100
+
+        df.loc[
+            df[df['dataframe'].str[4:] == region_number].index, 'ratio trainable'
+        ] = trainable_ratio
+
+#     df['vol_ratio'] = df['vol'] / df['volf']
+#     df['vol_from_zero'] = abs(1 - df['vol_ratio'])
+
+    return df
+
+
+
+
+
+
+'''
+'''
+def find_predictions(
+    coregistration = 'df8'
+):
+    root_dir = 'zults/'
+    prethicked = pd.DataFrame()
+    for file in tqdm(os.listdir(root_dir)):
+    # print(file)
+        if 'RGI_predicted' in file and coregistration in file:
+            file_reader = pd.read_csv(root_dir + file)
+            file_reader = file_reader.rename(columns = {
+                0:'vol'
+            })
+
+            file_reader['volume km3'] = (
+                file_reader['avg predicted thickness'] / 1e3
+            ) * file_reader['Area']
+            
+            file_reader['pred std dev'] = (
+                (file_reader['predicted thickness std dev'] / 1e3) * file_reader['Area']
+            )
+#             print(file)
+            str_1 = '_1_'
+            str_2 = '-'
+            str_3 = '_0_'
+            str_4 = '_0.'
+            str_7 = '.csv'
+            str_8 = 'df'
+            str_8_idx = file.index(str_8)
+            str_7_idx = file.index(str_7)
+            str_2_idx = file.index(str_2)
+            str_4_idx = file.index(str_4)
+            if str_1 in file:
+
+                str_1_idx = file.index(str_1)
+                layer_1_start = (str_1_idx + 3)
+                layer_2_start = str_2_idx + 1
+                layer_1_length = str_2_idx - layer_1_start
+                layer_2_length = str_4_idx - (str_2_idx + 1)
+
+
+            if str_3 in file :
+                str_3_idx = file.index(str_3)
+
+                layer_1_start = (str_3_idx + 3)
+                layer_2_start = str_2_idx + 1
+                layer_1_length = str_2_idx - layer_1_start
+                layer_2_length = str_4_idx - (str_2_idx + 1)
+
+
+            layer_1 = file[layer_1_start:(layer_1_start + layer_1_length)]
+            layer_2 = file[layer_2_start:(layer_2_start + layer_2_length)]
+
+            arch = pd.Series(str(layer_1) + '-' + str(layer_2), name = 'architecture')
+            prethicked = pd.concat([prethicked, arch])
+
+            # epochs = 100
+            if file[str_7_idx - 3] == str(1) or file[str_7_idx - 3] == str(9):
+
+                learning_rate = file[
+                    layer_2_start + layer_2_length + 1 : str_7_idx - 5
+                ]
+                epochs = file[
+                    str_7_idx - 4 : str_7_idx
+                ]
+                
+            # epochs = 2000
+            if file[str_7_idx - 4] == str(2) or file[str_7_idx - 3] == str(9):
+
+                learning_rate = file[
+                    layer_2_start + layer_2_length + 1 : str_7_idx - 5
+                ]
+                epochs = file[
+                    str_7_idx - 4 : str_7_idx
+                ]
+
+                    # epochs < 100
+            elif file[str_7_idx - 3] == '_':
+
+                learning_rate = file[
+                    layer_2_start + layer_2_length + 1 : str_7_idx - 3
+                ]
+
+                epochs = file[
+                    str_7_idx - 2 : str_7_idx
+                ]
+            prethicked = prethicked.reset_index()
+            prethicked = prethicked.drop('index', axis = 1)
+            prethicked.loc[prethicked.index[-1], 'learning rate'] = learning_rate
+            prethicked.loc[prethicked.index[-1], 'epochs'] = epochs
+            prethicked.loc[prethicked.index[-1], 'volume'] = sum(file_reader['volume km3'])
+            prethicked.loc[prethicked.index[-1], 'std dev'] = sum(
+                file_reader['pred std dev']
+            )
+            if file[str_8_idx + 3] == '_':
+                prethicked.loc[prethicked.index[-1], 'coregistration'] = file[
+                    str_8_idx : str_8_idx + 3]                
+            elif file[str_8_idx + 3] !='_':
+                prethicked.loc[prethicked.index[-1], 'coregistration'] = (
+                    file[str_8_idx + 2] + file[str_8_idx + 3]
+                )
+            predicted = pd.DataFrame()
+            
+#             break
+    prethicked = prethicked.rename(columns = {
+        0:'architecture'
+    })
+    for arch in prethicked['architecture'].unique():
+        for lr in prethicked['learning rate'].unique():
+            dft = prethicked[
+                (prethicked['architecture'] == arch) & 
+                (prethicked['learning rate'] == lr)
+            ]
+            dft['predicted volume'] = sum(dft['volume']) / 1e3
+            dft['std dev'] = sum(dft['std dev']) / 1e3
+    #         print(dft.iloc[-1])
+            predicted = pd.concat([predicted,dft],ignore_index = True)
+    predicted = predicted[[
+        'architecture',
+#         'epochs',
+        'learning rate',
+        'coregistration',
+        'predicted volume',
+        'std dev'
+    ]]
+    predicted = predicted.drop_duplicates()
+    prethicked = prethicked.drop_duplicates()
+    return predicted
+
+
+    
+
+'''
+cluster functions
+'''
+# define functions
+
+def silhouette_plot(X, model, ax, colors):
+    y_lower = 10
+    y_tick_pos_ = []
+    sh_samples = silhouette_samples(X, model.labels_)
+    sh_score = silhouette_score(X, model.labels_)
+    
+    for idx in range(model.n_clusters):
+        values = sh_samples[model.labels_ == idx]
+        values.sort()
+        size = values.shape[0]
+        y_upper = y_lower + size
+        ax.fill_betweenx(np.arange(y_lower, y_upper),0,values,
+                         facecolor=colors[idx],edgecolor=colors[idx]
+        )
+        y_tick_pos_.append(y_lower + 0.5 * size)
+        y_lower = y_upper + 10
+
+    ax.axvline(x=sh_score, color="red", linestyle="--", label="Avg Silhouette Score")
+    ax.set_title("Silhouette Plot for {} clusters".format(model.n_clusters))
+    l_xlim = max(-1, min(-0.1, round(min(sh_samples) - 0.1, 1)))
+    u_xlim = min(1, round(max(sh_samples) + 0.1, 1))
+    ax.set_xlim([l_xlim, u_xlim])
+    ax.set_ylim([0, X.shape[0] + (model.n_clusters + 1) * 10])
+    ax.set_xlabel("silhouette coefficient values")
+    ax.set_ylabel("cluster label")
+    ax.set_yticks(y_tick_pos_)
+    ax.set_yticklabels(str(idx) for idx in range(model.n_clusters))
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+    ax.legend(loc="best")
+    return ax
+
+
+
+def rgb_to_hex(rgb):
+    return '%02x%02x%02x' % rgb
+
+
+
+
+def cluster_comparison_bar(df_std, RGI_comparison, colors, deviation=True ,title="Cluster results"):
+    
+    features = RGI_comparison.index
+    ncols = 3
+    # calculate number of rows
+    nrows = len(features) // ncols + (len(features) % ncols > 0)
+    # set figure size
+    fig = plt.figure(figsize=(15,15), dpi=200)
+    #interate through every feature
+    for n, feature in enumerate(features):
+        # create chart
+
+#     plt.show()    
+        ax = plt.subplot(nrows, ncols, n + 1)
+        RGI_comparison[RGI_comparison.index==feature].plot(
+            kind='bar', 
+            ax=ax, 
+            title=feature,
+            color=colors[0:df_std['cluster'].nunique()],
+            legend=False
+                                                            )
+        plt.axhline(y=0)
+        x_axis = ax.axes.get_xaxis()
+        x_axis.set_visible(False)
+
+    c_labels = RGI_comparison.columns.to_list()
+    c_colors = colors[0:3]
+    mpats = [mpatches.Patch(color=c, label=l) for c,l in list(zip(
+        colors[0:df_std['cluster'].nunique()],
+        RGI_comparison.columns.to_list()
+    ))]
+
+    fig.legend(handles=mpats,
+               ncol=ncols,
+               loc="upper center",
+               fancybox=True,
+               bbox_to_anchor=(0.5, 0.98)
+              )
+    axes = fig.get_axes()
+    
+    fig.suptitle(title, fontsize=18, y=1)
+    fig.supylabel('Deviation from overall mean in %')
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.93)
+    plt.show()
+    
+    
+    
+    
+class Radar(object):
+    def __init__(self, figure, title, labels, rect=None):
+        if rect is None:
+            rect = [0.05, 0.05, 0.9, 0.9]
+
+        self.n = len(title)
+        self.angles = np.arange(0, 360, 360.0/self.n)
+        
+        self.axes = [
+            figure.add_axes(
+                rect, projection='polar', label='axes%d' % i
+            ) for i in range(self.n)
+        ]
+        
+        self.ax = self.axes[0]
+        self.ax.set_thetagrids(
+            self.angles, 
+            labels=title, 
+            fontsize=14, 
+            backgroundcolor="white",
+            zorder=999
+        ) 
+        # Feature names
+        self.ax.set_yticklabels([])
+#         self.ax.set_xscale('log')
+#         self.ax.set_yscale('log')
+        for ax in self.axes[1:]:
+            ax.xaxis.set_visible(False)
+            ax.set_yticklabels([])
+            ax.set_zorder(-99)
+            
+        for ax, angle, label in zip(self.axes, self.angles, labels):
+            ax.spines['polar'].set_color('black')
+            ax.spines['polar'].set_zorder(-99)
+                     
+            ax.set_rscale('symlog')
+#             ax.set_yscale('log')
+    def plot(self, values, *args, **kw):
+        angle = np.deg2rad(np.r_[self.angles, self.angles[0]])
+        values = np.r_[values, values[0]]
+        self.ax.plot(angle, values, *args, **kw)
+        kw['label'] = '_noLabel'
+        self.ax.fill(angle, values,*args,**kw)
+
+
+def color_grabber(
+    n_colors = 6,
+    color_map = 'viridis'
+):
+    
+
+    cluster_colors = px.colors.sample_colorscale(
+        color_map, 
+        [n/(n_colors -1) for n in range(n_colors)]
+    )
+    colors = pd.Series()
+    for i in cluster_colors:
+        color_1 = i[4:]
+        color_2 = color_1[:-1]
+    #     print(i[4:])
+    #     print(i[:-1])
+        numbers = color_2.split(',')
+        rgb_1 = int(numbers[0])
+        rgb_2 = int(numbers[1])
+        rgb_3 = int(numbers[2])
+        colors = colors.append(pd.Series('#' + rgb_to_hex((rgb_1, rgb_2, rgb_3))))
+    #     print(color)
+    #     colors = pd.concat([colors, color], ignore_index = True)
+    # cluster_colors
+
+    colors = colors.T
+    colors = colors.reset_index()
+    colors = colors.drop('index', axis = 1)
+    colors = colors.squeeze()
+    return colors
+
+
+
+
+def load_notebook_data():
+    df = pd.read_csv(
+            'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_df8.csv'
+        )
+    df['region'] = df['RGIId'].str[6:8]
+
+
+    RGI = load_RGI()
+    RGI = RGI[[
+        'RGIId',
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
+    ]]
+
+    RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']
+
+    df = pd.merge(df, RGI, on = 'RGIId')
+#     print(df)
+    df['Upper Bound'] = df['Upper Bound'] - df['Mean Thickness']
+    df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
+    df['UB'] = (df['Upper Bound'] / 1e3) * df['Area']
+    df['LB'] = (df['Lower Bound'] / 1e3) * df['Area']
+
+    upper_bound = np.round(
+        sum(df['UB']) / 1e3, 2)
+
+    lower_bound = np.round(
+        sum(df['LB']) / 1e3 , 2) 
+
+    volume = np.round(
+        sum(df['Weighted Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
+
+    std = np.round(
+        sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
+
+
+    print(f'Global Volume: {volume}, UB: {upper_bound}, LB: {lower_bound}, STD: {std}')
+    df['Edasi Volume'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
+    df['Volume Std Dev'] = df['Thickness Std Dev'] / 1e3 * df['Area']
+    
+    ref = pd.read_csv('reference_thicknesses/farinotti_mean_thickness_rgi_id.csv')
+    ref = ref[[
+        'RGIId',
+        'Farinotti Mean Thickness'
+    ]]
+    ref['region'] = ref['RGIId'].str[6:8]
+    ref = ref.sort_values('RGIId')
+    ref = ref.dropna()
+
+    ref = pd.merge(ref, df, 
+    #                left_index = True, right_index = True)
+    on = [
+        'RGIId'
+    ])
+    ref = ref.rename(columns = {
+        'Mean Thickness':'Edasi Mean Thickness'
+    })
+
+    ref['Farinotti Volume'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
+
+    ref['region'] = ref['RGIId'].str[6:8]
+    ref['Edasi Volume'] = (ref['Edasi Mean Thickness'] / 1e3) * ref['Area']
+    ref['Volume Std Dev'] = (ref['Thickness Std Dev'] / 1e3 )* ref['Area']
+    ref = ref.reset_index()
+    ref = ref.drop('index', axis = 1)
+    ref = ref.dropna()
+    ref['VE / VF'] = ref['Edasi Mean Thickness'] / ref['Farinotti Mean Thickness']
+    ref = ref.drop_duplicates()
+    # sum(ref['volume km3'])
+
+    ref['Upper Bound'] = ref['Upper Bound'] - ref['Edasi Mean Thickness']
+    ref['Lower Bound'] = ref['Edasi Mean Thickness'] - ref['Lower Bound']
+    ref
+
+    ref['UB'] = (ref['Upper Bound'] / 1e3) * ref['Area']
+    ref['LB'] = (ref['Lower Bound'] / 1e3) * ref['Area']
+
+    return df, ref
+
+
+
+
+def find_random_state(
     folder
 ):
     if folder.endswith('_0'):
@@ -1181,7 +1766,7 @@ def random_state_finder(
 '''
 predictions_loader
 '''
-def regional_predictions_loader(
+def load_regional_predictions(
     training_module,
     architecture,
     learning_rate,
@@ -1673,576 +2258,3 @@ def regional_predictions_loader(
 #     ], ascending = True)
                         
     return RGI_predicted
-
-
-
-def global_predictions_loader(
-    coregistration,
-    architecture,
-    learning_rate,
-    epochs,
-):
-    root_dir = 'zults/'
-    RGI_predicted = pd.DataFrame()
-    for file in (os.listdir(root_dir)):
-            # print(file)
-        if ('RGI_predicted' in file and 
-            coregistration in file and 
-            architecture in file and 
-            learning_rate in file and 
-            epochs in file):
-#             print(file)
-            file_reader = pd.read_csv(root_dir + file)
-#             print(file_reader)
-            file_reader['volume km3'] = (
-                file_reader['avg predicted thickness'] / 1e3
-            ) * file_reader['Area']
-            file_reader = file_reader.dropna()
-            RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
-
-    RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
-    RGI_predicted['dataframe' ] = 'df'+ coregistration
-
-    return RGI_predicted
-
-
-'''
-'''
-def glathida_stats_adder(
-    df,
-    pth_1 = '/data/fast1/glacierml/data/regional_data/raw/',
-    pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
-    pth_3 = '/data/fast1/glacierml/data/regional_data/training_data/',
-    
-):
-    # finish building df
-
-    dfa = pd.DataFrame()
-    for file in tqdm(os.listdir(pth_1)):
-        dfb = pd.read_csv(pth_1 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        region_and_number = file[:-4]
-        region_number = region_and_number[:2]
-        region = region_and_number[3:]
-
-        dfb['geographic region'] = region
-        dfb['region'] = region_number
-        dfa = dfa.append(dfb, ignore_index=True)
-
-    dfa = dfa.reset_index()
-
-    dfa = dfa[[
-        'GlaThiDa_index',
-        'RGI_index',
-        'RGIId',
-        'region',
-        'geographic region'
-    ]]
-    RGI_extra = pd.DataFrame()
-    for file in os.listdir(pth_2):
-        f = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI_extra = pd.concat([RGI_extra, f], ignore_index = True)
-
-        region_and_number = file[:-4]
-        region_number = region_and_number[:2]
-        region = region_and_number[9:]
-        dfc = dfa[dfa['region'] == region_number]
-
-        for file in os.listdir(pth_3):
-            print(file)
-            if file[:2] == region_number:
-                glathida_regional = pd.read_csv(pth_3 + file)
-
-        GlaThiDa_mean_area = glathida_regional['Area'].mean()
-        GlaThiDa_mean_aspect = glathida_regional['Aspect'].mean()
-        GlaThiDa_mean_lmax = glathida_regional['Lmax'].mean()
-        GlaThiDa_mean_slope = glathida_regional['Slope'].mean()
-        GlaThiDa_mean_zmin = glathida_regional['Zmin'].mean()
-        GlaThiDa_mean_zmax = glathida_regional['Zmax'].mean()
-
-        GlaThiDa_median_area = glathida_regional['Area'].median()
-        GlaThiDa_median_aspect = glathida_regional['Aspect'].median()
-        GlaThiDa_median_lmax = glathida_regional['Lmax'].median()
-        GlaThiDa_median_slope = glathida_regional['Slope'].median()
-        GlaThiDa_median_zmin = glathida_regional['Zmin'].median()
-        GlaThiDa_median_zmax = glathida_regional['Zmax'].median()
-
-        GlaThiDa_std_area = glathida_regional['Area'].std(ddof=0)
-        GlaThiDa_std_aspect = glathida_regional['Aspect'].std(ddof=0)
-        GlaThiDa_std_lmax = glathida_regional['Lmax'].std(ddof=0)
-        GlaThiDa_std_slope = glathida_regional['Slope'].std(ddof=0)
-        GlaThiDa_std_zmin = glathida_regional['Zmin'].std(ddof=0)
-        GlaThiDa_std_zmax = glathida_regional['Zmax'].std(ddof=0)
-
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_mean'
-        ] = GlaThiDa_mean_area
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_mean'
-        ] = GlaThiDa_mean_aspect
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_mean'
-        ] = GlaThiDa_mean_lmax
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_mean'
-        ] = GlaThiDa_mean_slope
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_mean'
-        ] = GlaThiDa_mean_zmin
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_mean'
-        ] = GlaThiDa_mean_zmax
-
-
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_median'
-        ] = GlaThiDa_median_area
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_median'
-        ] = GlaThiDa_median_aspect
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_median'
-        ] = GlaThiDa_median_lmax
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_median'
-        ] = GlaThiDa_median_slope
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_median'
-        ] = GlaThiDa_median_zmin
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_median'
-        ] = GlaThiDa_median_zmax
-
-
-
-
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_std'
-        ] = GlaThiDa_std_area
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_std'
-        ] = GlaThiDa_std_aspect
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_std'
-        ] = GlaThiDa_std_lmax
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_std'
-        ] = GlaThiDa_std_slope
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_std'
-        ] = GlaThiDa_std_zmin
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_std'
-        ] = GlaThiDa_std_zmax
-
-
-
-
-
-
-        trainable_ratio = (len(dfc) / len(f))
-        percent_trainable = trainable_ratio * 100
-
-        df.loc[
-            df[df['dataframe'].str[4:] == region_number].index, 'ratio trainable'
-        ] = trainable_ratio
-
-#     df['vol_ratio'] = df['vol'] / df['volf']
-#     df['vol_from_zero'] = abs(1 - df['vol_ratio'])
-
-    return df
-
-
-
-
-
-
-'''
-'''
-def predictions_finder(
-    coregistration = 'df8'
-):
-    root_dir = 'zults/'
-    prethicked = pd.DataFrame()
-    for file in tqdm(os.listdir(root_dir)):
-    # print(file)
-        if 'RGI_predicted' in file and coregistration in file:
-            file_reader = pd.read_csv(root_dir + file)
-            file_reader = file_reader.rename(columns = {
-                0:'vol'
-            })
-
-            file_reader['volume km3'] = (
-                file_reader['avg predicted thickness'] / 1e3
-            ) * file_reader['Area']
-            
-            file_reader['pred std dev'] = (
-                (file_reader['predicted thickness std dev'] / 1e3) * file_reader['Area']
-            )
-#             print(file)
-            str_1 = '_1_'
-            str_2 = '-'
-            str_3 = '_0_'
-            str_4 = '_0.'
-            str_7 = '.csv'
-            str_8 = 'df'
-            str_8_idx = file.index(str_8)
-            str_7_idx = file.index(str_7)
-            str_2_idx = file.index(str_2)
-            str_4_idx = file.index(str_4)
-            if str_1 in file:
-
-                str_1_idx = file.index(str_1)
-                layer_1_start = (str_1_idx + 3)
-                layer_2_start = str_2_idx + 1
-                layer_1_length = str_2_idx - layer_1_start
-                layer_2_length = str_4_idx - (str_2_idx + 1)
-
-
-            if str_3 in file :
-                str_3_idx = file.index(str_3)
-
-                layer_1_start = (str_3_idx + 3)
-                layer_2_start = str_2_idx + 1
-                layer_1_length = str_2_idx - layer_1_start
-                layer_2_length = str_4_idx - (str_2_idx + 1)
-
-
-            layer_1 = file[layer_1_start:(layer_1_start + layer_1_length)]
-            layer_2 = file[layer_2_start:(layer_2_start + layer_2_length)]
-
-            arch = pd.Series(str(layer_1) + '-' + str(layer_2), name = 'architecture')
-            prethicked = pd.concat([prethicked, arch])
-
-            # epochs = 100
-            if file[str_7_idx - 3] == str(1) or file[str_7_idx - 3] == str(9):
-
-                learning_rate = file[
-                    layer_2_start + layer_2_length + 1 : str_7_idx - 5
-                ]
-                epochs = file[
-                    str_7_idx - 4 : str_7_idx
-                ]
-                
-            # epochs = 2000
-            if file[str_7_idx - 4] == str(2) or file[str_7_idx - 3] == str(9):
-
-                learning_rate = file[
-                    layer_2_start + layer_2_length + 1 : str_7_idx - 5
-                ]
-                epochs = file[
-                    str_7_idx - 4 : str_7_idx
-                ]
-
-                    # epochs < 100
-            elif file[str_7_idx - 3] == '_':
-
-                learning_rate = file[
-                    layer_2_start + layer_2_length + 1 : str_7_idx - 3
-                ]
-
-                epochs = file[
-                    str_7_idx - 2 : str_7_idx
-                ]
-            prethicked = prethicked.reset_index()
-            prethicked = prethicked.drop('index', axis = 1)
-            prethicked.loc[prethicked.index[-1], 'learning rate'] = learning_rate
-            prethicked.loc[prethicked.index[-1], 'epochs'] = epochs
-            prethicked.loc[prethicked.index[-1], 'volume'] = sum(file_reader['volume km3'])
-            prethicked.loc[prethicked.index[-1], 'std dev'] = sum(
-                file_reader['pred std dev']
-            )
-            if file[str_8_idx + 3] == '_':
-                prethicked.loc[prethicked.index[-1], 'coregistration'] = file[
-                    str_8_idx : str_8_idx + 3]                
-            elif file[str_8_idx + 3] !='_':
-                prethicked.loc[prethicked.index[-1], 'coregistration'] = (
-                    file[str_8_idx + 2] + file[str_8_idx + 3]
-                )
-            predicted = pd.DataFrame()
-            
-#             break
-    prethicked = prethicked.rename(columns = {
-        0:'architecture'
-    })
-    for arch in prethicked['architecture'].unique():
-        for lr in prethicked['learning rate'].unique():
-            dft = prethicked[
-                (prethicked['architecture'] == arch) & 
-                (prethicked['learning rate'] == lr)
-            ]
-            dft['predicted volume'] = sum(dft['volume']) / 1e3
-            dft['std dev'] = sum(dft['std dev']) / 1e3
-    #         print(dft.iloc[-1])
-            predicted = pd.concat([predicted,dft],ignore_index = True)
-    predicted = predicted[[
-        'architecture',
-#         'epochs',
-        'learning rate',
-        'coregistration',
-        'predicted volume',
-        'std dev'
-    ]]
-    predicted = predicted.drop_duplicates()
-    prethicked = prethicked.drop_duplicates()
-    return predicted
-
-
-    
-
-'''
-cluster functions
-'''
-# define functions
-
-def silhouette_plot(X, model, ax, colors):
-    y_lower = 10
-    y_tick_pos_ = []
-    sh_samples = silhouette_samples(X, model.labels_)
-    sh_score = silhouette_score(X, model.labels_)
-    
-    for idx in range(model.n_clusters):
-        values = sh_samples[model.labels_ == idx]
-        values.sort()
-        size = values.shape[0]
-        y_upper = y_lower + size
-        ax.fill_betweenx(np.arange(y_lower, y_upper),0,values,
-                         facecolor=colors[idx],edgecolor=colors[idx]
-        )
-        y_tick_pos_.append(y_lower + 0.5 * size)
-        y_lower = y_upper + 10
-
-    ax.axvline(x=sh_score, color="red", linestyle="--", label="Avg Silhouette Score")
-    ax.set_title("Silhouette Plot for {} clusters".format(model.n_clusters))
-    l_xlim = max(-1, min(-0.1, round(min(sh_samples) - 0.1, 1)))
-    u_xlim = min(1, round(max(sh_samples) + 0.1, 1))
-    ax.set_xlim([l_xlim, u_xlim])
-    ax.set_ylim([0, X.shape[0] + (model.n_clusters + 1) * 10])
-    ax.set_xlabel("silhouette coefficient values")
-    ax.set_ylabel("cluster label")
-    ax.set_yticks(y_tick_pos_)
-    ax.set_yticklabels(str(idx) for idx in range(model.n_clusters))
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
-    ax.legend(loc="best")
-    return ax
-
-
-
-def rgb_to_hex(rgb):
-    return '%02x%02x%02x' % rgb
-
-
-
-
-def cluster_comparison_bar(df_std, RGI_comparison, colors, deviation=True ,title="Cluster results"):
-    
-    features = RGI_comparison.index
-    ncols = 3
-    # calculate number of rows
-    nrows = len(features) // ncols + (len(features) % ncols > 0)
-    # set figure size
-    fig = plt.figure(figsize=(15,15), dpi=200)
-    #interate through every feature
-    for n, feature in enumerate(features):
-        # create chart
-
-#     plt.show()    
-        ax = plt.subplot(nrows, ncols, n + 1)
-        RGI_comparison[RGI_comparison.index==feature].plot(
-            kind='bar', 
-            ax=ax, 
-            title=feature,
-            color=colors[0:df_std['cluster'].nunique()],
-            legend=False
-                                                            )
-        plt.axhline(y=0)
-        x_axis = ax.axes.get_xaxis()
-        x_axis.set_visible(False)
-
-    c_labels = RGI_comparison.columns.to_list()
-    c_colors = colors[0:3]
-    mpats = [mpatches.Patch(color=c, label=l) for c,l in list(zip(
-        colors[0:df_std['cluster'].nunique()],
-        RGI_comparison.columns.to_list()
-    ))]
-
-    fig.legend(handles=mpats,
-               ncol=ncols,
-               loc="upper center",
-               fancybox=True,
-               bbox_to_anchor=(0.5, 0.98)
-              )
-    axes = fig.get_axes()
-    
-    fig.suptitle(title, fontsize=18, y=1)
-    fig.supylabel('Deviation from overall mean in %')
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.93)
-    plt.show()
-    
-    
-    
-    
-class Radar(object):
-    def __init__(self, figure, title, labels, rect=None):
-        if rect is None:
-            rect = [0.05, 0.05, 0.9, 0.9]
-
-        self.n = len(title)
-        self.angles = np.arange(0, 360, 360.0/self.n)
-        
-        self.axes = [
-            figure.add_axes(
-                rect, projection='polar', label='axes%d' % i
-            ) for i in range(self.n)
-        ]
-        
-        self.ax = self.axes[0]
-        self.ax.set_thetagrids(
-            self.angles, 
-            labels=title, 
-            fontsize=14, 
-            backgroundcolor="white",
-            zorder=999
-        ) 
-        # Feature names
-        self.ax.set_yticklabels([])
-#         self.ax.set_xscale('log')
-#         self.ax.set_yscale('log')
-        for ax in self.axes[1:]:
-            ax.xaxis.set_visible(False)
-            ax.set_yticklabels([])
-            ax.set_zorder(-99)
-            
-        for ax, angle, label in zip(self.axes, self.angles, labels):
-            ax.spines['polar'].set_color('black')
-            ax.spines['polar'].set_zorder(-99)
-                     
-            ax.set_rscale('symlog')
-#             ax.set_yscale('log')
-    def plot(self, values, *args, **kw):
-        angle = np.deg2rad(np.r_[self.angles, self.angles[0]])
-        values = np.r_[values, values[0]]
-        self.ax.plot(angle, values, *args, **kw)
-        kw['label'] = '_noLabel'
-        self.ax.fill(angle, values,*args,**kw)
-
-
-def color_grabber(
-    n_colors = 6,
-    color_map = 'viridis'
-):
-    
-
-    cluster_colors = px.colors.sample_colorscale(
-        color_map, 
-        [n/(n_colors -1) for n in range(n_colors)]
-    )
-    colors = pd.Series()
-    for i in cluster_colors:
-        color_1 = i[4:]
-        color_2 = color_1[:-1]
-    #     print(i[4:])
-    #     print(i[:-1])
-        numbers = color_2.split(',')
-        rgb_1 = int(numbers[0])
-        rgb_2 = int(numbers[1])
-        rgb_3 = int(numbers[2])
-        colors = colors.append(pd.Series('#' + rgb_to_hex((rgb_1, rgb_2, rgb_3))))
-    #     print(color)
-    #     colors = pd.concat([colors, color], ignore_index = True)
-    # cluster_colors
-
-    colors = colors.T
-    colors = colors.reset_index()
-    colors = colors.drop('index', axis = 1)
-    colors = colors.squeeze()
-    return colors
-
-
-
-
-def notebook_data_loader():
-    df = pd.read_csv(
-            'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_df8.csv'
-        )
-    df['region'] = df['RGIId'].str[6:8]
-
-
-    RGI = RGI_loader()
-    RGI = RGI[[
-        'RGIId',
-        'CenLat',
-        'CenLon',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Area',
-        'Aspect',
-        'Lmax'
-    ]]
-
-    RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']
-
-    df = pd.merge(df, RGI, on = 'RGIId')
-
-    df['Upper Bound'] = df['Upper Bound'] - df['Mean Thickness']
-    df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
-    df['UB'] = (df['Upper Bound'] / 1e3) * df['Area']
-    df['LB'] = (df['Lower Bound'] / 1e3) * df['Area']
-
-    upper_bound = np.round(
-        sum(df['UB']) / 1e3, 2)
-
-    lower_bound = np.round(
-        sum(df['LB']) / 1e3 , 2) 
-
-    volume = np.round(
-        sum(df['Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
-
-    std = np.round(
-        sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
-
-
-    print(f'Global Volume: {volume}, UB: {upper_bound}, LB: {lower_bound}, STD: {std}')
-    df['Edasi Volume'] = df['Mean Thickness'] / 1e3 * df['Area']
-    df['Volume Std Dev'] = df['Thickness Std Dev'] / 1e3 * df['Area']
-    
-    ref = pd.read_csv('reference_thicknesses/farinotti_mean_thickness_rgi_id.csv')
-    ref = ref[[
-        'RGIId',
-        'Farinotti Mean Thickness'
-    ]]
-    ref['region'] = ref['RGIId'].str[6:8]
-    ref = ref.sort_values('RGIId')
-    ref = ref.dropna()
-
-    ref = pd.merge(ref, df, 
-    #                left_index = True, right_index = True)
-    on = [
-        'RGIId'
-    ])
-    ref = ref.rename(columns = {
-        'Mean Thickness':'Edasi Mean Thickness'
-    })
-
-    ref['Farinotti Volume'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
-
-    ref['region'] = ref['RGIId'].str[6:8]
-    ref['Edasi Volume'] = (ref['Edasi Mean Thickness'] / 1e3) * ref['Area']
-    ref['Volume Std Dev'] = (ref['Thickness Std Dev'] / 1e3 )* ref['Area']
-    ref = ref.reset_index()
-    ref = ref.drop('index', axis = 1)
-    ref = ref.dropna()
-    ref['VE / VF'] = ref['Edasi Mean Thickness'] / ref['Farinotti Mean Thickness']
-    ref = ref.drop_duplicates()
-    # sum(ref['volume km3'])
-
-    ref['Upper Bound'] = ref['Upper Bound'] - ref['Edasi Mean Thickness']
-    ref['Lower Bound'] = ref['Edasi Mean Thickness'] - ref['Lower Bound']
-    ref
-
-    ref['UB'] = (ref['Upper Bound'] / 1e3) * ref['Area']
-    ref['LB'] = (ref['Lower Bound'] / 1e3) * ref['Area']
-
-    return df, ref

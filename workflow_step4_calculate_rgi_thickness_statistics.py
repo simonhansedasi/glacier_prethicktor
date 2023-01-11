@@ -4,13 +4,14 @@ import os
 from tqdm import tqdm
 import glacierml as gl
 from scipy.stats import shapiro
-
-# print('Please select co-registration method: df1, df2, df3, df4, df5, df6, df7, df8')
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 coregistration = 'df8'
 
 print('Loading predictions...')
-predictions = gl.predictions_finder(coregistration = coregistration)
+predictions = gl.find_predictions(coregistration = coregistration)
 predictions = predictions.reset_index()
 predictions = predictions.drop('index', axis = 1)
 
@@ -22,6 +23,11 @@ df = pd.DataFrame(columns = {
 
 print('Predictions loaded')
 
+
+
+
+
+
 print('Compiling predictions...')
 for index in tqdm(predictions.index):
     idx = index
@@ -31,7 +37,7 @@ for index in tqdm(predictions.index):
     architecture = '_' + predictions['architecture'].iloc[idx]
     learning_rate = predictions['learning rate'].iloc[idx]
     epochs = '2000'
-    df_glob = gl.global_predictions_loader(
+    df_glob = gl.load_global_predictions(
         coregistration = coregistration,
         architecture = architecture,
         learning_rate = learning_rate,
@@ -41,16 +47,32 @@ for index in tqdm(predictions.index):
     
 
     df = pd.concat([df,df_glob])
+    
+    
+    
+    
+deviations = pd.DataFrame()
+for file in tqdm(os.listdir('zults/')):
+    if 'deviations' in file:
+        file_reader = pd.read_csv('zults/' + file)
+        deviations = pd.concat([deviations, file_reader], ignore_index = True)
+    
+deviations = deviations.dropna()
+df = pd.merge(df, deviations, on = 'layer architecture')
+    
+    
+    
+
 df = df[[
         'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
-        '22','23','24',
+        '22','23','24','architecture weight'
 ]]
 
 compiled_raw = df.groupby('RGIId')[
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
-        '22','23','24',
+        '22','23','24','architecture weight'
 ]
 
 print('Predictions compiled')
@@ -63,6 +85,24 @@ for this_rgi_id, obj in tqdm(compiled_raw):
     dft = dft.reset_index()
     dft = dft.drop('index', axis = 1)
     
+    
+    obj['weight'] = obj['architecture weight'] + 1 / (obj[['0', '1', '2', '3', '4',
+                                                     '5', '6', '7', '8', '9',
+                                                     '10','11','12','13','14',
+                                                     '15','16','17','18','19',
+                                                     '20','21','22','23','24']].var(axis = 1))
+    
+    
+    obj['weighted mean'] = obj['weight'] * obj[['0', '1', '2', '3', '4',
+                                               '5', '6', '7', '8', '9',
+                                               '10','11','12','13','14',
+                                               '15','16','17','18','19',
+                                               '20','21','22','23','24']].mean(axis = 1)
+    
+    
+    weighted_glacier_mean = sum(obj['weighted mean']) / sum(obj['weight'])
+
+    
     stacked_object = obj[[
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
@@ -70,6 +110,7 @@ for this_rgi_id, obj in tqdm(compiled_raw):
     ]].stack()
     
     glacier_count = len(stacked_object)
+    dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_glacier_mean
     dft.loc[dft.index[-1], 'Mean Thickness'] = stacked_object.mean()
     dft.loc[dft.index[-1], 'Median Thickness'] = stacked_object.median()
     dft.loc[dft.index[-1],'Thickness Std Dev'] = stacked_object.std()
