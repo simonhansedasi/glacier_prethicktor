@@ -8,7 +8,26 @@ import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-coregistration = 'df8'
+parameterization = input
+
+if parameterization == 'sm1':
+    coregistration = 'df1'
+if parameterization == 'sm2':
+    coregistration = 'df2'
+if parameterization == 'sm3':
+    coregistration = 'df3'
+if parameterization == 'sm4':
+    coregistration = 'df4'
+if parameterization == 'sm5':
+    coregistration = 'df5'
+if parameterization == 'sm6':
+    coregistration = 'df6'
+if parameterization == 'sm7':
+    coregistration = 'df7'
+if parameterization == 'sm8':
+    coregistration = 'df8'
+if parameterization == 'sm9':
+    coregistration = 'df9'
 
 print('Loading predictions...')
 predictions = gl.find_predictions(coregistration = coregistration)

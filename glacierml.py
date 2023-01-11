@@ -647,7 +647,6 @@ def match_GlaThiDa_RGI_index(
         df['RGI_index'].iloc[-1] = RGI_index
         df['Centroid Distance'].iloc[-1] = np.min(distances)
 
-
     df.to_csv(pth_3 + 'GlaThiDa_RGI_matched_indexes_' + version + '.csv')
     return version
         
@@ -2258,3 +2257,8 @@ def load_regional_predictions(
 #     ], ascending = True)
                         
     return RGI_predicted
+
+
+
+
+

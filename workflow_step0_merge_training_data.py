@@ -29,7 +29,7 @@ pth_2 = '/home/prethicktor/data/matched_indexes/' + version + '/'
 RGI = pd.DataFrame()
 for file in tqdm(os.listdir(pth_1)):
     file_reader = pd.read_csv(pth_1 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-    RGI = RGI.append(file_reader, ignore_index=True)
+    RGI = pd.concat([RGI,file_reader], ignore_index=True)
 
 print('Loading merged indexes')
 # read csv of matched indexes
@@ -40,8 +40,8 @@ indexes =  indexes[[
     'RGI_index'
 ]]
 
-indexes['GlaThiDa_index'] = indexes['GlaThiDa_index'].astype(int)
-indexes['RGI_index'] = indexes['RGI_index'].astype(int)
+# indexes['GlaThiDa_index'] = indexes['GlaThiDa_index'].astype(int)
+# indexes['RGI_index'] = indexes['RGI_index'].astype(int)
 
 print('Matching RGI index with RGIId')
 # match RGI indexes with RGIIds
@@ -81,7 +81,7 @@ for file in tqdm(os.listdir(pth_1)):
         # append the one line that matches
         df = file_reader.loc[s]
         if not df.empty:
-            temp_df = temp_df.append(df)
+            temp_df = pd.concat([temp_df,df], ignore_index = True)
 
 
 
@@ -155,7 +155,7 @@ print('GlaThiDa matched with RGI')
 RGI_extra = pd.DataFrame()
 for file in os.listdir(pth_1):
     f = pd.read_csv(pth_1 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-    RGI_extra = RGI_extra.append(f, ignore_index = True)
+    RGI_extra = pd.concat([RGI_extra, f], ignore_index = True)
 
 
 #     region_and_number = file[:-4]
