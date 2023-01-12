@@ -770,13 +770,13 @@ GlaThiDa_RGI_index_matcher:
 '''
 def match_GlaThiDa_RGI_index(
     version = 'v2',
-    pth = '/home/prethicktor/data/'
-
-    
+    pth = '/home/prethicktor/data/',
+    verbose = False,
+    useMP = False
 ):
     pth_1 = pth + '/T_data/'
     pth_2 = pth + '/RGI/rgi60-attribs/'
-    version = version
+
     pth_3 = pth + version + '/'
     if version == 'v1':
         glathida = pd.read_csv(pth_1 + 'glacier.csv')
@@ -788,7 +788,7 @@ def match_GlaThiDa_RGI_index(
     glathida['RGI Centroid Distance'] = np.nan
     glathida = glathida.reset_index()
     glathida = glathida.drop('index', axis = 1)
-    print(glathida)
+    if verbose: print(glathida)
     RGI = pd.DataFrame()
     for file in os.listdir(pth_2):
 #         print(file)
@@ -797,35 +797,65 @@ def match_GlaThiDa_RGI_index(
     RGI = RGI.reset_index()
     df = pd.DataFrame()
     #iterate over each glathida index
-    for i in tqdm(glathida.index):
-        #obtain lat and lon from glathida 
-        if version == 'v1':
-            glathida_ll = (glathida.loc[i].lat,glathida.loc[i].lon)
-        if version == 'v2':
-            glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
+    
+    if useMP == False:
+        centroid_distances = []
+        RGI_ids = []
+        for i in tqdm(glathida.index):
+            RGI_id_match, centroid_distance = get_id(RGI,glathida,version,verbose,i)
+            centroid_distances.append(centroid_distance)
+            RGI_ids.append(RGI_id_match)
+    else:
+        from functools import partial
+        import multiprocessing
+        pool = multiprocessing.pool.Pool(processes=48)         # create a process pool with 4 workers
+        newfunc = partial(get_id,RGI,glathida,version,verbose) #now we can call newfunc(i)
+        output = pool.map(newfunc,glathida.index )
         
-        # find distance between selected glathida glacier and all RGI
-        distances = RGI.apply(
-            lambda row: geopy.distance.geodesic((row.CenLat,row.CenLon),glathida_ll),
-            axis = 1
-        )
-#         print(distances)
-
-        # find index of minimum distance between glathida and RGI glacier
-        RGI_index = pd.Series(np.argmin(distances), name = 'RGI_indexes')
-        centroid_distance = distances.min()
-        number_glaciers_matched = len(RGI_index)
-        
-        if len(RGI_index) == 1:
-            RGI_id_match = (RGI['RGIId'].iloc[RGI_index.loc[0]])
-
-            glathida.loc[glathida.index[i], 'RGIId'] = RGI_id_match
-            glathida.loc[glathida.index[i], 'RGI Centroid Distance'] = centroid_distance
+    for i in tqdm(glathida.index):         
+        glathida.loc[glathida.index[i], 'RGIId'] = output[i][0]
+        glathida.loc[glathida.index[i], 'RGI Centroid Distance'] = output[i][1]
 
     isdir = os.path.isdir(pth_3)
     if isdir == False:
         os.makedirs(pth_3)
     glathida.to_csv(pth_3 + 'GlaThiDa_with_RGIId_' + version + '.csv')
+
+    
+def get_id(RGI,glathida,version,verbose,i):
+    if verbose: print(f'Working on Glathida ID {i}')
+    #obtain lat and lon from glathida 
+    if version == 'v1':
+        glathida_ll = (glathida.loc[i].lat,glathida.loc[i].lon)
+    if version == 'v2':
+        glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
+
+    # find distance between selected glathida glacier and all RGI
+    distances = RGI.apply(
+        lambda row: geopy.distance.geodesic((row.CenLat,row.CenLon),glathida_ll),
+            axis = 1
+    )
+    
+#     distances = RGI.apply(
+#         lambda row: geopy.distance.great_circle((row.CenLat,row.CenLon),glathida_ll),
+#             axis = 1
+#     )
+    
+#         print(distances)
+
+    # find index of minimum distance between glathida and RGI glacier
+    RGI_index = pd.Series(np.argmin(distances), name = 'RGI_indexes')
+    centroid_distance = distances.min()
+    number_glaciers_matched = len(RGI_index)
+
+    if len(RGI_index) == 1:
+        RGI_id_match = (RGI['RGIId'].iloc[RGI_index.loc[0]])
+    else:
+        RGI_id_match = -1
+        centroid_distance = -1
+        
+    return RGI_id_match, centroid_distance
+
         
         
 '''
