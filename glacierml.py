@@ -22,14 +22,17 @@ tf.random.set_seed(42)
 
 pd.set_option('mode.chained_assignment',None)
 
-def select_dataset_coregistration():
-    print('please input parameterization code:')
-
-    parameterization = input()
+def select_dataset_coregistration(
+    pth='/home/prethicktor/data/',
+    parameterization='sm8'
+):
+    root_dir=pth
+#     print('please input parameterization code:')
+#     parameterization = input()
 
     if parameterization == 'sm1':
         df1 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'n'
         )
         dataset = df1
@@ -40,7 +43,7 @@ def select_dataset_coregistration():
 
     if parameterization == 'sm2':
         df2 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
         )
@@ -53,7 +56,7 @@ def select_dataset_coregistration():
 
     if parameterization == 'sm3':
         df3 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
@@ -68,7 +71,7 @@ def select_dataset_coregistration():
 
     if parameterization == 'sm4':
         df4 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
@@ -83,7 +86,7 @@ def select_dataset_coregistration():
 
     if parameterization == 'sm5':
         df5 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
         )
@@ -98,7 +101,7 @@ def select_dataset_coregistration():
 
     if parameterization == 'sm6':
         df6 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
@@ -114,7 +117,7 @@ def select_dataset_coregistration():
 
     if parameterization == 'sm7':
         df7 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
@@ -131,7 +134,7 @@ def select_dataset_coregistration():
         
     if parameterization == 'sm8':
         df8 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
@@ -147,7 +150,7 @@ def select_dataset_coregistration():
         res = 'sr8'
     if parameterization == 'sm9':
         df9 = load_training_data(
-            root_dir = '/home/prethicktor/data/',
+            root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
@@ -774,10 +777,12 @@ def match_GlaThiDa_RGI_index(
     verbose = False,
     useMP = False
 ):
-    pth_1 = pth + '/T_data/'
-    pth_2 = pth + '/RGI/rgi60-attribs/'
-
-    pth_3 = pth + version + '/'
+    
+    import os
+    pth_1 = os.path.join(pth, '/T_data/')
+    pth_2 = os.path.join(pth, '/RGI/rgi60-attribs/')
+    pth_3 = os.path.join(pth, '/matched_indexes/', version)
+    
     if version == 'v1':
         glathida = pd.read_csv(pth_1 + 'glacier.csv')
         glathida = glathida.dropna(subset = ['mean_thickness'])
@@ -1020,7 +1025,8 @@ def build_and_train_model(dataset,
                           layer_1 = 10,
                           layer_2 = 5,
                           dropout = True,
-                          verbose = False
+                          verbose = False,
+                          writeToFile = True
                          ):
     # define paths
     arch = str(layer_1) + '-' + str(layer_2)
@@ -1092,46 +1098,49 @@ def build_and_train_model(dataset,
 
     #save model, results, and history
 
+    if writeToFile:
+
+        df = pd.DataFrame(dnn_history['MULTI'].history)
 
 
-    df = pd.DataFrame(dnn_history['MULTI'].history)
+        history_filename = (
+            svd_res_pth +
+           str(dataset.name) +
+           '_' +
+           dropout +
+           '_dnn_history_MULTI_' +
+           str(learning_rate) +
+           '_' +
+           str(validation_split) +
+           '_' +
+           str(epochs) +
+           '_' +
+           str(random_state)
+        )
 
+        df.to_csv(  history_filename  )
+
+        model_filename =  (
+            svd_mod_pth + 
+            str(dataset.name) + 
+            '_' +
+            dropout +
+            '_dnn_MULTI_' + 
+            str(learning_rate) + 
+            '_' + 
+            str(validation_split) + 
+            '_' + 
+            str(epochs) + 
+            '_' + 
+            str(random_state)
+        )
+
+        dnn_model.save(  model_filename  )
+
+        return history_filename, model_filename
     
-    history_filename = (
-        svd_res_pth +
-       str(dataset.name) +
-       '_' +
-       dropout +
-       '_dnn_history_MULTI_' +
-       str(learning_rate) +
-       '_' +
-       str(validation_split) +
-       '_' +
-       str(epochs) +
-       '_' +
-       str(random_state)
-    )
-
-    df.to_csv(  history_filename  )
-
-    model_filename =  (
-        svd_mod_pth + 
-        str(dataset.name) + 
-        '_' +
-        dropout +
-        '_dnn_MULTI_' + 
-        str(learning_rate) + 
-        '_' + 
-        str(validation_split) + 
-        '_' + 
-        str(epochs) + 
-        '_' + 
-        str(random_state)
-    )
-    
-    dnn_model.save(  model_filename  )
-    
-    return history_filename, model_filename
+    else:
+        return dnn_model
     
 
     
