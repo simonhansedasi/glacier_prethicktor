@@ -13,7 +13,7 @@ for file in tqdm(os.listdir(pth_2)):
 
     # select only RGI data that was used to train the model   
 RGI = RGI_extra[[
-'RGIId',
+    'RGIId',
     'Farinotti Mean Thickness'
 ]]
 print(RGI)
