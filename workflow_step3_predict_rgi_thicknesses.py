@@ -14,7 +14,7 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
 tf.random.set_seed(42)
-print('currently running tensorflow version: ' + tf.__version__)
+# print('currently running tensorflow version: ' + tf.__version__)
 
 
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration()
@@ -54,8 +54,8 @@ deviations = deviations_1[[
 
 
 for index in deviations.index:
-    print(index)
-    print(deviations.iloc[index])
+#     print(index)
+#     print(deviations.iloc[index])
     selected_model = deviations.iloc[index]
     arch = deviations['layer architecture'].iloc[index]
     lr = deviations['learning rate'].iloc[index]
@@ -66,7 +66,7 @@ for index in deviations.index:
     
     
     for region_selection in range(1,20,1):
-        RGI = gl.RGI_loader(
+        RGI = gl.load_RGI(
             pth = '/home/prethicktor/data/RGI/rgi60-attribs/',
             region_selection = int(region_selection)
         )
@@ -75,12 +75,12 @@ for index in deviations.index:
             region_selection = str(region_selection).zfill(N + len(str(region_selection)))
         else:
             region_selection = region_selection
-
+        
         RGI['region'] = RGI['RGIId'].str[6:8]
         RGI = RGI.reset_index()
         RGI = RGI.drop('index', axis=1)
         print(region_selection)
-        if region_selection != 19:
+        if region_selection != '19':
             drops = RGI[
                 ((RGI['region'] == str(region_selection)) & (RGI['Zmin'] < 0)) |
                 ((RGI['region'] == str(region_selection)) & (RGI['Zmed'] < 0)) |
@@ -94,7 +94,7 @@ for index in deviations.index:
                 RGI = RGI.drop(drops)
         RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
         print(RGI['Zmed'].min())
-        if chosen_dir == 'sm1':
+        if parameterization == 'sm1':
 
             RGI_for_predictions = RGI_for_predictions.rename(columns = {
                 'CenLat':'Lat',
@@ -121,7 +121,7 @@ for index in deviations.index:
 
         print('predicting thicknesses...')
         dnn_model = {}
-        rootdir = 'saved_models/' + chosen_dir + '/'
+        rootdir = 'saved_models/' + parameterization + '/'
         RS = range(0,25,1)
         dfs = pd.DataFrame()
         for rs in tqdm(RS):
@@ -187,20 +187,20 @@ for index in deviations.index:
             dnn_history ={}
             dnn_history[history_name] = pd.read_csv(rootdir_1 + history_name)
             
-            if abs((
-                dnn_history[history_name]['loss'].iloc[-1]
-            ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
-                pass
-            else:
+#             if abs((
+#                 dnn_history[history_name]['loss'].iloc[-1]
+#             ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
+#                 pass
+#             else:
 
-                dnn_model[model] = tf.keras.models.load_model(path)
+            dnn_model[model] = tf.keras.models.load_model(path)
 
-                s = pd.Series(
-                    dnn_model[model].predict(RGI_for_predictions, verbose=0).flatten(), 
-                    name = rs
-                )
+            s = pd.Series(
+                dnn_model[model].predict(RGI_for_predictions, verbose=0).flatten(), 
+                name = rs
+            )
 
-                dfs[rs] = s
+            dfs[rs] = s
 
 
         # make a copy of RGI to add predicted thickness and their statistics

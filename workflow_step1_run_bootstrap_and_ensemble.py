@@ -70,7 +70,8 @@ def main():
                         layer_1 = layer_1_input,
                         layer_2 = layer_2_input,
                         dropout = dropout
-                    )    
+                    )   
+
 
 
 if __name__ == "__main__":

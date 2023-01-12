@@ -19,7 +19,6 @@ tf.random.set_seed(42)
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration()
 
 
-print(dataset)
 rootdir = 'saved_models/' + parameterization + '/'
 (train_features, test_features, train_labels, test_labels) = gl.split_data(dataset)
 dnn_model = {}
@@ -28,7 +27,7 @@ print(' ')
 dropout = '1'
 predictions = pd.DataFrame()
 deviations = pd.DataFrame()
-dropout_input = dropout_input_iter
+# dropout_input = dropout_input_iter
 
 print('loading and evaluating models...')
 for arch in os.listdir(rootdir):        
@@ -47,9 +46,9 @@ for arch in os.listdir(rootdir):
 
             model_name = arch[3:] + '_' + folder
 
-            rs = gl.random_state_finder(folder)
+            rs = gl.find_random_state(folder)
 
-            df = gl.predictions_maker(
+            df = gl.make_predictions(
                 rs = rs,
                 dropout = dropout,
                 arch = arch,
@@ -63,7 +62,6 @@ for arch in os.listdir(rootdir):
 
 predictions.rename(columns = {0:'avg train thickness'},inplace = True)
 predictions.to_csv('zults/predictions_' + dataset.name + '_' + dropout + '.csv')
-print(predictions)
 # calculate statistics
 
 print('calculating statistics...')
@@ -136,7 +134,7 @@ deviations['architecture weight 1'] = (
     sum(deviations['test mae avg']) / deviations['test mae avg']
 )
 deviations['architecture weight 2'] = (
-    deviations['test mae avg'] / sum(deviations['test mae avg']
+    deviations['test mae avg'] / sum(deviations['test mae avg'])
 )
 deviations.to_csv(
     'zults/deviations_' + 

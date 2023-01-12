@@ -8,7 +8,7 @@ import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-parameterization = input
+parameterization = input()
 
 if parameterization == 'sm1':
     coregistration = 'df1'
@@ -64,29 +64,27 @@ for index in tqdm(predictions.index):
     
     
     
-    
 deviations = pd.DataFrame()
 for file in tqdm(os.listdir('zults/')):
-    if 'deviations' in file:
+    if 'deviations' in file and coregistration in file:
         file_reader = pd.read_csv('zults/' + file)
         deviations = pd.concat([deviations, file_reader], ignore_index = True)
     
-deviations = deviations.dropna()
+# deviations = deviations.dropna()
 df = pd.merge(df, deviations, on = 'layer architecture')
-    
     
     
 
 df = df[[
         'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
-        '22','23','24','architecture weight'
+        '22','23','24','architecture weight 1'
 ]]
 
 compiled_raw = df.groupby('RGIId')[
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
-        '22','23','24','architecture weight'
+        '22','23','24','architecture weight 1'
 ]
 
 print('Predictions compiled')
@@ -100,21 +98,21 @@ for this_rgi_id, obj in tqdm(compiled_raw):
     dft = dft.drop('index', axis = 1)
     
     
-    obj['weight'] = obj['architecture weight'] + 1 / (obj[['0', '1', '2', '3', '4',
-                                                     '5', '6', '7', '8', '9',
-                                                     '10','11','12','13','14',
-                                                     '15','16','17','18','19',
-                                                     '20','21','22','23','24']].var(axis = 1))
+#     obj['weight'] = obj['architecture weight'] + 1 / (obj[['0', '1', '2', '3', '4',
+#                                                      '5', '6', '7', '8', '9',
+#                                                      '10','11','12','13','14',
+#                                                      '15','16','17','18','19',
+#                                                      '20','21','22','23','24']].var(axis = 1))
     
     
-    obj['weighted mean'] = obj['weight'] * obj[['0', '1', '2', '3', '4',
-                                               '5', '6', '7', '8', '9',
-                                               '10','11','12','13','14',
-                                               '15','16','17','18','19',
-                                               '20','21','22','23','24']].mean(axis = 1)
+#     obj['weighted mean'] = obj['weight'] * obj[['0', '1', '2', '3', '4',
+#                                                '5', '6', '7', '8', '9',
+#                                                '10','11','12','13','14',
+#                                                '15','16','17','18','19',
+#                                                '20','21','22','23','24']].mean(axis = 1)
     
     
-    weighted_glacier_mean = sum(obj['weighted mean']) / sum(obj['weight'])
+#     weighted_glacier_mean = sum(obj['weighted mean']) / sum(obj['weight'])
 
     
     stacked_object = obj[[
@@ -124,7 +122,7 @@ for this_rgi_id, obj in tqdm(compiled_raw):
     ]].stack()
     
     glacier_count = len(stacked_object)
-    dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_glacier_mean
+#     dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_glacier_mean
     dft.loc[dft.index[-1], 'Mean Thickness'] = stacked_object.mean()
     dft.loc[dft.index[-1], 'Median Thickness'] = stacked_object.median()
     dft.loc[dft.index[-1],'Thickness Std Dev'] = stacked_object.std()
@@ -145,7 +143,6 @@ for this_rgi_id, obj in tqdm(compiled_raw):
     dft.loc[dft.index[-1],'Upper Bound'] = upper_bound
     dft.loc[dft.index[-1],'Median Value'] = median
     dft.loc[dft.index[-1],'Total estimates'] = glacier_count
-    
     
     
 dft = dft.rename(columns = {
