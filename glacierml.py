@@ -22,10 +22,11 @@ tf.random.set_seed(42)
 
 pd.set_option('mode.chained_assignment',None)
 
-def select_dataset_coregistration():
-    print('please input parameterization code:')
-
-    parameterization = input()
+def select_dataset_coregistration(
+    pth='/home/prethicktor/data/',
+    parameterization='sm8'
+):
+    root_dir = pth
 
     if parameterization == 'sm1':
         df1 = load_training_data(
@@ -143,6 +144,8 @@ def select_dataset_coregistration():
                        ], axis = 1)
     #         df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
         dataset = df8
+#         df8['Area'] = np.log(df8['Area'])
+#         df8['Lmax'] = np.log(df8['Lmax'])
         dataset.name = 'df8'
         res = 'sr8'
     if parameterization == 'sm9':
@@ -151,13 +154,17 @@ def select_dataset_coregistration():
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
-            anomaly_input = 25,
+            anomaly_input = .25,
             data_version = 'v2'
         )
-        df9 = df9.drop(['RGIId', 'region', 
-    #                         'Centroid Distance'
+        df9 = df9.drop([
+            'RGIId','region', 'RGI Centroid Distance', 
+            'AVG Radius', 'Roundness', 'distance test', 'size difference'
                        ], axis = 1)
-    #         df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+        df9['Area'] = np.log(df9['Area'])
+        df9['Lmax'] = np.log(df9['Lmax'])
+        
+        
         dataset = df9
         dataset.name = 'df9'
         res = 'sr9'
@@ -213,25 +220,6 @@ def load_RGI(
     ]]
     RGI['region'] = RGI['RGIId'].str[6:8]
     
-#     for region_number in (range(1,20,1)):
-#         if len(str(region_number)) == 1:
-#             N = 1
-#             region_number = str(region_number).zfill(N + len(str(region_number)))
-#         else:
-#             region_number == str(region_number)
-
-
-#         if region_number != 19:
-#             drops = RGI[
-#                 ((RGI['region'] == str(region_number)) & (RGI['Zmin'] < 0)) |
-#                 ((RGI['region'] == str(region_number)) & (RGI['Zmed'] < 0)) |
-#                 ((RGI['region'] == str(region_number)) & (RGI['Zmax'] < 0)) |
-#                 ((RGI['region'] == str(region_number)) & (RGI['Slope'] < 0)) |
-#                 ((RGI['region'] == str(region_number)) & (RGI['Aspect'] < 0))
-#             ].index
-
-#             if not drops.empty:
-#                 RGI = RGI.drop(drops)
     return RGI
 
 def load_training_data(
@@ -243,29 +231,18 @@ def load_training_data(
     anomaly_input = 0.5,
     data_version = 'v1'
 ):        
+    import os
+    pth_1 = os.path.join(root_dir, 'T_data/')
+    pth_2 = os.path.join(root_dir, 'RGI/rgi60-attribs/')
+    pth_3 = os.path.join(root_dir, 'matched_indexes/', data_version)
+    pth_4 = os.path.join(root_dir, 'regional_data/training_data/', data_version)
+    
+    
     # data versions older than df8 are old cod and will probably not work.
     # Here be mosnsters, ye be warned.
-    pth_1 = root_dir + 'T_data/'
-    pth_2 = root_dir + 'RGI/rgi60-attribs/'
-    pth_3 = root_dir + 'matched_indexes/' + data_version + '/'
-    pth_4 = root_dir + 'regional_data/training_data/' + data_version + '/'
-    
-            
-    pth_5 = pth_3 + 'GlaThiDa_with_RGIId_' + data_version + '.csv'
 
-    # load glacier GlaThiDa data v1
-    if data_version == 'v1':
-        glacier = pd.read_csv(pth_1 + 'glacier.csv', low_memory = False)    
-        glacier = glacier.rename(columns = {
-            'lat':'Lat',
-            'lon':'Lon',
-            'area':'area_g',
-            'mean_slope':'Mean Slope',
-            'mean_thickness':'Thickness'
-        })   
-        glacier = glacier.dropna(subset = ['Thickness'])
-        print('# of raw thicknesses: ' + str(len(glacier)))
-                                 
+            
+    pth_5 = pth_3 + '/GlaThiDa_with_RGIId_' + data_version + '.csv'                        
                                  
     # load glacier GlaThiDa data v2
     if data_version == 'v2':
@@ -300,14 +277,6 @@ def load_training_data(
 #         df = df.dropna()        
         return df
 
-
-
-
-
-
-
-
-
     # add in RGI attributes
     elif RGI_input == 'y':
         RGI_extra = pd.DataFrame()
@@ -329,7 +298,6 @@ def load_training_data(
                 'mean_thickness':'Thickness'
             })   
             glacier = glacier.dropna(subset = ['Thickness'])
-#             print('# of raw thicknesses: ' + str(len(glacier)))
 
 
         # load glacier GlaThiDa data v2
@@ -354,113 +322,21 @@ def load_training_data(
         rgi_matches_unique = len(glacier['RGIId'].unique())
         
         
-        
-        
-        
-        
-#         # read csv of combined GlaThiDa and RGI indexes, matched glacier for glacier
-#         comb = pd.read_csv(
-#                 pth_3 + 'GlaThiDa_RGI_matched_indexes_' + data_version + '.csv'
-#         )
-        
-#         idx = comb[comb['GlaThiDa_index'] == 203].index
-#         comb = comb.drop(idx)
-#         # force indexes to be integers rather than floats, and drop duplicates
-#         comb['GlaThiDa_index'] = comb['GlaThiDa_index'].astype(int)
-#         comb['RGI_index'] = comb['RGI_index'].astype(int)
-        
-#         rgi_matches = len(comb['RGI_index'])
-#         rgi_matches_unique = len(comb['RGI_index'].unique())
-        
-        print(f'# of raw thickness matched to RGI = {rgi_matches}, {rgi_matches_unique} unique')
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-#         comb = comb.drop_duplicates(subset = 'RGI_index', keep = 'last')
-#         # locate data in both datasets and line them up
-#         glacier = glacier.loc[comb['GlaThiDa_index']]
-#         RGI = RGI.loc[comb['RGI_index']]
-#         # reset indexes for merge
-#         glacier = glacier.reset_index()
-#         RGI = RGI.reset_index()
-#         RGI['region'] = RGI['RGIId'].str[6:8]
-#         # rename RGI area to differentiate from glathida area.
-#         # important for area scrubbing
-#         # don't forget to change the name back from area_r to Area when exiting function with df
-#         RGI = RGI.rename(columns = {
-#             'Area':'area_r'
-#         })
-        
-#         # GlaThiDa and RGI are lined up, just stick them together and keep both left and right idx
-#         df = pd.merge(
-#             RGI, 
-#             glacier,
-#             left_index = True,
-#             right_index = True
-#         )
-#         df['Centroid Distance'] = np.nan
-    
-#         df['Centroid Distance'] = geopy.distance.geodesic(
-#             (RGI['CenLat'], RGI['CenLon']),
-#             (glacier['Lat'], glacier['Lon'])
-#         ).km
-    
-#         for i in df.index:
-#             df['Centroid Distance'].loc[i] = geopy.distance.geodesic(
-#                 (RGI['CenLat'].loc[i], RGI['CenLon'].loc[i]),
-#                 (glacier['Lat'].loc[i], glacier['Lon'].loc[i])
-#             ).km
-        
-        
-#         for i in tqdm(glathida.index):
-#             #obtain lat and lon from glathida 
-#             glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
+        df = df.rename(columns = {
+            'name':'name_g',
+            'Name':'name_r',
 
-#             # find distance between selected glathida glacier and all RGI
-#             distances = RGI.apply(
-#                 lambda row: geopy.distance.geodesic((row.CenLat,row.CenLon),glathida_ll),
-#                 axis = 1
-#             )
-        
-        
-#         df = df.rename(columns = {
-#             'name':'name_g',
-#             'Name':'name_r',
-
-#             'BgnDate':'date_r',
-#             'date':'date_g'
-#         })
+            'BgnDate':'date_r',
+            'date':'date_g'
+        })
 
         # make a temp df for the duplicated entries
         
         # calculate the difference in size as a percentage
         df['size difference'] = abs(
-            ( (df['Area_x'] - df['Area_y']) / df['Area_y'] ) * 100
+            ( (df['Area_x'] - df['Area_y']) / df['Area_y'] )
         )                
-        
-#         # go by unique glacier. If more than one shows up, keep the min size difference.
-#         while len(df) > len(df['RGIId'].unique()):
-#             for glacier in df['RGIId'].unique():
-#                 if len(df[df['RGIId'] == glacier]) > 1:
-#                     idx = df[df['RGIId'] == glacier]['size difference'].idxmax()
-#                     df = df.drop(idx)
-#                 elif len(df[df['RGIId'] == glacier]) == 1:
-#                     pass
-        
-               
-#         df = df.rename(columns = {'Area_x':'Area'})
+
         df = df[[
             'RGIId',
             'CenLat',
@@ -481,34 +357,19 @@ def load_training_data(
             'size difference',
 #             'index_x',
 #             'index_y',
-#             'Centroid Distance'
+            'RGI Centroid Distance'
         ]]
         
-        if area_scrubber == 'on':
-#             df = df.rename(columns = {
-#                 'name':'name_g',
-#                 'Name':'name_r',
-
-#                 'BgnDate':'date_r',
-#                 'date':'date_g'
-#             })
-#             df['size_anomaly'] = abs(
-#                 ( (df['area_g'] - df['area_r']) / df['area_g'] ) * 100
-#             )                
+        if area_scrubber == 'on':          
             df = df[df['size difference'] <= anomaly_input]
-            df = df.drop([
-                'size difference',
-                'Area_y'
-            ], axis = 1)
+#             df = df.drop([
+#                 'size difference',
+# #                 'Area_y'
+#             ], axis = 1)
             df = df.rename(columns = {
                 'Area_x':'Area'
             })
-#             df = df.drop(df.loc[df['Zmed']<0].index)
-#             df = df.drop(df.loc[df['Lmax']<0].index)
-#             df = df.drop(df.loc[df['Slope']<0].index)
-# #                 df = df.drop(df.loc[df['Aspect']<0].index)
-#             df = df.reset_index()
-#             df = df.drop('index', axis=1)
+
             df = df[[
                 'RGIId',
 #                     'Lat',
@@ -524,243 +385,31 @@ def load_training_data(
                 'Lmax',
                 'Thickness',
                 'region',
-#                 'Centroid Distance'
+                'RGI Centroid Distance',
+                'size difference'
             ]]
+            if anomaly_input == 25:
+                indices_to_drop_25 = [114, 122, 140, 141, 142, 244, 245, 252, 253, 254,258,
+                           259,276,277,278,290,291,293,294,295,307,308,321,322,323,
+                           325,326,329,330,341,342,343,432,433]
+                df = df.drop(indices_to_drop_25)
 
-        elif area_scrubber == 'off':
-            df = df.drop([
-                'Area_y', 
-#                     'RGIId'
-                         ], axis = 1)
-            df = df.rename(columns = {
-                'Area_x':'Area'
-            })
-            return df
+#             return df
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-#         # archive error right here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#         # somehow drops non null df entries. Unknown myster bug located here
-# #         df = df.dropna()
-        
-#         # global scale 
-#         if scale == 'g':
-#             df = df
-            
-#             # finds anomalies between RGI and GlaThiDa areas. 
-#             # if anomaly > 1, drop data
-#             if area_scrubber == 'on':
-#                 df = df.rename(columns = {
-#                     'name':'name_g',
-#                     'Name':'name_r',
-                    
-#                     'BgnDate':'date_r',
-#                     'date':'date_g'
-#                 })
-#                 df['size_anomaly'] = abs(
-#                     ( (df['area_g'] - df['area_r']) / df['area_g'] ) * 100
-#                 )                
-#                 df = df[df['size_anomaly'] <= anomaly_input]
-#                 df = df.drop([
-#                     'size_anomaly',
-#                     'area_g'
-#                 ], axis = 1)
-#                 df = df.rename(columns = {
-#                     'area_r':'Area'
-#                 })
-#                 df = df.drop(df.loc[df['Zmed']<0].index)
-#                 df = df.drop(df.loc[df['Lmax']<0].index)
-#                 df = df.drop(df.loc[df['Slope']<0].index)
-# #                 df = df.drop(df.loc[df['Aspect']<0].index)
-#                 df = df.reset_index()
-#                 df = df.drop('index', axis=1)
-#                 df = df[[
-#                     'RGIId',
-# #                     'Lat',
-# #                     'Lon',
-#                     'CenLat',
-#                     'CenLon',
-#                     'Slope',
-#                     'Zmin',
-#                     'Zmed',
-#                     'Zmax',
-#                     'Area',
-#                     'Aspect',
-#                     'Lmax',
-#                     'Thickness',
-#                     'region',
-#                     'Centroid Distance'
-#                 ]]
-                
-#             elif area_scrubber == 'off':
-#                 df = df.drop([
-#                     'area_g', 
-# #                     'RGIId'
-#                              ], axis = 1)
-#                 df = df.rename(columns = {
-#                     'area_r':'Area'
-#                 })
-#                 return df
-            
-            
-#         # regional scale
-#         elif scale == 'r':
-#             # create temp df to hold regional data
-#             r_df = pd.DataFrame()
-            
-#             # sort through regional data previously sorted and cleaned
-#             for file in os.listdir(pth_4):
-#                 f = pd.read_csv(pth_4 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-#                 r_df = pd.concat([r_df, f], ignore_index = True)
-#                 r_df = r_df.drop_duplicates(subset = ['CenLon','CenLat'], keep = 'last')
-#                 r_df = r_df[[
-#                 #     'GlaThiDa_index',
-#                 #     'RGI_index',
-#                     'RGIId',
-#                     'region',
-#                 #     'geographic region',
-#                     'CenLat',
-#                     'CenLon',
-#                     'Area',
-#                     'Zmin',
-#                     'Zmed',
-#                     'Zmax',
-#                     'Slope',
-#                     'Aspect',
-#                     'Lmax'
-#                 ]]
-                
-            
-#             r_df = r_df.rename(columns = {
-#                 'Area':'area_r'
-#             })
-#             # select only data for specific region
-#             r_df = r_df[r_df['region'] == region_selection]   
-#             df = df[[
-# #                 'Lat',
-# #                 'Lon',
-#                 'area_g',
-#                 'Thickness',
-#                 'RGIId'
-#             ]]
-            
-#             # merge df and temp df on RGIId to get regional data
-#             df = pd.merge(
-#                 df, 
-#                 r_df, 
-# #                 left_index = True,
-# #                 right_index = True,
-#                 how = 'inner',
-#                 on = 'RGIId'
-#             )
-            
-#             if area_scrubber == 'on':
-#                 df = df.rename(columns = {
-#                     'name':'name_g',
-#                     'Name':'name_r',
-#                     'Area':'area_r',
-#                     'BgnDate':'date_r',
-#                     'date':'date_g'
-#                 })
-#                 df['size_anomaly'] = abs(
-#                     ( (df['area_g'] - df['area_r']) / df['area_g'] ) * 100
-#                 )
-#                 df = df[df['size_anomaly'] <= anomaly_input]
-#                 df = df.drop([
-#                     'size_anomaly',
-#                     'area_g'
-#                 ], axis = 1)
-#                 df = df.rename(columns = {
-#                     'area_r':'Area'
-#                 })
-#                 df = df[[
-# #                     'RGIId',
-# #                     'Lat',
-# #                     'Lon',
-#                     'CenLat',
-#                     'CenLon',
-#                     'Slope',
-#                     'Zmin',
-#                     'Zmed',
-#                     'Zmax',
-#                     'Area',
-#                     'Aspect',
-#                     'Lmax',
-#                     'Thickness',
-#                     'region',
-# #                     'Centroid Distance'
-#                 ]]
-#                 return df
-                
-#             elif area_scrubber == 'off':
-#                 df = df[[
-#                     'RGIId'
-# #                     'Lat',
-# #                     'Lon',
-#                     'CenLat',
-#                     'CenLon',
-#                     'Slope',
-#                     'Zmin',
-#                     'Zmed',
-#                     'Zmax',
-#                     'area_r',
-#                     'Aspect',
-#                     'Lmax',
-#                     'Thickness',
-#                     'region',
-#                     'Centroid Distance'
-#                 ]]
-#                 df = df.rename(columns = {'area_r':'Area'})
-#                 return df
+    # convert everything to common units (m)
+    df['RGI Centroid Distance'] = df['RGI Centroid Distance'].str[:-2].astype(float)
+    df['RGI Centroid Distance'] = df['RGI Centroid Distance'] * 1e3
 
+    df['Area'] = df['Area'] * 1e6
 
+    # make a guess of an average radius and "roundness" -- ratio of avg radius / width
+    df['AVG Radius'] = np.sqrt(df['Area'] / np.pi)
+    df['Roundness'] = (df['AVG Radius']) / (df['Lmax'])
+    df['distance test'] = df['RGI Centroid Distance'] / df['AVG Radius']
 
-            
-    for region_number in (range(1,20,1)):
-        if len(str(region_number)) == 1:
-            N = 1
-            region_number = str(region_number).zfill(N + len(str(region_number)))
-        else:
-            region_number == str(region_number)
-
-
-        if region_number != 19:
-            drops = df[
-                ((df['region'] == str(region_number)) & (df['Zmin'] < 0)) |
-                ((df['region'] == str(region_number)) & (df['Zmed'] < 0)) |
-                ((df['region'] == str(region_number)) & (df['Zmax'] < 0)) |
-                ((df['region'] == str(region_number)) & (df['Slope'] < 0)) |
-                ((df['region'] == str(region_number)) & (df['Aspect'] < 0))
-            ].index
-
-            if not drops.empty:
-                df = df.drop(drops)
+#     df['Area'] = np.log10(df['Area'])
+#     df['Lmax'] = np.log10(df['Lmax'])
+        
     return df
 
 
@@ -847,42 +496,6 @@ def split_data(df, random_state = 0):
     test_labels = test_features.pop('Thickness')
     
     return train_features, test_features, train_labels, test_labels
-
-
-# '''
-# prethicktor_inputs
-# input = none
-# output = hyperparameters and layer architecture for DNN model
-# '''
-# # designed to provide a CLI to the model for each run rather modifying code
-# def prethicktor_inputs():
-#     print('')
-#     print('Please set neurons for first layer')
-#     layer_1_input = input()
-    
-#     print('')
-#     print('Please set neurons for second layer')
-#     layer_2_input = input()
-    
-#     print('')
-#     print('Please set learning rate: 0.1, 0.01, 0.001')
-#     lr_list = ('0.1, 0.01, 0.001')
-#     lr_input = input()
-#     while lr_input not in lr_list:
-#         print('Please set valid learning rate: 0.1, 0.01, 0.001')
-#         lr_input = input()
-        
-#     print('')
-#     print('Please set epochs')
-#     ep_input = int(input())
-#     while type(ep_input) != int:
-#         print('Please input an integer for epochs')
-#         ep_input = input()
-    
-
-    
-#     return layer_1_input, layer_2_input, lr_input, ep_input
-
 
 
 
@@ -981,7 +594,7 @@ output = saved weights for trained model and model results saved as a csv
 '''
 
 def build_and_train_model(dataset,
-                          learning_rate = 0.001,
+                          learning_rate = 0.01,
                           validation_split = 0.2,
                           epochs = 100,
                           random_state = 0,
@@ -990,7 +603,8 @@ def build_and_train_model(dataset,
                           layer_1 = 10,
                           layer_2 = 5,
                           dropout = True,
-                          verbose = False
+                          verbose = False,
+                          writeToFile = True
                          ):
     # define paths
     arch = str(layer_1) + '-' + str(layer_2)
@@ -1062,83 +676,75 @@ def build_and_train_model(dataset,
 
     #save model, results, and history
 
+    if writeToFile:
+
+        df = pd.DataFrame(dnn_history['MULTI'].history)
 
 
-    df = pd.DataFrame(dnn_history['MULTI'].history)
+        history_filename = (
+            svd_res_pth +
+#             str(layer_1) + '_' + str(layer_2) + '_' + 
+            str(random_state)
+        )
 
+        df.to_csv(  history_filename  )
+
+        model_filename =  (
+            svd_mod_pth + 
+#             str(layer_1) + '_' + str(layer_2) + '_' + 
+
+            str(random_state)
+        )
+
+        dnn_model.save(  model_filename  )
+
+        return history_filename, model_filename
     
-    history_filename = (
-        svd_res_pth +
-       str(dataset.name) +
-       '_' +
-       dropout +
-       '_dnn_history_MULTI_' +
-       str(learning_rate) +
-       '_' +
-       str(validation_split) +
-       '_' +
-       str(epochs) +
-       '_' +
-       str(random_state)
-    )
-
-    df.to_csv(  history_filename  )
-
-    model_filename =  (
-        svd_mod_pth + 
-        str(dataset.name) + 
-        '_' +
-        dropout +
-        '_dnn_MULTI_' + 
-        str(learning_rate) + 
-        '_' + 
-        str(validation_split) + 
-        '_' + 
-        str(epochs) + 
-        '_' + 
-        str(random_state)
-    )
-    
-    dnn_model.save(  model_filename  )
-    
-    return history_filename, model_filename
+    else:
+        
+        return dnn_model
     
 
-    
-'''
-
-'''
-def make_predictions(
-    rs,
-    dropout,
-    arch,
-    dataset,
-    folder,
-    model_loc,
+def load_dnn_model(
     model_name,
+    model_loc
+):
+    
+    dnn_model = {}
+    dnn_model[model_name] = tf.keras.models.load_model(model_loc)
+    
+    return dnn_model
+    
+     
+'''
+Workflow functions
+'''
+def evaluate_model(
+    arch,
+    rs,
+    dataset,
+    dnn_model
 ):
     df = pd.DataFrame()
-    dnn_model = {}
     
     (
         train_features, test_features, train_labels, test_labels
     ) = split_data(
-        dataset, random_state = rs
+        dataset, random_state = int(rs)
     )
-    dnn_model[model_name] = tf.keras.models.load_model(model_loc)
     
-    mae_test = dnn_model[model_name].evaluate(
+    mae_test = dnn_model[str(rs)].evaluate(
                     test_features, test_labels, verbose=0
                 )
-    mae_train = dnn_model[model_name].evaluate(
+    mae_train = dnn_model[str(rs)].evaluate(
         train_features, train_labels, verbose=0
     )
 
-    pred_train = dnn_model[model_name].predict(
+    pred_train = dnn_model[str(rs)].predict(
         train_features, verbose=0
     )
 
-    pred_test = dnn_model[model_name].predict(
+    pred_test = dnn_model[str(rs)].predict(
         test_features, verbose=0
     )
     
@@ -1173,57 +779,43 @@ def make_predictions(
         [df, temp_df], ignore_index = True
     )
 
-    df.loc[df.index[-1], 'model'] = folder
+    df.loc[df.index[-1], 'model'] = rs
     df.loc[df.index[-1], 'test mae'] = mae_test
     df.loc[df.index[-1], 'train mae'] = mae_train
-    df.loc[df.index[-1], 'architecture'] = arch[3:]
-    df.loc[df.index[-1], 'validation split'] = '0.2'
+    df.loc[df.index[-1], 'architecture'] = arch
     df.loc[df.index[-1], 'coregistration'] = dataset.name
-    df.loc[df.index[-1], 'dropout'] = dropout
-    df.loc[df.index[-1], 'total parameters'] = dnn_model[model_name].count_params() 
-    if '0.1' in folder:
-        df.loc[df.index[-1], 'learning rate'] = '0.1'
-    if '0.01' in folder:
-        df.loc[df.index[-1], 'learning rate'] = '0.01'
-    if '0.001' in folder:
-        df.loc[df.index[-1], 'learning rate']= '0.001'
-    if '100' in folder:
-        df.loc[df.index[-1], 'epochs']= '100'
-    if '999' in folder:
-        df.loc[df.index[-1], 'epochs']= '999'
-    if '2000' in folder:
-        df.loc[df.index[-1], 'epochs']= '2000'
+    df.loc[df.index[-1], 'total parameters'] = dnn_model[rs].count_params() 
+
 
     return df
+
+
+'''
+
+'''
+def calculate_model_avg_statistics(
+    dnn_model,
+    arch, 
+    dataset,
+    model_thicknesses
+):
     
 
-def calculate_model_deviations(
-    model_loc,
-    model_name,
-    ep,
-    arch, 
-    lr,
-    dropout,
-    dataframe,
-    dataset,
-    dfsrq
-):
-    dnn_model = {}
     df = pd.DataFrame()
-    test_mae_mean = np.mean(dfsrq['test mae'])
-    test_mae_std_dev = np.std(dfsrq['test mae'])
+    test_mae_mean = np.mean(model_thicknesses['test mae'])
+    test_mae_std_dev = np.std(model_thicknesses['test mae'])
 
     # find mean and std dev of train mae
-    train_mae_mean = np.mean(dfsrq['train mae'])
-    train_mae_std_dev = np.std(dfsrq['train mae'])
+    train_mae_mean = np.mean(model_thicknesses['train mae'])
+    train_mae_std_dev = np.std(model_thicknesses['train mae'])
 
     # find mean and std dev of predictions made based on training data
-    train_thickness_mean = np.mean(dfsrq['avg train thickness']) 
-    train_thickness_std_dev = np.std(dfsrq['avg train thickness'])
+    train_thickness_mean = np.mean(model_thicknesses['avg train thickness']) 
+    train_thickness_std_dev = np.std(model_thicknesses['avg train thickness'])
 
     # find mean and std dev of predictions made based on test data
-    test_thickness_mean = np.mean(dfsrq['avg test thickness']) 
-    test_thickness_std_dev = np.std(dfsrq['avg test thickness'])
+    test_thickness_mean = np.mean(model_thicknesses['avg test thickness']) 
+    test_thickness_std_dev = np.std(model_thicknesses['avg test thickness'])
 
     # put something in a series that can be appended to a df
     s = pd.Series(train_thickness_mean)
@@ -1237,11 +829,10 @@ def calculate_model_deviations(
         df.index[-1], 'layer architecture'
     ] = arch  
 
-    dnn_model[model_name] = tf.keras.models.load_model(model_loc)
     
     df.loc[
         df.index[-1], 'total parameters'
-    ] = dnn_model[model_name].count_params() 
+    ] = dnn_model['0'].count_params() 
 
     df.loc[
         df.index[-1], 'trained parameters'
@@ -1252,26 +843,6 @@ def calculate_model_deviations(
     df.loc[
         df.index[-1], 'total inputs'
     ] = (len(dataset) * (len(dataset.columns) -1))
-
-    df.loc[
-        df.index[-1], 'df'
-    ] = dataframe
-
-    df.loc[
-        df.index[-1], 'dropout'
-    ] = dropout
-
-    df.loc[
-        df.index[-1], 'learning rate'
-    ] = lr
-
-    df.loc[
-        df.index[-1], 'validation split'
-    ]= 0.2
-
-    df.loc[
-        df.index[-1], 'epochs'
-    ] = ep
 
     df.loc[
         df.index[-1], 'test mae avg'
@@ -1298,11 +869,71 @@ def calculate_model_deviations(
 
 
     df = df.sort_values('test mae avg')
-    df['epochs'] = df['epochs'].astype(int)
     
     return df
-    
-    
+
+
+
+'''
+'''
+def find_predictions(
+    coregistration = 'df8'
+):
+    root_dir = 'zults/'
+    prethicked = pd.DataFrame()
+    for file in tqdm(os.listdir(root_dir)):
+    # print(file)
+        if 'RGI_predicted' in file and coregistration in file:
+            file_reader = pd.read_csv(root_dir + file)
+            file_reader = file_reader.rename(columns = {
+                0:'vol'
+            })
+
+            file_reader['volume km3'] = (
+                file_reader['avg predicted thickness'] / 1e3
+            ) * file_reader['Area']
+            
+            file_reader['pred std dev'] = (
+                (file_reader['predicted thickness std dev'] / 1e3) * file_reader['Area']
+            )
+            arch = pd.Series(file[14:-7], name = 'architecture')
+            print(arch)
+            prethicked = pd.concat([prethicked, arch])
+
+            prethicked = prethicked.reset_index()
+            prethicked = prethicked.drop('index', axis = 1)
+            prethicked.loc[prethicked.index[-1], 'volume'] = sum(file_reader['volume km3'])
+            prethicked.loc[prethicked.index[-1], 'std dev'] = sum(
+                file_reader['pred std dev']
+            )
+            prethicked.loc[prethicked.index[-1], 'coregistration'] = coregistration
+                
+
+    predicted = pd.DataFrame()
+            
+#             break
+    prethicked = prethicked.rename(columns = {
+        0:'architecture'
+    })
+    for arch in prethicked['architecture'].unique():
+        dft = prethicked[
+            (prethicked['architecture'] == arch)
+        ]
+        dft['predicted volume'] = sum(dft['volume']) / 1e3
+        dft['std dev'] = sum(dft['std dev']) / 1e3
+#         print(dft.iloc[-1])
+        predicted = pd.concat([predicted,dft],ignore_index = True)
+    predicted = predicted[[
+        'architecture',
+#         'epochs',
+#         'learning rate',
+        'coregistration',
+        'predicted volume',
+        'std dev'
+    ]]
+    predicted = predicted.drop_duplicates()
+#     prethicked = prethicked.drop_duplicates()
+    return predicted
 
 
 
@@ -1310,18 +941,19 @@ def calculate_model_deviations(
 def load_global_predictions(
     coregistration,
     architecture,
-    learning_rate,
-    epochs,
 ):
     root_dir = 'zults/'
     RGI_predicted = pd.DataFrame()
     for file in (os.listdir(root_dir)):
             # print(file)
         if ('RGI_predicted' in file and 
-            coregistration in file and 
-            architecture in file and 
-            learning_rate in file and 
-            epochs in file):
+            coregistration in file and
+            architecture in file
+           ):
+#             print(file)
+#             print(architecture[3:])
+#             print(architecture[5:])
+#             print(architecture[-3:])
 #             print(file)
             file_reader = pd.read_csv(root_dir + file)
 #             print(file_reader)
@@ -1330,10 +962,10 @@ def load_global_predictions(
             ) * file_reader['Area']
             file_reader = file_reader.dropna()
             RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
-            RGI_predicted['layer architecture'] =  architecture[1:]
+            RGI_predicted['layer architecture'] =  architecture[5:]
     RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
     RGI_predicted['dataframe'] =  coregistration
-    
+    print(RGI_predicted)
 
     return RGI_predicted
 
@@ -1484,139 +1116,98 @@ def add_glathida_stats(
     return df
 
 
-
-
-
-
-'''
-'''
-def find_predictions(
+def load_notebook_data(
     coregistration = 'df8'
 ):
-    root_dir = 'zults/'
-    prethicked = pd.DataFrame()
-    for file in tqdm(os.listdir(root_dir)):
-    # print(file)
-        if 'RGI_predicted' in file and coregistration in file:
-            file_reader = pd.read_csv(root_dir + file)
-            file_reader = file_reader.rename(columns = {
-                0:'vol'
-            })
+    df = pd.read_csv(
+            'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_'+
+            coregistration + '.csv'
+        )
+    print(df)
+    df['region'] = df['RGIId'].str[6:8]
 
-            file_reader['volume km3'] = (
-                file_reader['avg predicted thickness'] / 1e3
-            ) * file_reader['Area']
-            
-            file_reader['pred std dev'] = (
-                (file_reader['predicted thickness std dev'] / 1e3) * file_reader['Area']
-            )
-#             print(file)
-            str_1 = '_1_'
-            str_2 = '-'
-            str_3 = '_0_'
-            str_4 = '_0.'
-            str_7 = '.csv'
-            str_8 = 'df'
-            str_8_idx = file.index(str_8)
-            str_7_idx = file.index(str_7)
-            str_2_idx = file.index(str_2)
-            str_4_idx = file.index(str_4)
-            if str_1 in file:
-
-                str_1_idx = file.index(str_1)
-                layer_1_start = (str_1_idx + 3)
-                layer_2_start = str_2_idx + 1
-                layer_1_length = str_2_idx - layer_1_start
-                layer_2_length = str_4_idx - (str_2_idx + 1)
-
-
-            if str_3 in file :
-                str_3_idx = file.index(str_3)
-
-                layer_1_start = (str_3_idx + 3)
-                layer_2_start = str_2_idx + 1
-                layer_1_length = str_2_idx - layer_1_start
-                layer_2_length = str_4_idx - (str_2_idx + 1)
-
-
-            layer_1 = file[layer_1_start:(layer_1_start + layer_1_length)]
-            layer_2 = file[layer_2_start:(layer_2_start + layer_2_length)]
-
-            arch = pd.Series(str(layer_1) + '-' + str(layer_2), name = 'architecture')
-            prethicked = pd.concat([prethicked, arch])
-
-            # epochs = 100
-            if file[str_7_idx - 3] == str(1) or file[str_7_idx - 3] == str(9):
-
-                learning_rate = file[
-                    layer_2_start + layer_2_length + 1 : str_7_idx - 5
-                ]
-                epochs = file[
-                    str_7_idx - 4 : str_7_idx
-                ]
-                
-            # epochs = 2000
-            if file[str_7_idx - 4] == str(2) or file[str_7_idx - 3] == str(9):
-
-                learning_rate = file[
-                    layer_2_start + layer_2_length + 1 : str_7_idx - 5
-                ]
-                epochs = file[
-                    str_7_idx - 4 : str_7_idx
-                ]
-
-                    # epochs < 100
-            elif file[str_7_idx - 3] == '_':
-
-                learning_rate = file[
-                    layer_2_start + layer_2_length + 1 : str_7_idx - 3
-                ]
-
-                epochs = file[
-                    str_7_idx - 2 : str_7_idx
-                ]
-            prethicked = prethicked.reset_index()
-            prethicked = prethicked.drop('index', axis = 1)
-            prethicked.loc[prethicked.index[-1], 'learning rate'] = learning_rate
-            prethicked.loc[prethicked.index[-1], 'epochs'] = epochs
-            prethicked.loc[prethicked.index[-1], 'volume'] = sum(file_reader['volume km3'])
-            prethicked.loc[prethicked.index[-1], 'std dev'] = sum(
-                file_reader['pred std dev']
-            )
-            if file[str_8_idx + 3] == '_':
-                prethicked.loc[prethicked.index[-1], 'coregistration'] = file[
-                    str_8_idx : str_8_idx + 3]                
-            elif file[str_8_idx + 3] !='_':
-                prethicked.loc[prethicked.index[-1], 'coregistration'] = (
-                    file[str_8_idx + 2] + file[str_8_idx + 3]
-                )
-            predicted = pd.DataFrame()
-            
-#             break
-    prethicked = prethicked.rename(columns = {
-        0:'architecture'
-    })
-    for arch in prethicked['architecture'].unique():
-        for lr in prethicked['learning rate'].unique():
-            dft = prethicked[
-                (prethicked['architecture'] == arch) & 
-                (prethicked['learning rate'] == lr)
-            ]
-            dft['predicted volume'] = sum(dft['volume']) / 1e3
-            dft['std dev'] = sum(dft['std dev']) / 1e3
-    #         print(dft.iloc[-1])
-            predicted = pd.concat([predicted,dft],ignore_index = True)
-    predicted = predicted[[
-        'architecture',
-#         'epochs',
-        'learning rate',
-        'coregistration',
-        'predicted volume',
-        'std dev'
+    RGI = load_RGI()
+    RGI = RGI[[
+        'RGIId',
+        'CenLat',
+        'CenLon',
+        'Slope',
+        'Zmin',
+        'Zmed',
+        'Zmax',
+        'Area',
+        'Aspect',
+        'Lmax'
     ]]
-    predicted = predicted.drop_duplicates()
-    prethicked = prethicked.drop_duplicates()
-    return predicted
+
+#     RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']
+
+    df = pd.merge(df, RGI, on = 'RGIId')
+#     print(df)
+    df['Upper Bound'] = df['Upper Bound'] - df['Mean Thickness']
+    df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
+    df['UB'] = (df['Upper Bound'] / 1e3) * df['Area']
+    df['LB'] = (df['Lower Bound'] / 1e3) * df['Area']
+
+    upper_bound = np.round(
+        sum(df['UB']) / 1e3, 2)
+
+    lower_bound = np.round(
+        sum(df['LB']) / 1e3 , 2) 
+
+    volume = np.round(
+        sum(df['Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
+
+    std = np.round(
+        sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
+
+
+    print(f'Global Volume: {volume}, UB: {upper_bound}, LB: {lower_bound}, STD: {std}')
+    df['Edasi Volume'] = df['Mean Thickness'] / 1e3 * df['Area']
+    df['Volume Std Dev'] = df['Thickness Std Dev'] / 1e3 * df['Area']
+    
+    ref = pd.read_csv('reference_thicknesses/farinotti_mean_thickness_rgi_id.csv')
+    ref = ref[[
+        'RGIId',
+        'Farinotti Mean Thickness'
+    ]]
+    ref['region'] = ref['RGIId'].str[6:8]
+    ref = ref.sort_values('RGIId')
+    ref = ref.dropna()
+
+    ref = pd.merge(ref, df, 
+    #                left_index = True, right_index = True)
+    on = [
+        'RGIId'
+    ])
+    ref = ref.rename(columns = {
+        'Mean Thickness':'Edasi Mean Thickness'
+    })
+
+    ref['Farinotti Volume'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
+
+    ref['region'] = ref['RGIId'].str[6:8]
+    ref['Edasi Volume'] = (ref['Edasi Mean Thickness'] / 1e3) * ref['Area']
+    ref['Volume Std Dev'] = (ref['Thickness Std Dev'] / 1e3 )* ref['Area']
+    ref = ref.reset_index()
+    ref = ref.drop('index', axis = 1)
+    ref = ref.dropna()
+    ref['VE / VF'] = ref['Edasi Mean Thickness'] / ref['Farinotti Mean Thickness']
+    ref = ref.drop_duplicates()
+    # sum(ref['volume km3'])
+
+    ref['Upper Bound'] = ref['Upper Bound'] - ref['Edasi Mean Thickness']
+    ref['Lower Bound'] = ref['Edasi Mean Thickness'] - ref['Lower Bound']
+    ref
+
+    ref['UB'] = (ref['Upper Bound'] / 1e3) * ref['Area']
+    ref['LB'] = (ref['Lower Bound'] / 1e3) * ref['Area']
+
+    return df, ref
+
+
+
+
 
 
     
@@ -1793,649 +1384,562 @@ def color_grabber(
 
 
 
-def load_notebook_data(
-    coregistration = 'df8'
-):
-    df = pd.read_csv(
-            'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_'+
-            coregistration + '.csv'
-        )
-    df['region'] = df['RGIId'].str[6:8]
-
-    RGI = load_RGI()
-    RGI = RGI[[
-        'RGIId',
-        'CenLat',
-        'CenLon',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Area',
-        'Aspect',
-        'Lmax'
-    ]]
-
-#     RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']
-
-    df = pd.merge(df, RGI, on = 'RGIId')
-#     print(df)
-    df['Upper Bound'] = df['Upper Bound'] - df['Mean Thickness']
-    df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
-    df['UB'] = (df['Upper Bound'] / 1e3) * df['Area']
-    df['LB'] = (df['Lower Bound'] / 1e3) * df['Area']
-
-    upper_bound = np.round(
-        sum(df['UB']) / 1e3, 2)
-
-    lower_bound = np.round(
-        sum(df['LB']) / 1e3 , 2) 
-
-    volume = np.round(
-        sum(df['Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
-
-    std = np.round(
-        sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
-
-
-    print(f'Global Volume: {volume}, UB: {upper_bound}, LB: {lower_bound}, STD: {std}')
-    df['Edasi Volume'] = df['Mean Thickness'] / 1e3 * df['Area']
-    df['Volume Std Dev'] = df['Thickness Std Dev'] / 1e3 * df['Area']
-    
-    ref = pd.read_csv('reference_thicknesses/farinotti_mean_thickness_rgi_id.csv')
-    ref = ref[[
-        'RGIId',
-        'Farinotti Mean Thickness'
-    ]]
-    ref['region'] = ref['RGIId'].str[6:8]
-    ref = ref.sort_values('RGIId')
-    ref = ref.dropna()
-
-    ref = pd.merge(ref, df, 
-    #                left_index = True, right_index = True)
-    on = [
-        'RGIId'
-    ])
-    ref = ref.rename(columns = {
-        'Mean Thickness':'Edasi Mean Thickness'
-    })
-
-    ref['Farinotti Volume'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
-
-    ref['region'] = ref['RGIId'].str[6:8]
-    ref['Edasi Volume'] = (ref['Edasi Mean Thickness'] / 1e3) * ref['Area']
-    ref['Volume Std Dev'] = (ref['Thickness Std Dev'] / 1e3 )* ref['Area']
-    ref = ref.reset_index()
-    ref = ref.drop('index', axis = 1)
-    ref = ref.dropna()
-    ref['VE / VF'] = ref['Edasi Mean Thickness'] / ref['Farinotti Mean Thickness']
-    ref = ref.drop_duplicates()
-    # sum(ref['volume km3'])
-
-    ref['Upper Bound'] = ref['Upper Bound'] - ref['Edasi Mean Thickness']
-    ref['Lower Bound'] = ref['Edasi Mean Thickness'] - ref['Lower Bound']
-    ref
-
-    ref['UB'] = (ref['Upper Bound'] / 1e3) * ref['Area']
-    ref['LB'] = (ref['Lower Bound'] / 1e3) * ref['Area']
-
-    return df, ref
 
 
 
 
-def find_random_state(
-    folder
-):
-    if folder.endswith('_0'):
-        rs = 0
-    if folder.endswith('_1'):
-        rs = 1
-    if folder.endswith('_2'):
-        rs = 2
-    if folder.endswith('_3'):
-        rs = 3
-    if folder.endswith('_4'):
-        rs = 4
-    if folder.endswith('_5'):
-        rs = 5
-    if folder.endswith('_6'):
-        rs = 6
-    if folder.endswith('_7'):
-        rs = 7
-    if folder.endswith('_8'):
-        rs = 8
-    if folder.endswith('_9'):
-        rs = 9
-    if folder.endswith('10'):
-        rs = 10
-    if folder.endswith('11'):
-        rs = 11
-    if folder.endswith('12'):
-        rs = 12
-    if folder.endswith('13'):
-        rs = 13
-    if folder.endswith('14'):
-        rs = 14
-    if folder.endswith('15'):
-        rs = 15
-    if folder.endswith('16'):
-        rs = 16
-    if folder.endswith('17'):
-        rs = 17
-    if folder.endswith('18'):
-        rs = 18
-    if folder.endswith('19'):
-        rs = 19
-    if folder.endswith('20'):
-        rs = 20
-    if folder.endswith('21'):
-        rs = 21
-    if folder.endswith('22'):
-        rs = 22
-    if folder.endswith('23'):
-        rs = 23
-    if folder.endswith('24'):
-        rs = 24
+# def find_random_state(
+#     folder
+# ):
+#     if folder.endswith('_0'):
+#         rs = 0
+#     if folder.endswith('_1'):
+#         rs = 1
+#     if folder.endswith('_2'):
+#         rs = 2
+#     if folder.endswith('_3'):
+#         rs = 3
+#     if folder.endswith('_4'):
+#         rs = 4
+#     if folder.endswith('_5'):
+#         rs = 5
+#     if folder.endswith('_6'):
+#         rs = 6
+#     if folder.endswith('_7'):
+#         rs = 7
+#     if folder.endswith('_8'):
+#         rs = 8
+#     if folder.endswith('_9'):
+#         rs = 9
+#     if folder.endswith('10'):
+#         rs = 10
+#     if folder.endswith('11'):
+#         rs = 11
+#     if folder.endswith('12'):
+#         rs = 12
+#     if folder.endswith('13'):
+#         rs = 13
+#     if folder.endswith('14'):
+#         rs = 14
+#     if folder.endswith('15'):
+#         rs = 15
+#     if folder.endswith('16'):
+#         rs = 16
+#     if folder.endswith('17'):
+#         rs = 17
+#     if folder.endswith('18'):
+#         rs = 18
+#     if folder.endswith('19'):
+#         rs = 19
+#     if folder.endswith('20'):
+#         rs = 20
+#     if folder.endswith('21'):
+#         rs = 21
+#     if folder.endswith('22'):
+#         rs = 22
+#     if folder.endswith('23'):
+#         rs = 23
+#     if folder.endswith('24'):
+#         rs = 24
         
-    return rs
+#     return rs
     
     
-'''
-predictions_loader
-'''
-def load_regional_predictions(
-    training_module,
-    architecture,
-    learning_rate,
-    epochs,
-):
-    root_dir = 'zults/'
-    RGI_predicted = pd.DataFrame()
+# '''
+# predictions_loader
+# '''
+# def load_regional_predictions(
+#     training_module,
+#     architecture,
+#     learning_rate,
+#     epochs,
+# ):
+#     root_dir = 'zults/'
+#     RGI_predicted = pd.DataFrame()
 
-    for file in tqdm(os.listdir(root_dir)):
-        # print(file)
-        if 'RGI_predicted' in file and training_module + '_' in file and architecture in file and learning_rate in file and epochs in file:
-            file_reader = pd.read_csv(root_dir + file)
-            file_reader['volume km3'] = (
-                file_reader['avg predicted thickness'] / 1e3
-            ) * file_reader['Area']
-            file_reader = file_reader.dropna()
-            print(file_reader)
-            sum_volume = sum(file_reader['volume km3'])
-            total_volume = pd.Series(sum_volume, name = 'total volume')
-            RGI_predicted = pd.concat([RGI_predicted, total_volume], ignore_index = True)    
-#             print(RGI_predicted)
-            file_reader['variance'] = file_reader['predicted thickness std dev'] **2 
-            variance = sum(file_reader['variance'])
+#     for file in tqdm(os.listdir(root_dir)):
+#         # print(file)
+#         if 'RGI_predicted' in file and training_module + '_' in file and architecture in file and learning_rate in file and epochs in file:
+#             file_reader = pd.read_csv(root_dir + file)
+#             file_reader['volume km3'] = (
+#                 file_reader['avg predicted thickness'] / 1e3
+#             ) * file_reader['Area']
+#             file_reader = file_reader.dropna()
+#             print(file_reader)
+#             sum_volume = sum(file_reader['volume km3'])
+#             total_volume = pd.Series(sum_volume, name = 'total volume')
+#             RGI_predicted = pd.concat([RGI_predicted, total_volume], ignore_index = True)    
+# #             print(RGI_predicted)
+#             file_reader['variance'] = file_reader['predicted thickness std dev'] **2 
+#             variance = sum(file_reader['variance'])
             
-            RGI_predicted.loc[
-                RGI_predicted.index[-1], 'total variance'
-            ] = np.sqrt(variance)/1e3
+#             RGI_predicted.loc[
+#                 RGI_predicted.index[-1], 'total variance'
+#             ] = np.sqrt(variance)/1e3
 
-            area = sum(file_reader['Area'])
+#             area = sum(file_reader['Area'])
 
-            RGI_predicted.loc[
-                RGI_predicted.index[-1], 'area'
-            ] = area
+#             RGI_predicted.loc[
+#                 RGI_predicted.index[-1], 'area'
+#             ] = area
             
-            for i in range(1,10,1):
-                if ('df' + str(i) + '_1_') in file or ('df' + str(i) + '_0_'):
-                    RGI_predicted.loc[
-                            RGI_predicted.index[-1], 'volf'
-                    ] = 158.17
+#             for i in range(1,10,1):
+#                 if ('df' + str(i) + '_1_') in file or ('df' + str(i) + '_0_'):
+#                     RGI_predicted.loc[
+#                             RGI_predicted.index[-1], 'volf'
+#                     ] = 158.17
 
-                    RGI_predicted.loc[
-                        RGI_predicted.index[-1], 'tolerance'
-                    ] = 41.0
+#                     RGI_predicted.loc[
+#                         RGI_predicted.index[-1], 'tolerance'
+#                     ] = 41.0
 
-                    RGI_predicted.loc[
-                        RGI_predicted.index[-1], 'h mean f'
-                    ] = 224
-            if '_01_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '01'
+#                     RGI_predicted.loc[
+#                         RGI_predicted.index[-1], 'h mean f'
+#                     ] = 224
+#             if '_01_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '01'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 18.98
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 18.98
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 4.92
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 4.92
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 218    
-                
-                
-            if '_02_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '02'
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 1.06
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.27
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 72
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 218    
                 
                 
-            if '_03_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '03'
+#             if '_02_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '02'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 28.33
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 1.06
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.27
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 72
+                
+                
+#             if '_03_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '03'
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 28.33
             
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 7.35
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 7.35
             
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 270
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 270
                 
-            if '_04_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '04'
+#             if '_04_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '04'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 8.61
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 8.61
             
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 2.23
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 2.23
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 210
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 210
                 
-            if '_05_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '05'
+#             if '_05_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '05'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 15.69
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 15.69
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 4.07
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 4.07
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 175
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 175
                 
-            if '_06_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '06'
+#             if '_06_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '06'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] =  3.77
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] =  3.77
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] =  0.98 
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] =  0.98 
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] =  341 
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] =  341 
                 
-            if '_07_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '07'
+#             if '_07_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '07'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] =  7.47 
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] =  7.47 
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] =  1.94 
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] =  1.94 
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] =  220 
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] =  220 
                 
-            if '_08_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '08'
+#             if '_08_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '08'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] =  0.30 
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] =  0.30 
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] =  0.08 
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] =  0.08 
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] =  101 
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] =  101 
                 
-            if '_09_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '09'
+#             if '_09_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '09'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 14.64
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 14.64
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 3.80
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 3.80
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 283
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 283
                 
-            if '_10_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '10'
+#             if '_10_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '10'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 0.14
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 0.14
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.04
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.04
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 56
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 56
                 
-            if '_11_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '11'
+#             if '_11_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '11'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 0.13
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 0.13
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.03
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.03
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 61   
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 61   
                 
             
-            if '_12_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '12'
+#             if '_12_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '12'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 0.06
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 0.06
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.02
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.02
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 48
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 48
                 
-            if '_13_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '13'
+#             if '_13_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '13'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 3.27
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 3.27
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.85
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.85
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 66
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 66
                 
-            if '_14_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '14'
+#             if '_14_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '14'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 2.87
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 2.87
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.74
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.74
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 85
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 85
             
-            if '_15_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '15'
+#             if '_15_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '15'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 0.88
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 0.88
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.23
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.23
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 59
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 59
                 
-            if '_16_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '16'
+#             if '_16_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '16'
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 0.10
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 0.10
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.03
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.03
                 
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 42
-            
-            
-            if '_17_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '17'
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 5.34
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 1.39
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 181
-                
-                
-            if '_18_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '18'
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 0.07
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 0.02
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 63
-            
-            if '_19_' in file:
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'region'
-                ] = '19'
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'volf'
-                ] = 46.47
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'tolerance'
-                ] = 12.06
-                
-                RGI_predicted.loc[
-                    RGI_predicted.index[-1], 'h mean f'
-                ] = 349
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 42
             
             
+#             if '_17_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '17'
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 5.34
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 1.39
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 181
+                
+                
+#             if '_18_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '18'
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 0.07
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 0.02
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 63
             
-            if 'df1_' not in file:
-                att_list = [
-                    'CenLat',
-                    'CenLon',
-                    'Area',
-                    'Aspect',
-                    'Lmax',
-                    'Slope',
-                    'Zmin',
-                    'Zmax',
-                ]
-                for att in att_list:
-                    mean = file_reader[att].mean()
-                    median = file_reader[att].median()
-                    std = file_reader[att].std()
-                    q3 = np.quantile(file_reader[att], 0.75)
-                    q1 = np.quantile(file_reader[att], 0.25)
-                    iqr = q3 - q1  
+#             if '_19_' in file:
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'region'
+#                 ] = '19'
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'volf'
+#                 ] = 46.47
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'tolerance'
+#                 ] = 12.06
+                
+#                 RGI_predicted.loc[
+#                     RGI_predicted.index[-1], 'h mean f'
+#                 ] = 349
+            
+            
+            
+#             if 'df1_' not in file:
+#                 att_list = [
+#                     'CenLat',
+#                     'CenLon',
+#                     'Area',
+#                     'Aspect',
+#                     'Lmax',
+#                     'Slope',
+#                     'Zmin',
+#                     'Zmax',
+#                 ]
+#                 for att in att_list:
+#                     mean = file_reader[att].mean()
+#                     median = file_reader[att].median()
+#                     std = file_reader[att].std()
+#                     q3 = np.quantile(file_reader[att], 0.75)
+#                     q1 = np.quantile(file_reader[att], 0.25)
+#                     iqr = q3 - q1  
 
-                    RGI_predicted.loc[
-                        RGI_predicted.index[-1], att + '_RGI_mean'
-                    ] = mean
+#                     RGI_predicted.loc[
+#                         RGI_predicted.index[-1], att + '_RGI_mean'
+#                     ] = mean
 
-                    RGI_predicted.loc[
-                        RGI_predicted.index[-1], att + '_RGI_median'
-                    ] = median
+#                     RGI_predicted.loc[
+#                         RGI_predicted.index[-1], att + '_RGI_median'
+#                     ] = median
 
-                    RGI_predicted.loc[
-                        RGI_predicted.index[-1], att + '_RGI_std'
-                    ] = std
+#                     RGI_predicted.loc[
+#                         RGI_predicted.index[-1], att + '_RGI_std'
+#                     ] = std
 
-                    RGI_predicted.loc[
-                        RGI_predicted.index[-1], att + '_RGI_iqr'
-                    ] = iqr
-            str_1 = '_1_'
-            str_2 = '-'
-            str_3 = '_0_'
-            str_4 = '_0.'
-            str_7 = '.csv'
-            str_8 = 'df'
-            str_8_idx = file.index(str_8)
-            str_7_idx = file.index(str_7)
-            str_2_idx = file.index(str_2)
-            str_4_idx = file.index(str_4)
-            if str_1 in file:
+#                     RGI_predicted.loc[
+#                         RGI_predicted.index[-1], att + '_RGI_iqr'
+#                     ] = iqr
+#             str_1 = '_1_'
+#             str_2 = '-'
+#             str_3 = '_0_'
+#             str_4 = '_0.'
+#             str_7 = '.csv'
+#             str_8 = 'df'
+#             str_8_idx = file.index(str_8)
+#             str_7_idx = file.index(str_7)
+#             str_2_idx = file.index(str_2)
+#             str_4_idx = file.index(str_4)
+#             if str_1 in file:
 
-                str_1_idx = file.index(str_1)
-                layer_1_start = (str_1_idx + 3)
-                layer_2_start = str_2_idx + 1
-                layer_1_length = str_2_idx - layer_1_start
-                layer_2_length = str_4_idx - (str_2_idx + 1)
-
-
-            if str_3 in file :
-                str_3_idx = file.index(str_3)
-
-                layer_1_start = (str_3_idx + 3)
-                layer_2_start = str_2_idx + 1
-                layer_1_length = str_2_idx - layer_1_start
-                layer_2_length = str_4_idx - (str_2_idx + 1)
+#                 str_1_idx = file.index(str_1)
+#                 layer_1_start = (str_1_idx + 3)
+#                 layer_2_start = str_2_idx + 1
+#                 layer_1_length = str_2_idx - layer_1_start
+#                 layer_2_length = str_4_idx - (str_2_idx + 1)
 
 
-            layer_1 = file[layer_1_start:(layer_1_start + layer_1_length)]
-            layer_2 = file[layer_2_start:(layer_2_start + layer_2_length)]
+#             if str_3 in file :
+#                 str_3_idx = file.index(str_3)
 
-            arch = (str(layer_1) + '-' + str(layer_2))
-            RGI_predicted.loc[
-                RGI_predicted.index[-1], 'architecture'
-            ] = arch
+#                 layer_1_start = (str_3_idx + 3)
+#                 layer_2_start = str_2_idx + 1
+#                 layer_1_length = str_2_idx - layer_1_start
+#                 layer_2_length = str_4_idx - (str_2_idx + 1)
 
-            for i in range(1,11,1):
-                 if ('df' + str(i) + '_') in file:
-                    RGI_predicted.loc[
-                        RGI_predicted.index[-1], 'dataframe'
-                    ] = 'df' + str(i) + '_' + str(
-                        RGI_predicted['region'].loc[RGI_predicted.index[-1]])
+
+#             layer_1 = file[layer_1_start:(layer_1_start + layer_1_length)]
+#             layer_2 = file[layer_2_start:(layer_2_start + layer_2_length)]
+
+#             arch = (str(layer_1) + '-' + str(layer_2))
+#             RGI_predicted.loc[
+#                 RGI_predicted.index[-1], 'architecture'
+#             ] = arch
+
+#             for i in range(1,11,1):
+#                  if ('df' + str(i) + '_') in file:
+#                     RGI_predicted.loc[
+#                         RGI_predicted.index[-1], 'dataframe'
+#                     ] = 'df' + str(i) + '_' + str(
+#                         RGI_predicted['region'].loc[RGI_predicted.index[-1]])
         
 
 
                 
-            if '0.1' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.100'
-            if '0.01' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.010'
-            if '0.001' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.001'
-            if '_100' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'           
-            if '_999' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '999'
-            if '_2000' in file:
-                RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '2000'
-    print(RGI_predicted)
-    RGI_predicted = RGI_predicted.rename(columns = {
-        0:'vol'
-    })
+#             if '0.1' in file:
+#                 RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.100'
+#             if '0.01' in file:
+#                 RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.010'
+#             if '0.001' in file:
+#                 RGI_predicted.loc[RGI_predicted.index[-1], 'learning rate']= '0.001'
+#             if '_100' in file:
+#                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '100'           
+#             if '_999' in file:
+#                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '999'
+#             if '_2000' in file:
+#                 RGI_predicted.loc[RGI_predicted.index[-1], 'epochs']= '2000'
+#     print(RGI_predicted)
+#     RGI_predicted = RGI_predicted.rename(columns = {
+#         0:'vol'
+#     })
 
-#     RGI_predicted['vol'] = RGI_predicted['vol'] / 1e3
+# #     RGI_predicted['vol'] = RGI_predicted['vol'] / 1e3
 
-    RGI_predicted['mean thickness'] = (
-        (RGI_predicted['vol'] * 1e3) / RGI_predicted['area']
-    ) * 1e3
-    RGI_predicted['voldiff'] = (RGI_predicted['vol']) - RGI_predicted['volf'] 
-    RGI_predicted['vol_ratio'] = RGI_predicted['vol'] / RGI_predicted['volf']
-    RGI_predicted = RGI_predicted.reset_index()
-    RGI_predicted = RGI_predicted.drop('index', axis = 1)
-#     RGI_predicted = RGI_predicted.sort_values([
-# #         'mean thickness (km)',
-#         'architecture',
-#         'learning rate',
-#         'dataframe'
-#     ], ascending = True)
+#     RGI_predicted['mean thickness'] = (
+#         (RGI_predicted['vol'] * 1e3) / RGI_predicted['area']
+#     ) * 1e3
+#     RGI_predicted['voldiff'] = (RGI_predicted['vol']) - RGI_predicted['volf'] 
+#     RGI_predicted['vol_ratio'] = RGI_predicted['vol'] / RGI_predicted['volf']
+#     RGI_predicted = RGI_predicted.reset_index()
+#     RGI_predicted = RGI_predicted.drop('index', axis = 1)
+# #     RGI_predicted = RGI_predicted.sort_values([
+# # #         'mean thickness (km)',
+# #         'architecture',
+# #         'learning rate',
+# #         'dataframe'
+# #     ], ascending = True)
                         
-    return RGI_predicted
+#     return RGI_predicted
 
 
 

@@ -8,8 +8,9 @@ import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-parameterization = input()
-
+parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
+                                                    parameterization = 'sm9'
+                                                )
 if parameterization == 'sm1':
     coregistration = 'df1'
 if parameterization == 'sm2':
@@ -49,14 +50,9 @@ for index in tqdm(predictions.index):
 
     coregistration =  predictions['coregistration'].iloc[idx]
     architecture = '_' + predictions['architecture'].iloc[idx]
-    learning_rate = predictions['learning rate'].iloc[idx]
-    epochs = '2000'
     df_glob = gl.load_global_predictions(
         coregistration = coregistration,
         architecture = architecture,
-        learning_rate = learning_rate,
-        epochs = epochs
-
     )
     
 
@@ -64,11 +60,11 @@ for index in tqdm(predictions.index):
     
     
     
-deviations = pd.DataFrame()
+statistics = pd.DataFrame()
 for file in tqdm(os.listdir('zults/')):
-    if 'deviations' in file and coregistration in file:
+    if 'statistics' in file and coregistration in file:
         file_reader = pd.read_csv('zults/' + file)
-        deviations = pd.concat([deviations, file_reader], ignore_index = True)
+        deviations = pd.concat([statistics, file_reader], ignore_index = True)
     
 # deviations = deviations.dropna()
 df = pd.merge(df, deviations, on = 'layer architecture')

@@ -19,7 +19,9 @@ tf.random.set_seed(42)
 def main():
     
     
-    parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration()
+    parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
+                                                        parameterization = 'sm9'
+                                                    )
     
     
     RS = range(0,25,1)
@@ -45,31 +47,20 @@ def main():
                 print(
                     'Running multi-variable DNN regression on ' + 
                     str(dataset.name) + 
-                    ' dataset with parameters: Learning Rate = ' + 
-                    str(lr_input) + 
-                    ', Layer Architechture = ' +
-                    arch +
-                    ', dropout = ' + 
-                    str(dropout) +
-                    ', Validation split = ' + 
-                    str(0.2) + 
-                    ', Epochs = ' + 
-                    str(ep_input) 
-                )
+                    ' dataset with layer architecture = ' +
+                    arch
+                    )
 
                 for rs in tqdm(RS):
             #             for lr in LR:
 
                     gl.build_and_train_model(
                         dataset, 
-                        learning_rate = float(lr_input), 
                         random_state = rs, 
-                        epochs = int(ep_input), 
                         parameterization = parameterization, 
                         res = res,
                         layer_1 = layer_1_input,
                         layer_2 = layer_2_input,
-                        dropout = dropout
                     )   
 
 
