@@ -8,7 +8,8 @@ We treat estimating glacier thickness as a regression problem as opposed to ice 
     <li> tensorflow v. 2.8.0
 </ul>
 
-
+### Conda environment
+```conda create -n glacierml python=3.7 pandas=1.3.5 scikit-learn numpy yellowbrick plotly tensorflow geopy```
 
 ## Workflow:
 
