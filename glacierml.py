@@ -723,11 +723,7 @@ def build_and_train_model(dataset,
 
         model_filename =  (
             svd_mod_pth + 
-#             str(layer_1) + '_' + str(layer_2) + '_' + 
-<<<<<<< HEAD
 
-=======
->>>>>>> multiprocessing-indices
             str(random_state)
         )
 
@@ -736,10 +732,6 @@ def build_and_train_model(dataset,
         return history_filename, model_filename
     
     else:
-<<<<<<< HEAD
-        
-=======
->>>>>>> multiprocessing-indices
         return dnn_model
     
 
