@@ -26,7 +26,7 @@ def select_dataset_coregistration(
     pth='/home/prethicktor/data/',
     parameterization='sm8'
 ):
-    root_dir=pth
+    root_dir = pth
 
     if parameterization == 'sm1':
         df1 = load_training_data(
@@ -1111,7 +1111,7 @@ def build_and_train_model(dataset,
 
         model_filename =  (
             svd_mod_pth + 
-            str(dataset.name) + 
+#             str(dataset.name) + 
 #             str(layer_1) + '_' + str(layer_2) + '_' + 
             str(random_state)
         )
