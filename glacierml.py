@@ -27,8 +27,6 @@ def select_dataset_coregistration(
     parameterization='sm8'
 ):
     root_dir=pth
-#     print('please input parameterization code:')
-#     parameterization = input()
 
     if parameterization == 'sm1':
         df1 = load_training_data(
@@ -1105,17 +1103,8 @@ def build_and_train_model(dataset,
 
         history_filename = (
             svd_res_pth +
-           str(dataset.name) +
-           '_' +
-           dropout +
-           '_dnn_history_MULTI_' +
-           str(learning_rate) +
-           '_' +
-           str(validation_split) +
-           '_' +
-           str(epochs) +
-           '_' +
-           str(random_state)
+#             str(layer_1) + '_' + str(layer_2) + '_' + 
+            str(random_state)
         )
 
         df.to_csv(  history_filename  )
@@ -1123,15 +1112,7 @@ def build_and_train_model(dataset,
         model_filename =  (
             svd_mod_pth + 
             str(dataset.name) + 
-            '_' +
-            dropout +
-            '_dnn_MULTI_' + 
-            str(learning_rate) + 
-            '_' + 
-            str(validation_split) + 
-            '_' + 
-            str(epochs) + 
-            '_' + 
+#             str(layer_1) + '_' + str(layer_2) + '_' + 
             str(random_state)
         )
 
