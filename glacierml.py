@@ -1111,7 +1111,6 @@ def build_and_train_model(dataset,
 
         model_filename =  (
             svd_mod_pth + 
-#             str(dataset.name) + 
 #             str(layer_1) + '_' + str(layer_2) + '_' + 
             str(random_state)
         )
