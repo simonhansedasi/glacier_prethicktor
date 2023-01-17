@@ -35,7 +35,7 @@ def select_dataset_coregistration(
             scale = 'g',
             area_scrubber = 'on',
             anomaly_input = 1,
-            data_version = 'v2'
+#             data_version = 'v2'
         )
         df = df.drop([
             'RGIId','region', 'RGI Centroid Distance', 
@@ -57,7 +57,7 @@ def select_dataset_coregistration(
             scale = 'g',
             area_scrubber = 'on',
             anomaly_input = .25,
-            data_version = 'v2'
+#             data_version = 'v2'
         )
         df1 = df1.drop([
             'RGIId','region', 'RGI Centroid Distance', 
@@ -92,7 +92,7 @@ def load_RGI(
         
     RGI_extra = pd.DataFrame()
     for file in (os.listdir(pth)):
-        
+        print(file)
         region_number = file[:2]
         if str(region_selection) == 'all':
             file_reader = pd.read_csv(pth + file, encoding_errors = 'replace', on_bad_lines = 'skip')
@@ -175,18 +175,18 @@ def load_training_data(
 
     # add in RGI attributes
     elif RGI_input == 'y':
-        RGI = load_RGI()
+        RGI = load_RGI(pth = '/home/prethicktor/data/RGI/rgi60-attribs/')
         RGI['region'] = RGI['RGIId'].str[6:8]
 
         # load glacier GlaThiDa data v2
-            glacier = pd.read_csv(pth_5)    
-            glacier = glacier.rename(columns = {
-                'LAT':'Lat',
-                'LON':'Lon',
-                'AREA':'Area',
-                'MEAN_SLOPE':'Mean Slope',
-                'MEAN_THICKNESS':'Thickness'
-            })   
+        glacier = pd.read_csv(pth_5)    
+        glacier = glacier.rename(columns = {
+            'LAT':'Lat',
+            'LON':'Lon',
+            'AREA':'Area',
+            'MEAN_SLOPE':'Mean Slope',
+            'MEAN_THICKNESS':'Thickness'
+        })   
         glacier = glacier.dropna(subset = ['Thickness'])
 #         glacier = pd.read_csv(pth_5)
         df = pd.merge(RGI, glacier, on = 'RGIId', how = 'inner')
