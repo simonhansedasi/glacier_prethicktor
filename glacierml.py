@@ -92,7 +92,7 @@ def load_RGI(
         
     RGI_extra = pd.DataFrame()
     for file in (os.listdir(pth)):
-        print(file)
+#         print(file)
         region_number = file[:2]
         if str(region_selection) == 'all':
             file_reader = pd.read_csv(pth + file, encoding_errors = 'replace', on_bad_lines = 'skip')
@@ -125,6 +125,7 @@ def load_RGI(
 
 def load_training_data(
     root_dir = '/data/fast1/glacierml/data/',
+    alt_pth = '/home/prethicktor/data/',
     RGI_input = 'y',
     scale = 'g',
     region_selection = 1,
@@ -175,7 +176,7 @@ def load_training_data(
 
     # add in RGI attributes
     elif RGI_input == 'y':
-        RGI = load_RGI(pth = '/home/prethicktor/data/RGI/rgi60-attribs/')
+        RGI = load_RGI()
         RGI['region'] = RGI['RGIId'].str[6:8]
 
         # load glacier GlaThiDa data v2
@@ -961,7 +962,6 @@ def load_notebook_data(
             'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_'+
             coregistration + '.csv'
         )
-    print(df)
     df['region'] = df['RGIId'].str[6:8]
 
     RGI = load_RGI()
@@ -978,20 +978,10 @@ def load_notebook_data(
         'Lmax'
     ]]
 
-#     RGI['Zdelta'] = RGI['Zmax'] - RGI['Zmin']
 
     df = pd.merge(df, RGI, on = 'RGIId')
-#     print(df)
     df['Upper Bound'] = df['Upper Bound'] - df['Mean Thickness']
     df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
-    df['UB'] = (df['Upper Bound'] / 1e3) * df['Area']
-    df['LB'] = (df['Lower Bound'] / 1e3) * df['Area']
-
-    upper_bound = np.round(
-        sum(df['UB']) / 1e3, 2)
-
-    lower_bound = np.round(
-        sum(df['LB']) / 1e3 , 2) 
 
     volume = np.round(
         sum(df['Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
@@ -1000,48 +990,89 @@ def load_notebook_data(
         sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
 
 
-    print(f'Global Volume: {volume}, UB: {upper_bound}, LB: {lower_bound}, STD: {std}')
-    df['Edasi Volume'] = df['Mean Thickness'] / 1e3 * df['Area']
-    df['Volume Std Dev'] = df['Thickness Std Dev'] / 1e3 * df['Area']
+    df['Edasi Volume (km3)'] = df['Mean Thickness'] / 1e3 * df['Area']
+    df['Volume Std Dev (km3)'] = df['Thickness Std Dev'] / 1e3 * df['Area']
     
-    ref = pd.read_csv('reference_thicknesses/farinotti_mean_thickness_rgi_id.csv')
-    ref = ref[[
-        'RGIId',
-        'Farinotti Mean Thickness'
-    ]]
+    reference_path = 'reference_thicknesses/'
+    ref = pd.DataFrame()
+    for file in os.listdir(reference_path):
+        if 'Farinotti' in file:
+            file_reader = pd.read_csv('reference_thicknesses/' + file)
+            ref = pd.concat([ref, file_reader], ignore_index = True) 
     ref['region'] = ref['RGIId'].str[6:8]
     ref = ref.sort_values('RGIId')
-    ref = ref.dropna()
 
-    ref = pd.merge(ref, df, 
-    #                left_index = True, right_index = True)
-    on = [
-        'RGIId'
-    ])
-    ref = ref.rename(columns = {
-        'Mean Thickness':'Edasi Mean Thickness'
-    })
-
-    ref['Farinotti Volume'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
+    ref['Farinotti Volume (km3)'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
 
     ref['region'] = ref['RGIId'].str[6:8]
-    ref['Edasi Volume'] = (ref['Edasi Mean Thickness'] / 1e3) * ref['Area']
-    ref['Volume Std Dev'] = (ref['Thickness Std Dev'] / 1e3 )* ref['Area']
-    ref = ref.reset_index()
-    ref = ref.drop('index', axis = 1)
-    ref = ref.dropna()
-    ref['VE / VF'] = ref['Edasi Mean Thickness'] / ref['Farinotti Mean Thickness']
-    ref = ref.drop_duplicates()
-    # sum(ref['volume km3'])
+    ref = ref.dropna(subset = ['Farinotti Mean Thickness'])
+#     print(ref)
+    ref = ref.rename(columns = {
+         'Mean Thickness':'Farinotti Mean Thickness',
+         'Shapiro-Wilk statistic':'Farinotti Shapiro-Wilk statistic',
+         'Shapiro-Wilk p_value':'Farinotti Shapiro-Wilk p_value',
+         'Median Thickness':'Farinotti Median Thickness',
+         'Thickness STD':'Farinotti Thickness STD',
+         'Skew':'Farinotti Skew',
+#          'Farinotti Volume (km3)'
+    })
+#     print(ref)
+    ref = ref[[
+         'Farinotti Mean Thickness',
+         'Farinotti Shapiro-Wilk statistic',
+         'Farinotti Shapiro-Wilk p_value',
+         'Farinotti Median Thickness',
+         'Farinotti Thickness STD',
+         'Farinotti Skew',
+         'RGIId',
+         'Farinotti Volume (km3)'
+    ]]
+    df = df[[
+         'RGIId',
+         'Weighted Mean Thickness',
+         'Mean Thickness',
+         'Median Thickness',
+         'Thickness Std Dev',
+         'Shapiro-Wilk statistic',
+         'Shapiro-Wilk p_value',
+         'IQR',
+         'Lower Bound',
+         'Upper Bound',
+    #      'Median Value',
+         'Total estimates',
+         'region',
+         'CenLat',
+         'CenLon',
+         'Slope',
+         'Zmin',
+         'Zmed',
+         'Zmax',
+         'Area',
+         'Aspect',
+         'Lmax',
+         'Edasi Volume (km3)',
+         'Volume Std Dev (km3)'
+    ]]
 
-    ref['Upper Bound'] = ref['Upper Bound'] - ref['Edasi Mean Thickness']
-    ref['Lower Bound'] = ref['Edasi Mean Thickness'] - ref['Lower Bound']
-    ref
+    df = df.rename(columns = {
+        'Weighted Mean Thickness':'Edasi Weighted Mean Thickness',
+        'Mean Thickness':'Edasi Mean Thickness',
+        'Median Thickness':'Edasi Median Thickness',
+        'Thickness Std Dev':'Edasi Thickness Std Dev',
+        'Shapiro-Wilk statistic':'Edasi Shapiro-Wilk statistic',
+        'Shapiro-Wilk p_value':'Edasi Shapiro-Wilk p_value',
+        'IQR':'Edasi IQR',
+        'Lower Bound':'Edasi Lower Bound',
+        'Upper Bound':'Edasi Upper Bound',
+        'Volume Std Dev (km3)':'Edasi Volume Std Dev (km3)'
 
-    ref['UB'] = (ref['Upper Bound'] / 1e3) * ref['Area']
-    ref['LB'] = (ref['Lower Bound'] / 1e3) * ref['Area']
+    #     'Median Value':,
 
-    return df, ref
+    })
+    
+    df = pd.merge(df, ref, on = 'RGIId', how = 'inner')
+
+    return df
 
 
 
