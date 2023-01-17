@@ -27,149 +27,7 @@ def select_dataset_coregistration(
     parameterization='sm'
 ):
     root_dir = pth
-# Old parameterizations. Here be monsters
-#     if parameterization == 'sm1':
-#         df1 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'n'
-#         )
-#         dataset = df1
-#         dataset.name = 'df1'
-#         res = 'sr1'
-#         layer_1_list = ['10','16', '24']
-#         layer_2_list = ['5', '8',  '12']
 
-#     if parameterization == 'sm2':
-#         df2 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'y',
-#             scale = 'g',
-#         )
-#         df2 = df2.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-#         dataset = df2
-#         dataset.name = 'df2'
-#         res = 'sr2'
-#         layer_1_list = ['10','50', '64']
-#         layer_2_list = ['5', '28', '48']
-
-#     if parameterization == 'sm3':
-#         df3 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'y',
-#             scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = 25
-#         )
-#         df3 = df3.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-#         dataset = df3
-#         dataset.name = 'df3'
-#         res = 'sr3'
-#         layer_1_list = ['10', '32', '45']
-#         layer_2_list = ['5',  '17', '28']
-
-#     if parameterization == 'sm4':
-#         df4 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'y',
-#             scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = 75
-#         )
-#         df4 = df4.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-#         dataset = df4
-#         dataset.name = 'df4'
-#         res = 'sr4'
-#         layer_1_list = ['10', '47', '64']
-#         layer_2_list = ['5',  '21', '36']
-
-#     if parameterization == 'sm5':
-#         df5 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'y',
-#             scale = 'g',
-#         )
-#         df5 = df5.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-# #         df5['Zdelta'] = df5['Zmax'] - df5['Zmin']
-#         res = 'sr5'
-#         dataset = df5
-#         dataset.name = 'df5'
-#         layer_1_list = ['10','48', '64']
-#         layer_2_list = ['5', '32', '52']
-
-
-#     if parameterization == 'sm6':
-#         df6 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'y',
-#             scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = 25
-#         )
-#         df6 = df6.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-# #         df6['Zdelta'] = df6['Zmax'] - df6['Zmin']
-#         dataset = df6
-#         dataset.name = 'df6'
-#         res = 'sr6'
-#         layer_1_list = ['10', '32', '48']
-#         layer_2_list = ['5',  '18', '28']
-
-#     if parameterization == 'sm7':
-#         df7 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'y',
-#             scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = 75
-#         )
-#         df7 = df7.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-# #         df7['Zdelta'] = df7['Zmax'] - df7['Zmin']
-#         dataset = df7
-#         dataset.name = 'df7'
-#         res = 'sr7'
-#         layer_1_list = ['10', '42', '64']
-#         layer_2_list = ['5',  '26', '40']
-
-        
-#     if parameterization == 'sm8':
-#         df8 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'y',
-#             scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = .25,
-#             data_version = 'v2'
-#         )
-#         df8 = df8.drop(['RGIId', 'region', 
-#     #                         'Centroid Distance'
-#                        ], axis = 1)
-#     #         df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
-#         dataset = df8
-# #         df8['Area'] = np.log(df8['Area'])
-# #         df8['Lmax'] = np.log(df8['Lmax'])
-#         dataset.name = 'df8'
-#         res = 'sr8'
-        
-#     if parameterization == 'sm9':
-#         df9 = load_training_data(
-#             root_dir = pth,
-#             RGI_input = 'y',
-#             scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = .25,
-#             data_version = 'v2'
-#         )
-#         df9 = df9.drop([
-#             'RGIId','region', 'RGI Centroid Distance', 
-#             'AVG Radius', 'Roundness', 'distance test', 'size difference'
-#                        ], axis = 1)
-# #         df9['Area'] = df9['Area'] * 1e6
-# #         df9['Area'] = np.log(df9['Area'])
-# #         df9['Lmax'] = np.log(df9['Lmax'])
-        
-        
-#         dataset = df9
-#         dataset.name = 'df9'
-#         res = 'sr9'
     if parameterization == 'sm':
         df = load_training_data(
             root_dir = pth,
@@ -768,6 +626,10 @@ def build_and_train_model(dataset,
 
         model_filename =  (
             svd_mod_pth + 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4a37551cbdd817da6f6c7f3f015929ae77eb4a3a
             str(random_state)
         )
 
