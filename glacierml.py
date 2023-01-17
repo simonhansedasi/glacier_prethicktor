@@ -24,132 +24,176 @@ pd.set_option('mode.chained_assignment',None)
 
 def select_dataset_coregistration(
     pth='/home/prethicktor/data/',
-    parameterization='sm8'
+    parameterization='sm'
 ):
     root_dir = pth
+# Old parameterizations. Here be monsters
+#     if parameterization == 'sm1':
+#         df1 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'n'
+#         )
+#         dataset = df1
+#         dataset.name = 'df1'
+#         res = 'sr1'
+#         layer_1_list = ['10','16', '24']
+#         layer_2_list = ['5', '8',  '12']
 
-    if parameterization == 'sm1':
-        df1 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'n'
-        )
-        dataset = df1
-        dataset.name = 'df1'
-        res = 'sr1'
-        layer_1_list = ['10','16', '24']
-        layer_2_list = ['5', '8',  '12']
+#     if parameterization == 'sm2':
+#         df2 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'y',
+#             scale = 'g',
+#         )
+#         df2 = df2.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+#         dataset = df2
+#         dataset.name = 'df2'
+#         res = 'sr2'
+#         layer_1_list = ['10','50', '64']
+#         layer_2_list = ['5', '28', '48']
 
-    if parameterization == 'sm2':
-        df2 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-        )
-        df2 = df2.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-        dataset = df2
-        dataset.name = 'df2'
-        res = 'sr2'
-        layer_1_list = ['10','50', '64']
-        layer_2_list = ['5', '28', '48']
+#     if parameterization == 'sm3':
+#         df3 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'y',
+#             scale = 'g',
+#             area_scrubber = 'on',
+#             anomaly_input = 25
+#         )
+#         df3 = df3.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+#         dataset = df3
+#         dataset.name = 'df3'
+#         res = 'sr3'
+#         layer_1_list = ['10', '32', '45']
+#         layer_2_list = ['5',  '17', '28']
 
-    if parameterization == 'sm3':
-        df3 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = 25
-        )
-        df3 = df3.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-        dataset = df3
-        dataset.name = 'df3'
-        res = 'sr3'
-        layer_1_list = ['10', '32', '45']
-        layer_2_list = ['5',  '17', '28']
+#     if parameterization == 'sm4':
+#         df4 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'y',
+#             scale = 'g',
+#             area_scrubber = 'on',
+#             anomaly_input = 75
+#         )
+#         df4 = df4.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+#         dataset = df4
+#         dataset.name = 'df4'
+#         res = 'sr4'
+#         layer_1_list = ['10', '47', '64']
+#         layer_2_list = ['5',  '21', '36']
 
-    if parameterization == 'sm4':
-        df4 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = 75
-        )
-        df4 = df4.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-        dataset = df4
-        dataset.name = 'df4'
-        res = 'sr4'
-        layer_1_list = ['10', '47', '64']
-        layer_2_list = ['5',  '21', '36']
-
-    if parameterization == 'sm5':
-        df5 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-        )
-        df5 = df5.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-#         df5['Zdelta'] = df5['Zmax'] - df5['Zmin']
-        res = 'sr5'
-        dataset = df5
-        dataset.name = 'df5'
-        layer_1_list = ['10','48', '64']
-        layer_2_list = ['5', '32', '52']
+#     if parameterization == 'sm5':
+#         df5 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'y',
+#             scale = 'g',
+#         )
+#         df5 = df5.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+# #         df5['Zdelta'] = df5['Zmax'] - df5['Zmin']
+#         res = 'sr5'
+#         dataset = df5
+#         dataset.name = 'df5'
+#         layer_1_list = ['10','48', '64']
+#         layer_2_list = ['5', '32', '52']
 
 
-    if parameterization == 'sm6':
-        df6 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = 25
-        )
-        df6 = df6.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-#         df6['Zdelta'] = df6['Zmax'] - df6['Zmin']
-        dataset = df6
-        dataset.name = 'df6'
-        res = 'sr6'
-        layer_1_list = ['10', '32', '48']
-        layer_2_list = ['5',  '18', '28']
+#     if parameterization == 'sm6':
+#         df6 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'y',
+#             scale = 'g',
+#             area_scrubber = 'on',
+#             anomaly_input = 25
+#         )
+#         df6 = df6.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+# #         df6['Zdelta'] = df6['Zmax'] - df6['Zmin']
+#         dataset = df6
+#         dataset.name = 'df6'
+#         res = 'sr6'
+#         layer_1_list = ['10', '32', '48']
+#         layer_2_list = ['5',  '18', '28']
 
-    if parameterization == 'sm7':
-        df7 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = 75
-        )
-        df7 = df7.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
-#         df7['Zdelta'] = df7['Zmax'] - df7['Zmin']
-        dataset = df7
-        dataset.name = 'df7'
-        res = 'sr7'
-        layer_1_list = ['10', '42', '64']
-        layer_2_list = ['5',  '26', '40']
+#     if parameterization == 'sm7':
+#         df7 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'y',
+#             scale = 'g',
+#             area_scrubber = 'on',
+#             anomaly_input = 75
+#         )
+#         df7 = df7.drop(['RGIId', 'region', 'Centroid Distance'], axis = 1)
+# #         df7['Zdelta'] = df7['Zmax'] - df7['Zmin']
+#         dataset = df7
+#         dataset.name = 'df7'
+#         res = 'sr7'
+#         layer_1_list = ['10', '42', '64']
+#         layer_2_list = ['5',  '26', '40']
 
         
-    if parameterization == 'sm8':
-        df8 = load_training_data(
+#     if parameterization == 'sm8':
+#         df8 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'y',
+#             scale = 'g',
+#             area_scrubber = 'on',
+#             anomaly_input = .25,
+#             data_version = 'v2'
+#         )
+#         df8 = df8.drop(['RGIId', 'region', 
+#     #                         'Centroid Distance'
+#                        ], axis = 1)
+#     #         df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
+#         dataset = df8
+# #         df8['Area'] = np.log(df8['Area'])
+# #         df8['Lmax'] = np.log(df8['Lmax'])
+#         dataset.name = 'df8'
+#         res = 'sr8'
+        
+#     if parameterization == 'sm9':
+#         df9 = load_training_data(
+#             root_dir = pth,
+#             RGI_input = 'y',
+#             scale = 'g',
+#             area_scrubber = 'on',
+#             anomaly_input = .25,
+#             data_version = 'v2'
+#         )
+#         df9 = df9.drop([
+#             'RGIId','region', 'RGI Centroid Distance', 
+#             'AVG Radius', 'Roundness', 'distance test', 'size difference'
+#                        ], axis = 1)
+# #         df9['Area'] = df9['Area'] * 1e6
+# #         df9['Area'] = np.log(df9['Area'])
+# #         df9['Lmax'] = np.log(df9['Lmax'])
+        
+        
+#         dataset = df9
+#         dataset.name = 'df9'
+#         res = 'sr9'
+    if parameterization == 'sm':
+        df = load_training_data(
             root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
-            anomaly_input = 25,
+            anomaly_input = 1,
             data_version = 'v2'
         )
-        df8 = df8.drop(['RGIId', 'region', 
-    #                         'Centroid Distance'
+        df = df.drop([
+            'RGIId','region', 'RGI Centroid Distance', 
+            'AVG Radius', 'Roundness', 'distance test', 'size difference'
                        ], axis = 1)
-    #         df8['Zdelta'] = df8['Zmax'] - df8['Zmin']
-        dataset = df8
-#         df8['Area'] = np.log(df8['Area'])
-#         df8['Lmax'] = np.log(df8['Lmax'])
-        dataset.name = 'df8'
-        res = 'sr8'
-    if parameterization == 'sm9':
-        df9 = load_training_data(
+#         df9['Area'] = df9['Area'] * 1e6
+#         df9['Area'] = np.log(df9['Area'])
+#         df9['Lmax'] = np.log(df9['Lmax'])
+        
+        
+        dataset = df
+        dataset.name = 'df'
+        res = 'sr'
+        
+    if parameterization == 'sm1':
+        df1 = load_training_data(
             root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
@@ -157,19 +201,18 @@ def select_dataset_coregistration(
             anomaly_input = .25,
             data_version = 'v2'
         )
-        df9 = df9.drop([
+        df1 = df1.drop([
             'RGIId','region', 'RGI Centroid Distance', 
             'AVG Radius', 'Roundness', 'distance test', 'size difference'
                        ], axis = 1)
-        df9['Area'] = np.log(df9['Area'])
-        df9['Lmax'] = np.log(df9['Lmax'])
+#         df9['Area'] = df9['Area'] * 1e6
+#         df9['Area'] = np.log(df9['Area'])
+#         df9['Lmax'] = np.log(df9['Lmax'])
         
         
-        dataset = df9
-        dataset.name = 'df9'
-        res = 'sr9'
-        
-
+        dataset = df1
+        dataset.name = 'df1'
+        res = 'sr1'
         
         
     return parameterization, dataset, dataset.name, res
@@ -256,7 +299,7 @@ def load_training_data(
         })   
         glacier = glacier.dropna(subset = ['Thickness'])
 
-        print('# of raw thicknesses: ' + str(len(glacier)))
+#         print('# of raw thicknesses: ' + str(len(glacier)))
         
         
     # keep it just GlaThiDa
@@ -336,15 +379,15 @@ def load_training_data(
         df['size difference'] = abs(
             ( (df['Area_x'] - df['Area_y']) / df['Area_y'] )
         )                
-
+        df = df.rename(columns = {'Area_x':'Area',})
         df = df[[
             'RGIId',
             'CenLat',
             'CenLon',
 #             'Lat',
 #             'Lon',
-            'Area_x',
-            'Area_y',
+            'Area',
+#             'Area_y',
             'Zmin',
             'Zmed',
             'Zmax',
@@ -366,9 +409,9 @@ def load_training_data(
 #                 'size difference',
 # #                 'Area_y'
 #             ], axis = 1)
-            df = df.rename(columns = {
-                'Area_x':'Area'
-            })
+#             df = df.rename(columns = {
+#                 'Area_x':'Area'
+#             })
 
             df = df[[
                 'RGIId',
@@ -388,7 +431,7 @@ def load_training_data(
                 'RGI Centroid Distance',
                 'size difference'
             ]]
-            if anomaly_input == 25:
+            if anomaly_input == .25:
                 indices_to_drop_25 = [114, 122, 140, 141, 142, 244, 245, 252, 253, 254,258,
                            259,276,277,278,290,291,293,294,295,307,308,321,322,323,
                            325,326,329,330,341,342,343,432,433]
@@ -400,13 +443,15 @@ def load_training_data(
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'].str[:-2].astype(float)
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'] * 1e3
 
-    df['Area'] = df['Area'] * 1e6
+    df['Area'] = df['Area'] * 1e6     # Put area to meters for radius and roundness calc
 
     # make a guess of an average radius and "roundness" -- ratio of avg radius / width
     df['AVG Radius'] = np.sqrt(df['Area'] / np.pi)
     df['Roundness'] = (df['AVG Radius']) / (df['Lmax'])
     df['distance test'] = df['RGI Centroid Distance'] / df['AVG Radius']
-
+    
+    
+    df['Area'] = df['Area'] / 1e6     # Put area back to sq km
 #     df['Area'] = np.log10(df['Area'])
 #     df['Lmax'] = np.log10(df['Lmax'])
         
@@ -626,9 +671,9 @@ output = saved weights for trained model and model results saved as a csv
 '''
 
 def build_and_train_model(dataset,
-                          learning_rate = 0.01,
-                          validation_split = 0.2,
-                          epochs = 100,
+#                           learning_rate = 0.01,
+#                           validation_split = 0.2,
+#                           epochs = 100,
                           random_state = 0,
                           parameterization = 'sm',
                           res = 'sr',
@@ -683,7 +728,7 @@ def build_and_train_model(dataset,
     dnn_results = {}
 
     # set up model with  normalized data and defined layer architecture
-    dnn_model = build_dnn_model(normalizer['ALL'], learning_rate, layer_1, layer_2, dropout)
+    dnn_model = build_dnn_model(normalizer['ALL'], 0.01, layer_1, layer_2, dropout)
     
     # set up callback function to cut off training when performance reaches peak
     callback = tf.keras.callbacks.EarlyStopping(
@@ -700,10 +745,10 @@ def build_and_train_model(dataset,
     dnn_history['MULTI'] = dnn_model.fit(
         train_features,
         train_labels,
-        validation_split=validation_split,
+        validation_split=0.2,
         callbacks = [callback],
         verbose=0, 
-        epochs=epochs
+        epochs=2000
     )
 
     #save model, results, and history
@@ -723,11 +768,6 @@ def build_and_train_model(dataset,
 
         model_filename =  (
             svd_mod_pth + 
-#             str(layer_1) + '_' + str(layer_2) + '_' + 
-<<<<<<< HEAD
-
-=======
->>>>>>> multiprocessing-indices
             str(random_state)
         )
 
@@ -736,10 +776,6 @@ def build_and_train_model(dataset,
         return history_filename, model_filename
     
     else:
-<<<<<<< HEAD
-        
-=======
->>>>>>> multiprocessing-indices
         return dnn_model
     
 
@@ -763,67 +799,85 @@ def evaluate_model(
     dataset,
     dnn_model
 ):
-    df = pd.DataFrame()
-    
+    df = pd.DataFrame({
+                'Line1':[1]
+    })
+    print(df)
     (
         train_features, test_features, train_labels, test_labels
     ) = split_data(
         dataset, random_state = int(rs)
     )
     
-    mae_test = dnn_model[str(rs)].evaluate(
+#     mae_test = dnn_model[str(rs)].evaluate(
+#                     test_features, test_labels, verbose=0
+#                 )
+#     mae_train = dnn_model[str(rs)].evaluate(
+#         train_features, train_labels, verbose=0
+#     )
+
+#     pred_train = dnn_model[str(rs)].predict(
+#         train_features, verbose=0
+#     )
+
+#     pred_test = dnn_model[str(rs)].predict(
+#         test_features, verbose=0
+#     )
+
+    mae_test = dnn_model.evaluate(
                     test_features, test_labels, verbose=0
                 )
-    mae_train = dnn_model[str(rs)].evaluate(
+    mae_train = dnn_model.evaluate(
         train_features, train_labels, verbose=0
     )
 
-    pred_train = dnn_model[str(rs)].predict(
-        train_features, verbose=0
-    )
+#     pred_train = dnn_model.predict(
+#         train_features, verbose=0
+#     )
 
-    pred_test = dnn_model[str(rs)].predict(
-        test_features, verbose=0
-    )
-    
-    train_thickness = pd.Series(pred_train.flatten(), name = 'thickness')
-    train_features = train_features.reset_index()
-    train_features = train_features.drop('index', axis = 1)
-    dft = pd.concat([train_features, train_thickness], axis = 1)
-    dft['vol'] = dft['thickness'] * (dft['Area'] * 1e6)
-    avg_train_thickness = sum(dft['vol']) / sum(dft['Area'] * 1e6)
-    
-    avg_thickness = pd.Series(
-        np.mean(pred_train), name = 'avg train thickness'
-    )
+#     pred_test = dnn_model.predict(
+#         test_features, verbose=0
+#     )
 
-    test_thickness = pd.Series(pred_test.flatten(), name = 'thickness')
-    test_features = test_features.reset_index()
-    test_features = test_features.drop('index', axis = 1)
-    dft = pd.concat([test_features, test_thickness], axis = 1)
-    dft['vol'] = dft['thickness'] * (dft['Area'] * 1e6)
-    avg_test_thickness = sum(dft['vol']) / sum(dft['Area'] * 1e6)
+    
+#     train_thickness = pd.Series(pred_train.flatten(), name = 'thickness')
+#     train_features = train_features.reset_index()
+#     train_features = train_features.drop('index', axis = 1)
+#     dft = pd.concat([train_features, train_thickness], axis = 1)
+#     dft['vol'] = dft['thickness'] * (dft['Area'] * 1e6)
+#     avg_train_thickness = sum(dft['vol']) / sum(dft['Area'] * 1e6)
+    
+#     avg_thickness = pd.Series(
+#         np.mean(pred_train), name = 'avg train thickness'
+#     )
+
+#     test_thickness = pd.Series(pred_test.flatten(), name = 'thickness')
+#     test_features = test_features.reset_index()
+#     test_features = test_features.drop('index', axis = 1)
+#     dft = pd.concat([test_features, test_thickness], axis = 1)
+#     dft['vol'] = dft['thickness'] * (dft['Area'] * 1e6)
+#     avg_test_thickness = sum(dft['vol']) / sum(dft['Area'] * 1e6)
     
     
-    avg_test_thickness = pd.Series(
-        np.mean(pred_test),  name = 'avg test thickness'
-    )
+#     avg_test_thickness = pd.Series(
+#         np.mean(pred_test),  name = 'avg test thickness'
+#     )
 
-    temp_df = pd.merge(
-        avg_thickness, avg_test_thickness, right_index=True, left_index=True
-    )
+#     temp_df = pd.merge(
+#         avg_thickness, avg_test_thickness, right_index=True, left_index=True
+#     )
 
-    df = pd.concat(
-        [df, temp_df], ignore_index = True
-    )
+#     df = pd.concat(
+#         [df, temp_df], ignore_index = True
+#     )
 
     df.loc[df.index[-1], 'model'] = rs
     df.loc[df.index[-1], 'test mae'] = mae_test
     df.loc[df.index[-1], 'train mae'] = mae_train
     df.loc[df.index[-1], 'architecture'] = arch
     df.loc[df.index[-1], 'coregistration'] = dataset.name
-    df.loc[df.index[-1], 'total parameters'] = dnn_model[rs].count_params() 
-
+    df.loc[df.index[-1], 'total parameters'] = dnn_model.count_params() 
+    df = df.drop('Line1', axis = 1)
 
     return df
 
@@ -838,8 +892,11 @@ def calculate_model_avg_statistics(
     model_thicknesses
 ):
     
-
-    df = pd.DataFrame()
+    df = pd.DataFrame({
+                'Line1':[1]
+    })
+#     print(df)
+#     df = pd.DataFrame()
     test_mae_mean = np.mean(model_thicknesses['test mae'])
     test_mae_std_dev = np.std(model_thicknesses['test mae'])
 
@@ -847,20 +904,20 @@ def calculate_model_avg_statistics(
     train_mae_mean = np.mean(model_thicknesses['train mae'])
     train_mae_std_dev = np.std(model_thicknesses['train mae'])
 
-    # find mean and std dev of predictions made based on training data
-    train_thickness_mean = np.mean(model_thicknesses['avg train thickness']) 
-    train_thickness_std_dev = np.std(model_thicknesses['avg train thickness'])
+#     # find mean and std dev of predictions made based on training data
+#     train_thickness_mean = np.mean(model_thicknesses['avg train thickness']) 
+#     train_thickness_std_dev = np.std(model_thicknesses['avg train thickness'])
 
-    # find mean and std dev of predictions made based on test data
-    test_thickness_mean = np.mean(model_thicknesses['avg test thickness']) 
-    test_thickness_std_dev = np.std(model_thicknesses['avg test thickness'])
+#     # find mean and std dev of predictions made based on test data
+#     test_thickness_mean = np.mean(model_thicknesses['avg test thickness']) 
+#     test_thickness_std_dev = np.std(model_thicknesses['avg test thickness'])
 
     # put something in a series that can be appended to a df
-    s = pd.Series(train_thickness_mean)
+#     s = pd.Series(train_thickness_mean)
 
-    df = pd.concat(
-        [df, s], ignore_index=True
-    )
+#     df = pd.concat(
+#         [df, s], ignore_index=True
+#     )
 
     # begin populating deviations table
     df.loc[
@@ -870,7 +927,7 @@ def calculate_model_avg_statistics(
     
     df.loc[
         df.index[-1], 'total parameters'
-    ] = dnn_model['0'].count_params() 
+    ] = dnn_model.count_params() 
 
     df.loc[
         df.index[-1], 'trained parameters'
@@ -892,22 +949,23 @@ def calculate_model_avg_statistics(
 
     df.loc[df.index[-1], 'train mae std dev'] = train_mae_std_dev
 
-    df.loc[
-        df.index[-1], 'test predicted thickness std dev'
-    ] = test_thickness_std_dev
+#     df.loc[
+#         df.index[-1], 'test predicted thickness std dev'
+#     ] = test_thickness_std_dev
 
-    df.loc[
-        df.index[-1], 'train predicted thickness std dev'
-    ] = train_thickness_std_dev
+#     df.loc[
+#         df.index[-1], 'train predicted thickness std dev'
+#     ] = train_thickness_std_dev
 
 
 
-    df.drop(columns = {0},inplace = True)    
+#     df.drop(columns = {0},inplace = True)    
     df = df.dropna()
 
 
     df = df.sort_values('test mae avg')
-    
+    df = df.drop('Line1', axis = 1)
+
     return df
 
 
@@ -935,7 +993,7 @@ def find_predictions(
                 (file_reader['predicted thickness std dev'] / 1e3) * file_reader['Area']
             )
             arch = pd.Series(file[14:-7], name = 'architecture')
-            print(arch)
+#             print(arch)
             prethicked = pd.concat([prethicked, arch])
 
             prethicked = prethicked.reset_index()
@@ -945,7 +1003,6 @@ def find_predictions(
                 file_reader['pred std dev']
             )
             prethicked.loc[prethicked.index[-1], 'coregistration'] = coregistration
-                
 
     predicted = pd.DataFrame()
             

@@ -59,16 +59,18 @@ for index in tqdm(predictions.index):
     df = pd.concat([df,df_glob])
     
     
-    
 statistics = pd.DataFrame()
-for file in tqdm(os.listdir('zults/')):
+for file in (os.listdir('zults/')):
     if 'statistics' in file and coregistration in file:
         file_reader = pd.read_csv('zults/' + file)
-        deviations = pd.concat([statistics, file_reader], ignore_index = True)
-    
+        statistics = pd.concat([statistics, file_reader], ignore_index = True)
+#     print(file)
+#     break
 # deviations = deviations.dropna()
-df = pd.merge(df, deviations, on = 'layer architecture')
-    
+# print(list(statistics))
+df = pd.merge(df, statistics, on = 'layer architecture')
+# df = pd.merge(df, statistics, on = 'architecture')
+
     
 
 df = df[[
@@ -139,7 +141,6 @@ for this_rgi_id, obj in tqdm(compiled_raw):
     dft.loc[dft.index[-1],'Upper Bound'] = upper_bound
     dft.loc[dft.index[-1],'Median Value'] = median
     dft.loc[dft.index[-1],'Total estimates'] = glacier_count
-    
     
 dft = dft.rename(columns = {
     0:'RGIId'

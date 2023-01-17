@@ -20,23 +20,25 @@ def main():
     
     
     parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                        parameterization = 'sm9'
+                                                        parameterization = 'sm1'
                                                     )
     
     
     RS = range(0,25,1)
-    
+    print('')
     print(dataset.name)
     print(dataset)  
-    print(len(dataset))
+#     print(len(dataset))
 
-    ep_input = '2000'
+#     ep_input = '2000'
     layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-    lr_input = '0.01'
+#     lr_input = '0.01'
+    print('Building models...')
     
-    for layer_2_input in layer_2_list:
-        for layer_1_input in layer_1_list:
+    
+    for layer_2_input in (layer_2_list):
+        for layer_1_input in (layer_1_list):
             if layer_1_input <= layer_2_input:
                 pass
             elif layer_1_input > layer_2_input:
@@ -51,7 +53,7 @@ def main():
                     arch
                     )
 
-                for rs in tqdm(RS):
+                for rs in (RS):
             #             for lr in LR:
 
                     gl.build_and_train_model(
@@ -62,6 +64,7 @@ def main():
                         layer_1 = layer_1_input,
                         layer_2 = layer_2_input,
                     )   
+
 
 
 
