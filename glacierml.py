@@ -130,32 +130,27 @@ def load_training_data(
     region_selection = 1,
     area_scrubber = 'off',
     anomaly_input = 0.5,
-    data_version = 'v1'
+#     data_version = 'v1'
 ):        
     import os
     pth_1 = os.path.join(root_dir, 'T_data/')
     pth_2 = os.path.join(root_dir, 'RGI/rgi60-attribs/')
-    pth_3 = os.path.join(root_dir, 'matched_indexes/', data_version)
-    pth_4 = os.path.join(root_dir, 'regional_data/training_data/', data_version)
+    pth_3 = os.path.join(root_dir, 'matched_indexes/', 'v2')
+    pth_4 = os.path.join(root_dir, 'regional_data/training_data/', 'v2')
     
     
-    # data versions older than df8 are old cod and will probably not work.
-    # Here be mosnsters, ye be warned.
-
-            
-    pth_5 = pth_3 + '/GlaThiDa_with_RGIId_' + data_version + '.csv'                        
+    pth_5 = pth_3 + '/GlaThiDa_with_RGIId_' + 'v2' + '.csv'                        
                                  
     # load glacier GlaThiDa data v2
-    if data_version == 'v2':
-        glacier = pd.read_csv(pth_1 + 'T.csv', low_memory = False)    
-        glacier = glacier.rename(columns = {
-            'LAT':'Lat',
-            'LON':'Lon',
-            'AREA':'area_g',
-            'MEAN_SLOPE':'Mean Slope',
-            'MEAN_THICKNESS':'Thickness'
-        })   
-        glacier = glacier.dropna(subset = ['Thickness'])
+    glacier = pd.read_csv(pth_1 + 'T.csv', low_memory = False)    
+    glacier = glacier.rename(columns = {
+        'LAT':'Lat',
+        'LON':'Lon',
+        'AREA':'area_g',
+        'MEAN_SLOPE':'Mean Slope',
+        'MEAN_THICKNESS':'Thickness'
+    })   
+    glacier = glacier.dropna(subset = ['Thickness'])
 
 #         print('# of raw thicknesses: ' + str(len(glacier)))
         
@@ -180,29 +175,10 @@ def load_training_data(
 
     # add in RGI attributes
     elif RGI_input == 'y':
-        RGI_extra = pd.DataFrame()
-        for file in os.listdir(pth_2):
-            file_reader = pd.read_csv(
-                pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip'
-            )            
-            RGI_extra = pd.concat([RGI_extra, file_reader], ignore_index=True)
-        RGI = RGI_extra
+        RGI = load_RGI()
         RGI['region'] = RGI['RGIId'].str[6:8]
-#         print(RGI)
-        if data_version == 'v1':
-            glacier = pd.read_csv(pth_5)    
-            glacier = glacier.rename(columns = {
-                'lat':'Lat',
-                'lon':'Lon',
-                'area':'Area',
-                'mean_slope':'Mean Slope',
-                'mean_thickness':'Thickness'
-            })   
-            glacier = glacier.dropna(subset = ['Thickness'])
-
 
         # load glacier GlaThiDa data v2
-        if data_version == 'v2':
             glacier = pd.read_csv(pth_5)    
             glacier = glacier.rename(columns = {
                 'LAT':'Lat',
@@ -223,13 +199,13 @@ def load_training_data(
         rgi_matches_unique = len(glacier['RGIId'].unique())
         
         
-        df = df.rename(columns = {
-            'name':'name_g',
-            'Name':'name_r',
+#         df = df.rename(columns = {
+#             'name':'name_g',
+#             'Name':'name_r',
 
-            'BgnDate':'date_r',
-            'date':'date_g'
-        })
+#             'BgnDate':'date_r',
+#             'date':'date_g'
+#         })
 
         # make a temp df for the duplicated entries
         
