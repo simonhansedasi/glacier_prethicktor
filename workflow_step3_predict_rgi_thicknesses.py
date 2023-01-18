@@ -76,24 +76,6 @@ for index in (model_statistics.index):
 #                     RGI = RGI.drop(drops)
 
         RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
-#         print(RGI_for_predictions)
-#         print(RGI['Zmed'].min())
-        if parameterization == 'sm1':
-
-            RGI_for_predictions = RGI_for_predictions.rename(columns = {
-                'CenLat':'Lat',
-                'CenLon':'Lon',
-                'Area':'Area',
-                'Slope':'Mean Slope'
-            })
-            RGI_for_predictions = RGI_for_predictions[[
-                'Lat',
-                'Lon',
-                'Area',
-                'Mean Slope'
-            ]]
-
-#         RGI_for_predictions['Zdelta'] = RGI_for_predictions['Zmax'] - RGI_for_predictions['Zmin']
 
         print('Predicting thicknesses with model ' +
             'layer architecture: ' + arch + 
@@ -134,10 +116,10 @@ for index in (model_statistics.index):
                 pass
             else:
 
-                dnn_model[model] = tf.keras.models.load_model(model_path)
+                dnn_model = tf.keras.models.load_model(model_path)
 
                 s = pd.Series(
-                    dnn_model[model].predict(RGI_for_predictions, verbose=0).flatten(), 
+                    dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
                     name = rs
                 )
 

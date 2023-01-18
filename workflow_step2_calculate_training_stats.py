@@ -6,13 +6,13 @@ from tqdm import tqdm
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm9'
+                                                    parameterization = 'sm1'
                                                 )
 
 
 rootdir = 'saved_models/' + parameterization + '/'
 (train_features, test_features, train_labels, test_labels) = gl.split_data(dataset)
-dnn_model = {}
+# dnn_model = {}
 # print(' ')
 
 model_predictions = pd.DataFrame()
@@ -34,8 +34,8 @@ for arch in tqdm( os.listdir(rootdir)):
         )
 
         model_name = folder
-        dnn_model = gl.load_dnn_model(model_name, model_loc)
-        
+        dnn_model = gl.load_dnn_model(model_loc)
+#         print(dnn_model)
         df = gl.evaluate_model(architecture, model_name, dataset, dnn_model)
 
         model_predictions = pd.concat([model_predictions, df], ignore_index = True)
@@ -70,7 +70,7 @@ for arch in tqdm(list(model_predictions['architecture'].unique())):
     elif isdir == True:
         
         
-        dnn_model = gl.load_dnn_model(model_name, model_loc)
+        dnn_model = gl.load_dnn_model(model_loc)
         df = gl.calculate_model_avg_statistics(
             dnn_model,
             arch,

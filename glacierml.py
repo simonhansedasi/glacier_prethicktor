@@ -37,10 +37,10 @@ def select_dataset_coregistration(
             anomaly_input = 1,
 #             data_version = 'v2'
         )
-        df = df.drop([
-            'RGIId','region', 'RGI Centroid Distance', 
-            'AVG Radius', 'Roundness', 'distance test', 'size difference'
-                       ], axis = 1)
+#         df = df.drop([
+#             'RGIId','region', 'RGI Centroid Distance', 
+#             'AVG Radius', 'Roundness', 'distance test', 'size difference'
+#                        ], axis = 1)
 #         df9['Area'] = df9['Area'] * 1e6
 #         df9['Area'] = np.log(df9['Area'])
 #         df9['Lmax'] = np.log(df9['Lmax'])
@@ -176,7 +176,8 @@ def load_training_data(
 
     # add in RGI attributes
     elif RGI_input == 'y':
-        RGI = load_RGI()
+        RGI = load_RGI(pth = os.path.join(root_dir, 'RGI/rgi60-attribs/'))
+        print(RGI)
         RGI['region'] = RGI['RGIId'].str[6:8]
 
         # load glacier GlaThiDa data v2
@@ -615,12 +616,12 @@ def build_and_train_model(dataset,
     
 
 def load_dnn_model(
-    model_name,
+#     model_name,
     model_loc
 ):
     
-    dnn_model = {}
-    dnn_model[model_name] = tf.keras.models.load_model(model_loc)
+#     dnn_model = {}
+    dnn_model = tf.keras.models.load_model(model_loc)
     
     return dnn_model
     
@@ -634,15 +635,15 @@ def evaluate_model(
     dataset,
     dnn_model
 ):
-    df = pd.DataFrame({
-                'Line1':[1]
-    })
-    print(df)
+
     (
         train_features, test_features, train_labels, test_labels
     ) = split_data(
         dataset, random_state = int(rs)
     )
+    
+    features = pd.concat([train_features,test_features], ignore_index = True)
+    labels = pd.concat([train_labels, test_labels], ignore_index = True)
     
     mae_test = dnn_model.evaluate(
                     test_features, test_labels, verbose=0
@@ -650,14 +651,17 @@ def evaluate_model(
     mae_train = dnn_model.evaluate(
         train_features, train_labels, verbose=0
     )
-
-    df.loc[df.index[-1], 'model'] = rs
-    df.loc[df.index[-1], 'test mae'] = mae_test
-    df.loc[df.index[-1], 'train mae'] = mae_train
-    df.loc[df.index[-1], 'architecture'] = arch
-    df.loc[df.index[-1], 'coregistration'] = dataset.name
-    df.loc[df.index[-1], 'total parameters'] = dnn_model.count_params() 
-    df = df.drop('Line1', axis = 1)
+    df = features
+    thicknesses = (dnn_model.predict(features).flatten())
+    df['model'] = rs
+    df['test mae'] = mae_test
+    df['train mae'] = mae_train
+    df['architecture'] = arch
+    df['coregistration'] = dataset.name
+    df['total parameters'] = dnn_model.count_params() 
+    df['GlaThiDa Thickness'] = labels
+    df['E&L Thickness'] = thicknesses
+    df['Residual'] = df['GlaThiDa Thickness'] - df['E&L Thickness']
 
     return df
 
