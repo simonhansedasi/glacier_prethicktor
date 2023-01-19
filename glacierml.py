@@ -4,6 +4,8 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 from tensorflow import keras
+from keras import backend as K
+
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 import matplotlib.pyplot as plt
@@ -34,7 +36,7 @@ def select_dataset_coregistration(
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
-            anomaly_input = 1,
+            anomaly_input = 0.5,
 #             data_version = 'v2'
         )
 #         df = df.drop([
@@ -79,8 +81,8 @@ def select_dataset_coregistration(
             root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = .25,
+            area_scrubber = 'on',
+            anomaly_input = .5,
 #             data_version = 'v2'
         )
         df2 = df2[df2['distance test'] <= 0.5]
@@ -494,13 +496,13 @@ input = normalized data and desired learning rate
 output = linear regression model
 '''
 # No longer used
-def build_linear_model(normalizer,learning_rate=0.1):
+def build_linear_model(normalizer,learning_rate=0.01):
     model = tf.keras.Sequential([
         normalizer,
         layers.Dense(1)
     ])
 
-    model.compile(
+    model.compile( 
         optimizer=tf.optimizers.Adam(learning_rate=learning_rate),
         loss='mean_absolute_error')
     
@@ -514,8 +516,14 @@ input = normalized data and selected learning rate
 output = dnn model with desired layer architecture, ready to be trained.
 '''
 def build_dnn_model(
-    norm, learning_rate=0.1, layer_1 = 10, layer_2 = 5, dropout = True
+    norm, learning_rate=0.01, layer_1 = 10, layer_2 = 5, dropout = True, 
+    loss = 'mean_absolute_error'
 ):
+#     def coeff_determination(y_true, y_pred):
+#         SS_res =  K.sum(K.square( y_true-y_pred )) 
+#         SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) ) 
+#     return ( 1 - SS_res/(SS_tot + K.epsilon()) )
+
     
     if dropout == True:
         model = keras.Sequential(
@@ -528,9 +536,15 @@ def build_dnn_model(
                   layers.Dense(1) 
             ]
         )
-
-        model.compile(loss='mean_absolute_error',
-                    optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate))
+#         if loss == 'mean_squared_error':
+#             def coeff_determination(y_true, y_pred):
+#                 SS_res =  K.sum(K.square( y_true-y_pred )) 
+#                 SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) ) 
+#             return ( 1 - SS_res/(SS_tot + K.epsilon()) )
+#             model.compile(optimizer='adam', loss='mean_squared_error', metrics=[coeff_determination])
+#         if loss == 'mean_absolute_error':
+#             model.compile(loss='mean_absolute_error',
+#                     optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate))
         
     else:
         model = keras.Sequential(
@@ -593,7 +607,8 @@ def build_and_train_model(dataset,
                           layer_2 = 5,
                           dropout = True,
                           verbose = False,
-                          writeToFile = True
+                          writeToFile = True,
+                          loss = 'mean_absolute_error'
                          ):
     # define paths
     arch = str(layer_1) + '-' + str(layer_2)
@@ -640,7 +655,7 @@ def build_and_train_model(dataset,
     dnn_results = {}
 
     # set up model with  normalized data and defined layer architecture
-    dnn_model = build_dnn_model(normalizer['ALL'], 0.01, layer_1, layer_2, dropout)
+    dnn_model = build_dnn_model(normalizer['ALL'], 0.01, layer_1, layer_2, dropout, loss)
     
     # set up callback function to cut off training when performance reaches peak
     callback = tf.keras.callbacks.EarlyStopping(
