@@ -150,6 +150,30 @@ def select_dataset_coregistration(
         dataset.name = 'df4'
         res = 'sr4'
         
+    if parameterization == 'sm5':
+        df5 = load_training_data(
+            root_dir = pth,
+            RGI_input = 'y',
+            scale = 'g',
+#             area_scrubber = 'on',
+#             anomaly_input = .75,
+#             data_version = 'v2'
+        )
+        df5 = df5.drop([
+            'RGIId','region', 'RGI Centroid Distance', 
+            'AVG Radius',
+            'Roundness', 
+            'distance test', 'size difference'
+                       ], axis = 1)
+#         df4['Area'] = df4['Area'] * 1e6
+#         df4['Area'] = np.log(df4['Area'])
+#         df4['Lmax'] = np.log(df4['Lmax'])
+        
+        
+        dataset = df5
+        dataset.name = 'df5'
+        res = 'sr5'
+        
         
     return parameterization, dataset, dataset.name, res
 

@@ -9,7 +9,7 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm2'
+                                                    parameterization = 'sm5'
                                                 )
 if parameterization == 'sm1':
     coregistration = 'df1'
@@ -19,8 +19,8 @@ if parameterization == 'sm2':
 #     coregistration = 'df3'
 # if parameterization == 'sm4':
 #     coregistration = 'df4'
-# if parameterization == 'sm5':
-#     coregistration = 'df5'
+if parameterization == 'sm5':
+    coregistration = 'df5'
 # if parameterization == 'sm6':
 #     coregistration = 'df6'
 # if parameterization == 'sm7':

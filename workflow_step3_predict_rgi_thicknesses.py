@@ -18,7 +18,7 @@ tf.random.set_seed(42)
 
 
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm2'
+                                                    parameterization = 'sm5'
                                                 )
 
     
