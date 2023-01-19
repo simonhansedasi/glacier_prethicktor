@@ -20,7 +20,7 @@ def main():
     
     
     parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                        parameterization = 'sm'
+                                                        parameterization = 'sm2'
                                                     )
     
     
@@ -53,7 +53,7 @@ def main():
                     arch
                     )
 
-                for rs in (RS):
+                for rs in tqdm(RS):
             #             for lr in LR:
 
                     gl.build_and_train_model(
