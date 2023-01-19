@@ -18,7 +18,7 @@ tf.random.set_seed(42)
 
 
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm9'
+                                                    parameterization = 'sm2'
                                                 )
 
     
@@ -41,26 +41,30 @@ model_statistics = model_statistics[[
 
 print('Predicting thicknesses...')
 
-for index in (model_statistics.index):
+# for index in (model_statistics.index):
 #     print(index)
 #     print(deviations.iloc[index])
-    arch = model_statistics['layer architecture'].iloc[index]
+#     arch = model_statistics['layer architecture'].iloc[index]
 
 #     print(arch)
-    for region_selection in range(1,20,1):
-        RGI = gl.load_RGI(
-            pth = '/home/prethicktor/data/RGI/rgi60-attribs/',
-            region_selection = int(region_selection)
-        )
-        if len(str(region_selection)) == 1:
-            N = 1
-            region_selection = str(region_selection).zfill(N + len(str(region_selection)))
-        else:
-            region_selection = region_selection
+arch = '3-2'
+print('Predicting thicknesses with model ' +
+    'layer architecture: ' + arch + 
+    ', dataset: ' + dataset.name)
+for region_selection in tqdm(range(1,20,1)):
+    RGI = gl.load_RGI(
+        pth = '/home/prethicktor/data/RGI/rgi60-attribs/',
+        region_selection = int(region_selection)
+    )
+    if len(str(region_selection)) == 1:
+        N = 1
+        region_selection = str(region_selection).zfill(N + len(str(region_selection)))
+    else:
+        region_selection = region_selection
 
-        RGI['region'] = RGI['RGIId'].str[6:8]
-        RGI = RGI.reset_index()
-        RGI = RGI.drop('index', axis=1)
+    RGI['region'] = RGI['RGIId'].str[6:8]
+    RGI = RGI.reset_index()
+    RGI = RGI.drop('index', axis=1)
 #         print(region_selection)
 #             if region_selection != '19':
 #                 drops = RGI[
@@ -75,77 +79,72 @@ for index in (model_statistics.index):
 #                     print('dropping bad data')
 #                     RGI = RGI.drop(drops)
 
-        RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
+    RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
 
-        print('Predicting thicknesses with model ' +
-            'layer architecture: ' + arch + 
-            ', dataset: ' + dataset.name +
-            ', region: ' + str(region_selection)
+
+
+    dnn_model = {}
+    rootdir = 'saved_models/' + parameterization + '/'
+    RS = range(0,25,1)
+    dfs = pd.DataFrame()
+    for rs in (RS):
+        rs = str(rs)
+
+    # each series is one random state of an ensemble of 25.
+    # predictions are made on each random state and appended to a df as a column
+        model = (
+            rs
         )
 
-        print('predicting thicknesses...')
-        dnn_model = {}
-        rootdir = 'saved_models/' + parameterization + '/'
-        RS = range(0,25,1)
-        dfs = pd.DataFrame()
-        for rs in (RS):
-            rs = str(rs)
+        model_path = (
+            rootdir + 'sm_' + arch + '/' + str(rs)
+        )
+        results_path = 'saved_results/' + res + '/sr_' + arch + '/'
 
-        # each series is one random state of an ensemble of 25.
-        # predictions are made on each random state and appended to a df as a column
-            model = (
-                rs
+        history_name = (
+            rs
+        )
+
+        dnn_history ={}
+        dnn_history[rs] = pd.read_csv(results_path + rs)
+
+        if abs((
+            dnn_history[history_name]['loss'].iloc[-1]
+        ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
+
+            pass
+        else:
+
+            dnn_model = tf.keras.models.load_model(model_path)
+
+            s = pd.Series(
+                dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
+                name = rs
             )
 
-            model_path = (
-                rootdir + 'sm_' + arch + '/' + str(rs)
-            )
-            results_path = 'saved_results/' + res + '/sr_' + arch + '/'
-
-            history_name = (
-                rs
-            )
-
-            dnn_history ={}
-            dnn_history[rs] = pd.read_csv(results_path + rs)
-
-            if abs((
-                dnn_history[history_name]['loss'].iloc[-1]
-            ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
-
-                pass
-            else:
-
-                dnn_model = tf.keras.models.load_model(model_path)
-
-                s = pd.Series(
-                    dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
-                    name = rs
-                )
-
-                dfs[rs] = s
+            dfs[rs] = s
 
 
-        # make a copy of RGI to add predicted thickness and their statistics
-        RGI_prethicked = RGI.copy() 
-        RGI_prethicked['avg predicted thickness'] = 'NaN'
-        RGI_prethicked['predicted thickness std dev'] = 'NaN'
-        RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
+    # make a copy of RGI to add predicted thickness and their statistics
+    RGI_prethicked = RGI.copy() 
+    RGI_prethicked['avg predicted thickness'] = 'NaN'
+    RGI_prethicked['predicted thickness std dev'] = 'NaN'
+    RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
 
 #         print('calculating average thickness across random state ensemble...')
-        # loop through predictions df and find average across each ensemble of 25 random states
-        for i in (dfs.index):
-            RGI_prethicked['avg predicted thickness'].loc[i] = np.mean(dfs.loc[i])
+    # loop through predictions df and find average across each ensemble of 25 random states
+    for i in (dfs.index):
+        RGI_prethicked['avg predicted thickness'].loc[i] = np.mean(dfs.loc[i])
 
 
 #         print('computing standard deviations and variances for RGI predicted thicknesses')
-        # loop through predictions df and find std dev across each ensemble of 25 random states
-        for i in (dfs.index):
-            RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
+    # loop through predictions df and find std dev across each ensemble of 25 random states
+    for i in (dfs.index):
+        RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
 #         print(' ')
 
-        RGI_prethicked.to_csv(
-            'zults/RGI_predicted_' +
-            dataset.name + '_' + arch + '_' + str(region_selection) + '.csv'          
-        )    
+    RGI_prethicked.to_csv(
+        'zults/RGI_predicted_' +
+        dataset.name + '_' + arch + '_' + str(region_selection) + '.csv'          
+    )    
 

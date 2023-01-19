@@ -9,69 +9,77 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm9'
+                                                    parameterization = 'sm2'
                                                 )
 if parameterization == 'sm1':
     coregistration = 'df1'
 if parameterization == 'sm2':
     coregistration = 'df2'
-if parameterization == 'sm3':
-    coregistration = 'df3'
-if parameterization == 'sm4':
-    coregistration = 'df4'
-if parameterization == 'sm5':
-    coregistration = 'df5'
-if parameterization == 'sm6':
-    coregistration = 'df6'
-if parameterization == 'sm7':
-    coregistration = 'df7'
-if parameterization == 'sm8':
-    coregistration = 'df8'
-if parameterization == 'sm9':
-    coregistration = 'df9'
+# if parameterization == 'sm3':
+#     coregistration = 'df3'
+# if parameterization == 'sm4':
+#     coregistration = 'df4'
+# if parameterization == 'sm5':
+#     coregistration = 'df5'
+# if parameterization == 'sm6':
+#     coregistration = 'df6'
+# if parameterization == 'sm7':
+#     coregistration = 'df7'
+# if parameterization == 'sm8':
+#     coregistration = 'df8'
+# if parameterization == 'sm9':
+#     coregistration = 'df9'
 
-print('Loading predictions...')
-predictions = gl.find_predictions(coregistration = coregistration)
-predictions = predictions.reset_index()
-predictions = predictions.drop('index', axis = 1)
+print('Gathering architectures...')
+arch_list = gl.list_architectures(coregistration = coregistration)
+arch_list = arch_list.reset_index()
+arch_list = arch_list.drop('index', axis = 1)
 
 df = pd.DataFrame(columns = {
         'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
         '11','12','13','14','15','16','17','18','19','20','21',
         '22','23','24',
 })
-
-print('Predictions loaded')
-
+# df = pd.merge(df, arch_list, on = 'RGIId', how = 'inner')
+arch_list = arch_list.sort_values('architecture')
+# print(len(arch_list['architecture'].unique()))
+# print(arch_list['architecture'].unique())
+print('Architectures listed')
+# print(list(predictions))
+# print(predictions['architecture'].unique())
 print('Compiling predictions...')
-for index in tqdm(predictions.index):
-    idx = index
+for arch in tqdm(arch_list['architecture'].unique()):
+#     print(arch)
+#     break
+#     idx = index
 #     print(idx)
 
-    coregistration =  predictions['coregistration'].iloc[idx]
-    architecture = '_' + predictions['architecture'].iloc[idx]
+#     coregistration =  arch_list['coregistration'].iloc[idx]
+#     architecture = '_' + arch_list['architecture'].iloc[idx]
     df_glob = gl.load_global_predictions(
         coregistration = coregistration,
-        architecture = architecture,
+        architecture = arch,
     )
     
 
     df = pd.concat([df,df_glob])
-    
-    
+#     print(df)
+# print(df)
 statistics = pd.DataFrame()
 for file in (os.listdir('zults/')):
     if 'statistics' in file and coregistration in file:
         file_reader = pd.read_csv('zults/' + file)
         statistics = pd.concat([statistics, file_reader], ignore_index = True)
+
 #     print(file)
 #     break
 # deviations = deviations.dropna()
 # print(list(statistics))
-df = pd.merge(df, statistics, on = 'layer architecture')
+statistics = statistics.rename(columns = {'layer architecture':'architecture'})
+df = pd.merge(df, statistics, on = 'architecture')
 # df = pd.merge(df, statistics, on = 'architecture')
 
-    
+print(df)
 
 df = df[[
         'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
@@ -96,21 +104,21 @@ for this_rgi_id, obj in tqdm(compiled_raw):
     dft = dft.drop('index', axis = 1)
     
     
-#     obj['weight'] = obj['architecture weight'] + 1 / (obj[['0', '1', '2', '3', '4',
-#                                                      '5', '6', '7', '8', '9',
-#                                                      '10','11','12','13','14',
-#                                                      '15','16','17','18','19',
-#                                                      '20','21','22','23','24']].var(axis = 1))
+    obj['weight'] = obj['architecture weight 1'] + 1 / (obj[['0', '1', '2', '3', '4',
+                                                     '5', '6', '7', '8', '9',
+                                                     '10','11','12','13','14',
+                                                     '15','16','17','18','19',
+                                                     '20','21','22','23','24']].var(axis = 1))
     
     
-#     obj['weighted mean'] = obj['weight'] * obj[['0', '1', '2', '3', '4',
-#                                                '5', '6', '7', '8', '9',
-#                                                '10','11','12','13','14',
-#                                                '15','16','17','18','19',
-#                                                '20','21','22','23','24']].mean(axis = 1)
+    obj['weighted mean'] = obj['weight'] * obj[['0', '1', '2', '3', '4',
+                                               '5', '6', '7', '8', '9',
+                                               '10','11','12','13','14',
+                                               '15','16','17','18','19',
+                                               '20','21','22','23','24']].mean(axis = 1)
     
     
-#     weighted_glacier_mean = sum(obj['weighted mean']) / sum(obj['weight'])
+    weighted_glacier_mean = sum(obj['weighted mean']) / sum(obj['weight'])
 
     
     stacked_object = obj[[

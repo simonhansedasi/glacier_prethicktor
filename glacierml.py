@@ -61,7 +61,9 @@ def select_dataset_coregistration(
         )
         df1 = df1.drop([
             'RGIId','region', 'RGI Centroid Distance', 
-            'AVG Radius', 'Roundness', 'distance test', 'size difference'
+            'AVG Radius',
+            'Roundness', 
+            'distance test', 'size difference'
                        ], axis = 1)
 #         df9['Area'] = df9['Area'] * 1e6
 #         df9['Area'] = np.log(df9['Area'])
@@ -71,6 +73,79 @@ def select_dataset_coregistration(
         dataset = df1
         dataset.name = 'df1'
         res = 'sr1'
+        
+    if parameterization == 'sm2':
+        df2 = load_training_data(
+            root_dir = pth,
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = .25,
+#             data_version = 'v2'
+        )
+        df2 = df2.drop([
+            'RGIId','region', 'RGI Centroid Distance', 
+            'AVG Radius',
+#             'Roundness', 
+            'distance test', 'size difference'
+                       ], axis = 1)
+#         df9['Area'] = df9['Area'] * 1e6
+#         df9['Area'] = np.log(df9['Area'])
+#         df9['Lmax'] = np.log(df9['Lmax'])
+        
+        
+        dataset = df2
+        dataset.name = 'df2'
+        res = 'sr2'
+        
+    if parameterization == 'sm3':
+        df3 = load_training_data(
+            root_dir = pth,
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = .75,
+#             data_version = 'v2'
+        )
+        df3 = df3.drop([
+            'RGIId','region', 'RGI Centroid Distance', 
+            'AVG Radius',
+            'Roundness', 
+            'distance test', 'size difference'
+                       ], axis = 1)
+#         df9['Area'] = df9['Area'] * 1e6
+#         df9['Area'] = np.log(df9['Area'])
+#         df9['Lmax'] = np.log(df9['Lmax'])
+        
+        
+        dataset = df3
+        dataset.name = 'df3'
+        res = 'sr3'
+        
+        
+    if parameterization == 'sm4':
+        df4 = load_training_data(
+            root_dir = pth,
+            RGI_input = 'y',
+            scale = 'g',
+            area_scrubber = 'on',
+            anomaly_input = .75,
+#             data_version = 'v2'
+        )
+        df4 = df4.drop([
+            'RGIId','region', 'RGI Centroid Distance', 
+            'AVG Radius',
+            'Roundness', 
+            'distance test', 'size difference'
+                       ], axis = 1)
+        df4['Area'] = df4['Area'] * 1e6
+        df4['Area'] = np.log(df4['Area'])
+#         df4['Lmax'] = np.log(df4['Lmax'])
+        
+        
+        dataset = df4
+        dataset.name = 'df4'
+        res = 'sr4'
         
         
     return parameterization, dataset, dataset.name, res
@@ -177,7 +252,7 @@ def load_training_data(
     # add in RGI attributes
     elif RGI_input == 'y':
         RGI = load_RGI(pth = os.path.join(root_dir, 'RGI/rgi60-attribs/'))
-        print(RGI)
+#         print(RGI)
         RGI['region'] = RGI['RGIId'].str[6:8]
 
         # load glacier GlaThiDa data v2
@@ -727,63 +802,26 @@ def calculate_model_avg_statistics(
 
 '''
 '''
-def find_predictions(
+def list_architectures(
     coregistration = 'df8'
 ):
     root_dir = 'zults/'
-    prethicked = pd.DataFrame()
+    arch_list = pd.DataFrame()
     for file in tqdm(os.listdir(root_dir)):
-    # print(file)
-        if 'RGI_predicted' in file and coregistration in file:
+        
+        if 'RGI_predicted_' + coregistration in file :
             file_reader = pd.read_csv(root_dir + file)
-            file_reader = file_reader.rename(columns = {
-                0:'vol'
-            })
-
-            file_reader['volume km3'] = (
-                file_reader['avg predicted thickness'] / 1e3
-            ) * file_reader['Area']
-            
-            file_reader['pred std dev'] = (
-                (file_reader['predicted thickness std dev'] / 1e3) * file_reader['Area']
-            )
-            arch = pd.Series(file[14:-7], name = 'architecture')
-#             print(arch)
-            prethicked = pd.concat([prethicked, arch])
-
-            prethicked = prethicked.reset_index()
-            prethicked = prethicked.drop('index', axis = 1)
-            prethicked.loc[prethicked.index[-1], 'volume'] = sum(file_reader['volume km3'])
-            prethicked.loc[prethicked.index[-1], 'std dev'] = sum(
-                file_reader['pred std dev']
-            )
-            prethicked.loc[prethicked.index[-1], 'coregistration'] = coregistration
-
-    predicted = pd.DataFrame()
-            
-#             break
-    prethicked = prethicked.rename(columns = {
+            arch = pd.Series(file[18:-7], name = 'architecture')
+            arch_list = pd.concat([arch_list, arch], ignore_index = True)
+            arch_list = arch_list.reset_index()
+            arch_list = arch_list.drop('index', axis = 1)
+            arch_list.loc[arch_list.index[-1], 'coregistration'] = coregistration
+    
+    arch_list = arch_list.rename(columns = {
         0:'architecture'
     })
-    for arch in prethicked['architecture'].unique():
-        dft = prethicked[
-            (prethicked['architecture'] == arch)
-        ]
-        dft['predicted volume'] = sum(dft['volume']) / 1e3
-        dft['std dev'] = sum(dft['std dev']) / 1e3
-#         print(dft.iloc[-1])
-        predicted = pd.concat([predicted,dft],ignore_index = True)
-    predicted = predicted[[
-        'architecture',
-#         'epochs',
-#         'learning rate',
-        'coregistration',
-        'predicted volume',
-        'std dev'
-    ]]
-    predicted = predicted.drop_duplicates()
-#     prethicked = prethicked.drop_duplicates()
-    return predicted
+
+    return arch_list
 
 
 
@@ -792,25 +830,31 @@ def load_global_predictions(
     coregistration,
     architecture,
 ):
+    
+#     print(architecture)
     root_dir = 'zults/'
     RGI_predicted = pd.DataFrame()
     for file in (os.listdir(root_dir)):
             # print(file)
-        if ('RGI_predicted' in file and 
-            coregistration in file and
-            architecture in file
-           ):
+        if ('RGI_predicted_' + coregistration and '_' + architecture + '_' in file):
+            
             file_reader = pd.read_csv(root_dir + file)
+#             print(list(file_reader))
 #             print(file_reader)
-            file_reader['volume km3'] = (
-                file_reader['avg predicted thickness'] / 1e3
-            ) * file_reader['Area']
+#             file_reader['volume km3'] = (
+#                 file_reader['E&L Thickness'] / 1e3
+#             ) * file_reader['Area']
             file_reader = file_reader.dropna()
+#             print(file_reader)
             RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
-            RGI_predicted['layer architecture'] =  architecture[5:]
-    RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
+            RGI_predicted['architecture'] =  architecture
+#         break
+#     RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
     RGI_predicted['dataframe'] =  coregistration
-    print(RGI_predicted)
+#     print(RGI_predicted['architecture'].unique())
+#     print(len(RGI_predicted['architecture'].unique()))
+#     print(list(RGI_predicted))
+#     print(RGI_predicted)
 
     return RGI_predicted
 
@@ -1033,7 +1077,7 @@ def load_notebook_data(
     ]]
     df = df[[
          'RGIId',
-         'Weighted Mean Thickness',
+#          'Weighted Mean Thickness',
          'Mean Thickness',
          'Median Thickness',
          'Thickness Std Dev',
