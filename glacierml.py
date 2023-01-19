@@ -79,10 +79,11 @@ def select_dataset_coregistration(
             root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = .25,
+#             area_scrubber = 'on',
+#             anomaly_input = .25,
 #             data_version = 'v2'
         )
+        df2 = df2[df2['distance test'] <= 0.5]
         df2 = df2.drop([
             'RGIId','region', 'RGI Centroid Distance', 
             'AVG Radius',
