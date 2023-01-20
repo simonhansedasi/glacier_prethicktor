@@ -82,7 +82,8 @@ for index in (model_statistics.index):
             RGI['AVG Radius'] = np.sqrt((RGI['Area'] * 1e6) / np.pi)
             RGI['Roundness'] = (RGI['AVG Radius']) / (RGI['Lmax'])
     #         RGI['Area'] = RGI['Area'] / 1e6
-        RGI_for_predictions = RGI.drop(['region', 'RGIId', 'AVG Radius'], axis = 1)
+            RGI_for_predictions = RGI.drop(['region', 'RGIId', 'AVG Radius'], axis = 1)
+        RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
 #         print(RGI_for_predictions)
 
 
