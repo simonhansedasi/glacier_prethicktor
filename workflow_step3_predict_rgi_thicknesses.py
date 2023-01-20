@@ -42,8 +42,8 @@ model_statistics = model_statistics[[
 print('Predicting thicknesses...')
 
 for index in (model_statistics.index):
-    print(index)
-    print(model_statistics.iloc[index])
+#     print(index)
+#     print(model_statistics.iloc[index])
     arch = model_statistics['layer architecture'].iloc[index]
 
 # arch = '3-2'
