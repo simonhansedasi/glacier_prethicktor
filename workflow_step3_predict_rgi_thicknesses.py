@@ -16,14 +16,24 @@ pd.set_option('mode.chained_assignment', None)
 tf.random.set_seed(42)
 # print('currently running tensorflow version: ' + tf.__version__)
 
+parameterization = str(  4  )
+config = configparser.ConfigParser()
+config.read('model_parameterization.ini')
 
-parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm3'
-                                                )
+data = gl.load_training_data(
+    RGI_input = config[parameterization]['RGI_input'],
+    scale = config[parameterization]['scale'],
+)
+
+data.name = config[parameterization]['datasetname'] 
+data = data.drop([
+    'RGIId','region', 'RGI Centroid Distance', 
+    'AVG Radius', 'Roundness', 'distance test', 'size difference'
+], axis = 1)
 
     
     
-model_statistics = pd.read_csv('zults/model_statistics_' + dataset.name + '.csv')
+model_statistics = pd.read_csv('zults/model_statistics_' + data.name + '.csv')
 # deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')
 # deviations = pd.concat([deviations_1, deviations_2])
 model_statistics = model_statistics.reset_index()
@@ -77,16 +87,16 @@ for index in (model_statistics.index):
     #                 if not drops.empty:
     #                     print('dropping bad data')
     #                     RGI = RGI.drop(drops)
-        if 'Roundness' in dataset:
-    #         RGI['Area'] = RGI['Area'] * 1e6
-            RGI['AVG Radius'] = np.sqrt((RGI['Area'] * 1e6) / np.pi)
-            RGI['Roundness'] = (RGI['AVG Radius']) / (RGI['Lmax'])
-            RGI['Area'] = np.log(RGI['Area'] * 1e3)
-    #         RGI['Area'] = RGI['Area'] / 1e6
-            RGI_for_predictions = RGI.drop(['region', 'RGIId', 'AVG Radius'], axis = 1)
-        elif 'Roundness' not in dataset:
-            RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
-#         print(RGI_for_predictions)
+#         if 'Roundness' in dataset:
+#     #         RGI['Area'] = RGI['Area'] * 1e6
+#             RGI['AVG Radius'] = np.sqrt((RGI['Area'] * 1e6) / np.pi)
+#             RGI['Roundness'] = (RGI['AVG Radius']) / (RGI['Lmax'])
+#             RGI['Area'] = np.log(RGI['Area'] * 1e3)
+#     #         RGI['Area'] = RGI['Area'] / 1e6
+#             RGI_for_predictions = RGI.drop(['region', 'RGIId', 'AVG Radius'], axis = 1)
+#         elif 'Roundness' not in dataset:
+#             RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
+# #         print(RGI_for_predictions)
 
 
 
@@ -106,7 +116,7 @@ for index in (model_statistics.index):
             model_path = (
                 rootdir + 'sm_' + arch + '/' + str(rs)
             )
-            results_path = 'saved_results/' + res + '/sr_' + arch + '/'
+            results_path = 'saved_results/' + parameterization + '/' + arch + '/'
 
             history_name = (
                 rs

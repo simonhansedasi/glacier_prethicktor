@@ -24,161 +24,6 @@ tf.random.set_seed(42)
 
 pd.set_option('mode.chained_assignment',None)
 
-def select_dataset_coregistration(
-    pth='/home/prethicktor/data/',
-    parameterization='sm'
-):
-    root_dir = pth
-
-    if parameterization == 'sm':
-        df = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = 0.5,
-#             data_version = 'v2'
-        )
-#         df = df.drop([
-#             'RGIId','region', 'RGI Centroid Distance', 
-#             'AVG Radius', 'Roundness', 'distance test', 'size difference'
-#                        ], axis = 1)
-#         df9['Area'] = df9['Area'] * 1e6
-#         df9['Area'] = np.log(df9['Area'])
-#         df9['Lmax'] = np.log(df9['Lmax'])
-        
-        
-        dataset = df
-        dataset.name = 'df'
-        res = 'sr'
-        
-    if parameterization == 'sm1':
-        df1 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = .25,
-#             data_version = 'v2'
-        )
-        df1 = df1.drop([
-            'RGIId','region', 'RGI Centroid Distance', 
-            'AVG Radius',
-            'Roundness', 
-            'distance test', 'size difference'
-                       ], axis = 1)
-#         df9['Area'] = df9['Area'] * 1e6
-#         df9['Area'] = np.log(df9['Area'])
-#         df9['Lmax'] = np.log(df9['Lmax'])
-        
-        
-        dataset = df1
-        dataset.name = 'df1'
-        res = 'sr1'
-        
-    if parameterization == 'sm2':
-        df2 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = .5,
-#             data_version = 'v2'
-        )
-        df2 = df2[df2['distance test'] <= 0.5]
-        df2 = df2.drop([
-            'RGIId','region', 'RGI Centroid Distance', 
-            'AVG Radius',
-#             'Roundness', 
-            'distance test', 'size difference'
-                       ], axis = 1)
-#         df9['Area'] = df9['Area'] * 1e6
-#         df9['Area'] = np.log(df9['Area'])
-#         df9['Lmax'] = np.log(df9['Lmax'])
-        
-        
-        dataset = df2
-        dataset.name = 'df2'
-        res = 'sr2'
-        
-    if parameterization == 'sm3':
-        df3 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = .5,
-#             data_version = 'v2'
-        )
-        df3 = df3[df3['distance test'] <= 0.5]
-
-        df3 = df3.drop([
-            'RGIId','region', 'RGI Centroid Distance', 
-            'AVG Radius',
-#             'Roundness', 
-            'distance test', 'size difference'
-                       ], axis = 1)
-        df3['Area'] = df3['Area'] * 1e6
-        df3['Area'] = np.log(df3['Area'])
-#         df9['Lmax'] = np.log(df9['Lmax'])
-        
-        
-        dataset = df3
-        dataset.name = 'df3'
-        res = 'sr3'
-        
-        
-    if parameterization == 'sm4':
-        df4 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = .5,
-#             data_version = 'v2'
-        )
-        df4 = df4[df4['distance test'] <= 0.5]
-        df4 = df4.drop([
-            'RGIId','region', 'RGI Centroid Distance', 
-            'AVG Radius',
-            'Roundness', 
-            'distance test', 'size difference'
-                       ], axis = 1)
-        df4['Area'] = df4['Area'] * 1e6
-        df4['Area'] = np.log(df4['Area'])
-#         df4['Lmax'] = np.log(df4['Lmax'])
-        
-        
-        dataset = df4
-        dataset.name = 'df4'
-        res = 'sr4'
-        
-    if parameterization == 'sm5':
-        df5 = load_training_data(
-            root_dir = pth,
-            RGI_input = 'y',
-            scale = 'g',
-#             area_scrubber = 'on',
-#             anomaly_input = .75,
-#             data_version = 'v2'
-        )
-        df5 = df5.drop([
-            'RGIId','region', 'RGI Centroid Distance', 
-            'AVG Radius',
-            'Roundness', 
-            'distance test', 'size difference'
-                       ], axis = 1)
-#         df4['Area'] = df4['Area'] * 1e6
-#         df4['Area'] = np.log(df4['Area'])
-#         df4['Lmax'] = np.log(df4['Lmax'])
-        
-        
-        dataset = df5
-        dataset.name = 'df5'
-        res = 'sr5'
-        
-        
-    return parameterization, dataset, dataset.name, res
 
 
 
@@ -415,9 +260,6 @@ def match_GlaThiDa_RGI_index(
     pth_2 = os.path.join(pth, '/RGI/rgi60-attribs/')
     pth_3 = os.path.join(pth, '/matched_indexes/', version)
     
-    if version == 'v1':
-        glathida = pd.read_csv(pth_1 + 'glacier.csv')
-        glathida = glathida.dropna(subset = ['mean_thickness'])
     if version == 'v2':
         glathida = pd.read_csv(pth_1 + 'T.csv')
         glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
@@ -462,10 +304,10 @@ def match_GlaThiDa_RGI_index(
 def get_id(RGI,glathida,version,verbose,i):
     if verbose: print(f'Working on Glathida ID {i}')
     #obtain lat and lon from glathida 
-    if version == 'v1':
-        glathida_ll = (glathida.loc[i].lat,glathida.loc[i].lon)
-    if version == 'v2':
-        glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
+#     if version == 'v1':
+#         glathida_ll = (glathida.loc[i].lat,glathida.loc[i].lon)
+#     if version == 'v2':
+    glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
 
     # find distance between selected glathida glacier and all RGI
     distances = RGI.apply(
@@ -639,8 +481,8 @@ def build_and_train_model(dataset,
                          ):
     # define paths
     arch = str(layer_1) + '-' + str(layer_2)
-    svd_mod_pth = 'saved_models/' + parameterization + '/sm_' + arch + '/'
-    svd_res_pth = 'saved_results/' + res + '/sr_' + arch + '/'
+    svd_mod_pth = 'saved_models/' + parameterization + '/' + arch + '/'
+    svd_res_pth = 'saved_results/' + parameterization + '/' + arch + '/'
 
     # code snippet to make folders for saved models and results if they do not already exist
     isdir = os.path.isdir(svd_mod_pth)
@@ -753,7 +595,8 @@ def evaluate_model(
     arch,
     rs,
     dataset,
-    dnn_model
+    dnn_model,
+    parameterization
 ):
 
     (
@@ -776,8 +619,8 @@ def evaluate_model(
     df['model'] = rs
     df['test mae'] = mae_test
     df['train mae'] = mae_train
-    df['architecture'] = arch
-    df['coregistration'] = dataset.name
+    df['layer architecture'] = arch
+    df['parameterization'] = parameterization
     df['total parameters'] = dnn_model.count_params() 
     df['GlaThiDa Thickness'] = labels
     df['E&L Thickness'] = thicknesses
@@ -848,22 +691,23 @@ def calculate_model_avg_statistics(
 '''
 '''
 def list_architectures(
-    coregistration = 'df8'
+    parameterization = '1'
 ):
-    root_dir = 'zults/'
+#     root_dir = 'zults/'
     arch_list = pd.DataFrame()
     for file in tqdm(os.listdir(root_dir)):
         
-        if 'RGI_predicted_' + coregistration in file :
+        if 'RGI_predicted_' + parameterization in file :
             file_reader = pd.read_csv(root_dir + file)
-            arch = pd.Series(file[18:-7], name = 'architecture')
+            arch = pd.Series(file[16:-7])
             arch_list = pd.concat([arch_list, arch], ignore_index = True)
             arch_list = arch_list.reset_index()
             arch_list = arch_list.drop('index', axis = 1)
-            arch_list.loc[arch_list.index[-1], 'coregistration'] = coregistration
+#             arch_list.loc[arch_list.index[-1], 'parameterization'] = parameterization
+#             arch_list.loc[arch_list.index[-1], 'arch'] = arch
     
     arch_list = arch_list.rename(columns = {
-        0:'architecture'
+        0:'layer architecture'
     })
     arch_list = arch_list.drop_duplicates()
     return arch_list
@@ -872,7 +716,7 @@ def list_architectures(
 
 
 def load_global_predictions(
-    coregistration,
+    parameterization,
     architecture,
 ):
     
@@ -881,25 +725,16 @@ def load_global_predictions(
     RGI_predicted = pd.DataFrame()
     for file in (os.listdir(root_dir)):
             # print(file)
-        if ('RGI_predicted_' + coregistration and '_' + architecture + '_' in file):
-            
+        if ('RGI_predicted_' + parameterization + '_' + architecture + '_' in file):
+            print(file)
             file_reader = pd.read_csv(root_dir + file)
-#             print(list(file_reader))
-#             print(file_reader)
-#             file_reader['volume km3'] = (
-#                 file_reader['E&L Thickness'] / 1e3
-#             ) * file_reader['Area']
+
             file_reader = file_reader.dropna()
-#             print(file_reader)
             RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
-            RGI_predicted['architecture'] =  architecture
-#         break
-#     RGI_predicted = RGI_predicted.drop('Unnamed: 0', axis = 1)
-    RGI_predicted['dataframe'] =  coregistration
-#     print(RGI_predicted['architecture'].unique())
-#     print(len(RGI_predicted['architecture'].unique()))
-#     print(list(RGI_predicted))
-#     print(RGI_predicted)
+            RGI_predicted['layer architecture'] =  architecture
+
+    RGI_predicted['parameterization'] =  parameterization
+
 
     return RGI_predicted
 
