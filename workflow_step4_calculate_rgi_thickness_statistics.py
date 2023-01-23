@@ -8,30 +8,32 @@ import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm3'
-                                                )
-if parameterization == 'sm1':
-    coregistration = 'df1'
-if parameterization == 'sm2':
-    coregistration = 'df2'
-# if parameterization == 'sm3':
-#     coregistration = 'df3'
-# if parameterization == 'sm4':
-#     coregistration = 'df4'
-if parameterization == 'sm5':
-    coregistration = 'df5'
-# if parameterization == 'sm6':
-#     coregistration = 'df6'
-# if parameterization == 'sm7':
-#     coregistration = 'df7'
-# if parameterization == 'sm8':
-#     coregistration = 'df8'
-# if parameterization == 'sm9':
-#     coregistration = 'df9'
+parameterization = str(  4  )
+config = configparser.ConfigParser()
+config.read('model_parameterization.ini')
+
+data = gl.load_training_data(
+    RGI_input = config[parameterization]['RGI_input'],
+    scale = config[parameterization]['scale'],
+)
+
+data.name = config[parameterization]['datasetname'] 
+data = data.drop([
+    'RGIId','region', 'RGI Centroid Distance', 
+    'AVG Radius', 'Roundness', 'distance test', 'size difference'
+], axis = 1)
+
+
+if parameterization == '1':
+    training_data = 'df1'
+if parameterization == '2':
+    training_data = 'df2'
+if parameterization == '3':
+    training_data = 'df3'
+
 
 print('Gathering architectures...')
-arch_list = gl.list_architectures(coregistration = coregistration)
+arch_list = gl.list_architectures(training_data = training_data)
 arch_list = arch_list.reset_index()
 arch_list = arch_list.drop('index', axis = 1)
 
@@ -57,7 +59,7 @@ for arch in tqdm(arch_list['architecture'].unique()):
 #     coregistration =  arch_list['coregistration'].iloc[idx]
 #     architecture = '_' + arch_list['architecture'].iloc[idx]
     df_glob = gl.load_global_predictions(
-        coregistration = coregistration,
+        training_data = training_data,
         architecture = arch,
     )
     
@@ -67,7 +69,7 @@ for arch in tqdm(arch_list['architecture'].unique()):
 # print(df)
 statistics = pd.DataFrame()
 for file in (os.listdir('zults/')):
-    if 'statistics' in file and coregistration in file:
+    if 'statistics' in file and training_data in file:
         file_reader = pd.read_csv('zults/' + file)
         statistics = pd.concat([statistics, file_reader], ignore_index = True)
 
@@ -156,5 +158,5 @@ dft = dft.rename(columns = {
 dft = dft.drop_duplicates()
 dft.to_csv(
     'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_' + 
-    coregistration + '.csv'
+    training_data + '.csv'
           )

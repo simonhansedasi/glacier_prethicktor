@@ -13,21 +13,47 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 pd.set_option('mode.chained_assignment', None)
+import configparser
 
 tf.random.set_seed(42)
+# chosen_parameterization = input()
 
 def main():
     
     
-    parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                        parameterization = 'sm3'
-                                                    )
+    parameterization = str(  1  )
+    config = configparser.ConfigParser()
+    config.read('model_parameterization.ini')
+
+    data = gl.load_training_data(
+    #     pth = '/home/prethicktor/data/',
+        RGI_input = config[parameterization]['RGI_input'],
+        scale = config[parameterization]['scale'],
+        area_scrubber = config[parameterization]['area scrubber'],
+        anomaly_input = float(   config[parameterization]['size anomaly']   )
+    )
+    data = data.drop(
+        data[data['distance test'] >= float(  config[parameterization]['distance test']  )].index
+    )
+    data.name = config[parameterization]['datasetname']
+    data = data.drop([
+        'RGIId','region', 'RGI Centroid Distance', 
+        'AVG Radius', 'Roundness', 
+            'distance test', 
+        'size difference'
+    ], axis = 1)
+    
+    
+#     parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
+#                                                         parameterization = '1'
+#                                                     )
+    
     
     
     RS = range(0,25,1)
     print('')
-    print(dataset.name)
-    print(dataset)  
+    print(data.name)
+    print(data)  
 #     print(len(dataset))
 
 #     ep_input = '2000'
@@ -48,7 +74,7 @@ def main():
                 print('')
                 print(
                     'Running multi-variable DNN regression on ' + 
-                    str(dataset.name) + 
+                    str(data.name) + 
                     ' dataset with layer architecture = ' +
                     arch
                     )
@@ -57,7 +83,7 @@ def main():
             #             for lr in LR:
 
                     gl.build_and_train_model(
-                        dataset, 
+                        data, 
                         random_state = rs, 
                         parameterization = parameterization, 
                         res = res,

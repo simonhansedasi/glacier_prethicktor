@@ -5,9 +5,19 @@ import os
 from tqdm import tqdm
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm3'
-                                                )
+parameterization = str(  4  )
+config = configparser.ConfigParser()
+config.read('model_parameterization.ini')
+
+data = gl.load_training_data(
+    RGI_input = config[parameterization]['RGI_input'],
+    scale = config[parameterization]['scale'],
+)
+data.name = config[parameterization]['datasetname'] 
+data = data.drop([
+    'RGIId','region', 'RGI Centroid Distance', 
+    'AVG Radius', 'Roundness', 'distance test', 'size difference'
+], axis = 1)
 
 
 rootdir = 'saved_models/' + parameterization + '/'
@@ -36,14 +46,14 @@ for arch in tqdm( os.listdir(rootdir)):
         model_name = folder
         dnn_model = gl.load_dnn_model(model_loc)
 #         print(dnn_model)
-        df = gl.evaluate_model(architecture, model_name, dataset, dnn_model)
+        df = gl.evaluate_model(architecture, model_name, data, dnn_model)
 
         model_predictions = pd.concat([model_predictions, df], ignore_index = True)
 #     break
 # print(model_predictions['architecture'])
 # print(list(model_predictions))
 model_predictions.rename(columns = {0:'avg train thickness'},inplace = True)
-model_predictions.to_csv('zults/model_predictions_' + dataset.name  + '.csv')
+model_predictions.to_csv('zults/model_predictions_' + data.name  + '.csv')
 # calculate statistics
 print('calculating statistics...')
 print(' ')
@@ -57,7 +67,6 @@ for arch in tqdm(list(model_predictions['architecture'].unique())):
 
     model_loc = (
         rootdir + 
-        'sm_' +
         arch + 
         '/' +
         '0'
@@ -74,7 +83,7 @@ for arch in tqdm(list(model_predictions['architecture'].unique())):
         df = gl.calculate_model_avg_statistics(
             dnn_model,
             arch,
-            dataset,
+            data,
             model_thicknesses
         )
 
@@ -92,6 +101,6 @@ model_statistics['architecture weight 2'] = (
 )
 model_statistics.to_csv(
     'zults/model_statistics_' + 
-    dataset.name + 
+    data.name + 
     '.csv'
 )
