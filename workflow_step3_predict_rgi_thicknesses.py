@@ -18,7 +18,7 @@ tf.random.set_seed(42)
 
 
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm5'
+                                                    parameterization = 'sm3'
                                                 )
 
     
@@ -47,7 +47,7 @@ for index in (model_statistics.index):
     arch = model_statistics['layer architecture'].iloc[index]
 
 # arch = '3-2'
-    print('Predicting thicknesses with model ' +
+    print('Estimating thicknesses with model ' +
         'layer architecture: ' + arch + 
         ', dataset: ' + dataset.name)
     for region_selection in tqdm(range(1,20,1)):
@@ -81,9 +81,10 @@ for index in (model_statistics.index):
     #         RGI['Area'] = RGI['Area'] * 1e6
             RGI['AVG Radius'] = np.sqrt((RGI['Area'] * 1e6) / np.pi)
             RGI['Roundness'] = (RGI['AVG Radius']) / (RGI['Lmax'])
+            RGI['Area'] = np.log(RGI['Area'] * 1e3)
     #         RGI['Area'] = RGI['Area'] / 1e6
             RGI_for_predictions = RGI.drop(['region', 'RGIId', 'AVG Radius'], axis = 1)
-        elif:
+        elif 'Roundness' not in dataset:
             RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
 #         print(RGI_for_predictions)
 

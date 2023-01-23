@@ -20,7 +20,7 @@ def main():
     
     
     parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                        parameterization = 'sm5'
+                                                        parameterization = 'sm3'
                                                     )
     
     

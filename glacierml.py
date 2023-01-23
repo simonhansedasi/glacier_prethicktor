@@ -35,8 +35,8 @@ def select_dataset_coregistration(
             root_dir = pth,
             RGI_input = 'y',
             scale = 'g',
-            area_scrubber = 'on',
-            anomaly_input = 0.5,
+#             area_scrubber = 'on',
+#             anomaly_input = 0.5,
 #             data_version = 'v2'
         )
 #         df = df.drop([
@@ -107,17 +107,19 @@ def select_dataset_coregistration(
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
-            anomaly_input = .75,
+            anomaly_input = .5,
 #             data_version = 'v2'
         )
+        df3 = df3[df3['distance test'] <= 0.5]
+
         df3 = df3.drop([
             'RGIId','region', 'RGI Centroid Distance', 
             'AVG Radius',
-            'Roundness', 
+#             'Roundness', 
             'distance test', 'size difference'
                        ], axis = 1)
-#         df9['Area'] = df9['Area'] * 1e6
-#         df9['Area'] = np.log(df9['Area'])
+        df3['Area'] = df3['Area'] * 1e6
+        df3['Area'] = np.log(df3['Area'])
 #         df9['Lmax'] = np.log(df9['Lmax'])
         
         
@@ -132,9 +134,10 @@ def select_dataset_coregistration(
             RGI_input = 'y',
             scale = 'g',
             area_scrubber = 'on',
-            anomaly_input = .75,
+            anomaly_input = .5,
 #             data_version = 'v2'
         )
+        df4 = df4[df4['distance test'] <= 0.5]
         df4 = df4.drop([
             'RGIId','region', 'RGI Centroid Distance', 
             'AVG Radius',
@@ -730,6 +733,8 @@ def build_and_train_model(dataset,
         return dnn_model
     
 
+    
+
 def load_dnn_model(
 #     model_name,
     model_loc
@@ -860,7 +865,7 @@ def list_architectures(
     arch_list = arch_list.rename(columns = {
         0:'architecture'
     })
-
+    arch_list = arch_list.drop_duplicates()
     return arch_list
 
 
@@ -898,149 +903,6 @@ def load_global_predictions(
 
     return RGI_predicted
 
-
-'''
-'''
-# def add_glathida_stats(
-#     df,
-#     pth_1 = '/data/fast1/glacierml/data/regional_data/raw/',
-#     pth_2 = '/data/fast1/glacierml/data/RGI/rgi60-attribs/',
-#     pth_3 = '/data/fast1/glacierml/data/regional_data/training_data/',
-    
-# ):
-#     # finish building df
-
-#     dfa = pd.DataFrame()
-#     for file in tqdm(os.listdir(pth_1)):
-#         dfb = pd.read_csv(pth_1 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-#         region_and_number = file[:-4]
-#         region_number = region_and_number[:2]
-#         region = region_and_number[3:]
-
-#         dfb['geographic region'] = region
-#         dfb['region'] = region_number
-#         dfa = dfa.append(dfb, ignore_index=True)
-
-#     dfa = dfa.reset_index()
-
-#     dfa = dfa[[
-#         'GlaThiDa_index',
-#         'RGI_index',
-#         'RGIId',
-#         'region',
-#         'geographic region'
-#     ]]
-#     RGI_extra = pd.DataFrame()
-#     for file in os.listdir(pth_2):
-#         f = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-#         RGI_extra = pd.concat([RGI_extra, f], ignore_index = True)
-
-#         region_and_number = file[:-4]
-#         region_number = region_and_number[:2]
-#         region = region_and_number[9:]
-#         dfc = dfa[dfa['region'] == region_number]
-
-#         for file in os.listdir(pth_3):
-#             print(file)
-#             if file[:2] == region_number:
-#                 glathida_regional = pd.read_csv(pth_3 + file)
-
-#         GlaThiDa_mean_area = glathida_regional['Area'].mean()
-#         GlaThiDa_mean_aspect = glathida_regional['Aspect'].mean()
-#         GlaThiDa_mean_lmax = glathida_regional['Lmax'].mean()
-#         GlaThiDa_mean_slope = glathida_regional['Slope'].mean()
-#         GlaThiDa_mean_zmin = glathida_regional['Zmin'].mean()
-#         GlaThiDa_mean_zmax = glathida_regional['Zmax'].mean()
-
-#         GlaThiDa_median_area = glathida_regional['Area'].median()
-#         GlaThiDa_median_aspect = glathida_regional['Aspect'].median()
-#         GlaThiDa_median_lmax = glathida_regional['Lmax'].median()
-#         GlaThiDa_median_slope = glathida_regional['Slope'].median()
-#         GlaThiDa_median_zmin = glathida_regional['Zmin'].median()
-#         GlaThiDa_median_zmax = glathida_regional['Zmax'].median()
-
-#         GlaThiDa_std_area = glathida_regional['Area'].std(ddof=0)
-#         GlaThiDa_std_aspect = glathida_regional['Aspect'].std(ddof=0)
-#         GlaThiDa_std_lmax = glathida_regional['Lmax'].std(ddof=0)
-#         GlaThiDa_std_slope = glathida_regional['Slope'].std(ddof=0)
-#         GlaThiDa_std_zmin = glathida_regional['Zmin'].std(ddof=0)
-#         GlaThiDa_std_zmax = glathida_regional['Zmax'].std(ddof=0)
-
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_mean'
-#         ] = GlaThiDa_mean_area
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_mean'
-#         ] = GlaThiDa_mean_aspect
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_mean'
-#         ] = GlaThiDa_mean_lmax
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_mean'
-#         ] = GlaThiDa_mean_slope
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_mean'
-#         ] = GlaThiDa_mean_zmin
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_mean'
-#         ] = GlaThiDa_mean_zmax
-
-
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_median'
-#         ] = GlaThiDa_median_area
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_median'
-#         ] = GlaThiDa_median_aspect
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_median'
-#         ] = GlaThiDa_median_lmax
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_median'
-#         ] = GlaThiDa_median_slope
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_median'
-#         ] = GlaThiDa_median_zmin
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_median'
-#         ] = GlaThiDa_median_zmax
-
-
-
-
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Area_GlaThiDa_std'
-#         ] = GlaThiDa_std_area
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Aspect_GlaThiDa_std'
-#         ] = GlaThiDa_std_aspect
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Lmax_GlaThiDa_std'
-#         ] = GlaThiDa_std_lmax
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Slope_GlaThiDa_std'
-#         ] = GlaThiDa_std_slope
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Zmin_GlaThiDa_std'
-#         ] = GlaThiDa_std_zmin
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'Zmax_GlaThiDa_std'
-#         ] = GlaThiDa_std_zmax
-
-
-
-
-
-
-#         trainable_ratio = (len(dfc) / len(f))
-#         percent_trainable = trainable_ratio * 100
-
-#         df.loc[
-#             df[df['dataframe'].str[4:] == region_number].index, 'ratio trainable'
-#         ] = trainable_ratio
-
-
-#     return df
 
 
 def load_notebook_data(

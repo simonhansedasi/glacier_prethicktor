@@ -6,7 +6,7 @@ from tqdm import tqdm
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 parameterization, dataset, dataset.name, res = gl.select_dataset_coregistration(
-                                                    parameterization = 'sm5'
+                                                    parameterization = 'sm3'
                                                 )
 
 
