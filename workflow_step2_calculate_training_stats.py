@@ -28,13 +28,14 @@ rootdir = 'saved_models/' + parameterization + '/'
 model_predictions = pd.DataFrame()
 model_statistics = pd.DataFrame()
 # dropout_input = dropout_input_iter
+rootdir = 'saved_models/' + parameterization + '/'
 
 print('loading and evaluating models...')
 for arch in tqdm( os.listdir(rootdir)):       
 #     print('layer architecture: ' + arch[3:])
     pth = os.path.join(rootdir, arch)
     for folder in (os.listdir(pth)):
-        architecture = arch[3:]
+        architecture = arch
 #         print(architecture)
         model_loc = (
             rootdir + 
@@ -46,21 +47,20 @@ for arch in tqdm( os.listdir(rootdir)):
         model_name = folder
         dnn_model = gl.load_dnn_model(model_loc)
 #         print(dnn_model)
-        df = gl.evaluate_model(architecture, model_name, data, dnn_model)
+        df = gl.evaluate_model(architecture, model_name, data, dnn_model, parameterization)
 
         model_predictions = pd.concat([model_predictions, df], ignore_index = True)
 #     break
 # print(model_predictions['architecture'])
 # print(list(model_predictions))
 model_predictions.rename(columns = {0:'avg train thickness'},inplace = True)
-model_predictions.to_csv('zults/model_predictions_' + data.name  + '.csv')
+model_predictions.to_csv('zults/model_predictions_' + parameterization + '.csv')
 # calculate statistics
 print('calculating statistics...')
-print(' ')
 dnn_model = {}
 
-for arch in tqdm(list(model_predictions['architecture'].unique())):
-    model_thicknesses = model_predictions[model_predictions['architecture'] == arch]
+for arch in tqdm(list(model_predictions['layer architecture'].unique())):
+    model_thicknesses = model_predictions[model_predictions['layer architecture'] == arch]
 
 
     model_name = ('0')
@@ -101,6 +101,6 @@ model_statistics['architecture weight 2'] = (
 )
 model_statistics.to_csv(
     'zults/model_statistics_' + 
-    data.name + 
+    parameterization + 
     '.csv'
 )
