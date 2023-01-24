@@ -24,16 +24,8 @@ data = data.drop([
 ], axis = 1)
 
 
-if parameterization == '1':
-    training_data = 'df1'
-if parameterization == '2':
-    training_data = 'df2'
-if parameterization == '3':
-    training_data = 'df3'
-
-
 print('Gathering architectures...')
-arch_list = gl.list_architectures(training_data = training_data)
+arch_list = gl.list_architectures(parameterization = parameterization)
 arch_list = arch_list.reset_index()
 arch_list = arch_list.drop('index', axis = 1)
 
@@ -43,14 +35,15 @@ df = pd.DataFrame(columns = {
         '22','23','24',
 })
 # df = pd.merge(df, arch_list, on = 'RGIId', how = 'inner')
-arch_list = arch_list.sort_values('architecture')
+print(arch_list)
+arch_list = arch_list.sort_values('layer architecture')
 # print(len(arch_list['architecture'].unique()))
 # print(arch_list['architecture'].unique())
 print('Architectures listed')
 # print(list(predictions))
 # print(predictions['architecture'].unique())
 print('Compiling predictions...')
-for arch in tqdm(arch_list['architecture'].unique()):
+for arch in tqdm(arch_list['layer architecture'].unique()):
 #     print(arch)
 #     break
 #     idx = index
@@ -59,7 +52,7 @@ for arch in tqdm(arch_list['architecture'].unique()):
 #     coregistration =  arch_list['coregistration'].iloc[idx]
 #     architecture = '_' + arch_list['architecture'].iloc[idx]
     df_glob = gl.load_global_predictions(
-        training_data = training_data,
+        parameterization = parameterization,
         architecture = arch,
     )
     
@@ -69,7 +62,7 @@ for arch in tqdm(arch_list['architecture'].unique()):
 # print(df)
 statistics = pd.DataFrame()
 for file in (os.listdir('zults/')):
-    if 'statistics' in file and training_data in file:
+    if 'statistics_' + parameterization in file:
         file_reader = pd.read_csv('zults/' + file)
         statistics = pd.concat([statistics, file_reader], ignore_index = True)
 
@@ -77,11 +70,11 @@ for file in (os.listdir('zults/')):
 #     break
 # deviations = deviations.dropna()
 # print(list(statistics))
-statistics = statistics.rename(columns = {'layer architecture':'architecture'})
-df = pd.merge(df, statistics, on = 'architecture')
+# statistics = statistics.rename(columns = {'layer architecture':'architecture'}, inplace = True)
+
+df = pd.merge(df, statistics, on = 'layer architecture')
 # df = pd.merge(df, statistics, on = 'architecture')
 
-print(df)
 
 df = df[[
         'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
@@ -158,5 +151,5 @@ dft = dft.rename(columns = {
 dft = dft.drop_duplicates()
 dft.to_csv(
     'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_' + 
-    training_data + '.csv'
+    parameterization + '.csv'
           )

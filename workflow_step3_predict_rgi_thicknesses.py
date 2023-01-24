@@ -33,7 +33,7 @@ data = data.drop([
 
     
     
-model_statistics = pd.read_csv('zults/model_statistics_' + data.name + '.csv')
+model_statistics = pd.read_csv('zults/model_statistics_' + parameterization + '.csv')
 # deviations_2 = pd.read_csv('zults/deviations_' + dataset.name + '_0.csv')
 # deviations = pd.concat([deviations_1, deviations_2])
 model_statistics = model_statistics.reset_index()
@@ -49,7 +49,7 @@ model_statistics = model_statistics[[
 # 'train mae std dev'
 ]]
 
-print('Predicting thicknesses...')
+print('Estimating thicknesses...')
 
 for index in (model_statistics.index):
 #     print(index)
@@ -57,9 +57,7 @@ for index in (model_statistics.index):
     arch = model_statistics['layer architecture'].iloc[index]
 
 # arch = '3-2'
-    print('Estimating thicknesses with model ' +
-        'layer architecture: ' + arch + 
-        ', dataset: ' + dataset.name)
+    print('Estimating thicknesses with parameterization ' + parameterization + ', layer architecture = ' + arch )
     for region_selection in tqdm(range(1,20,1)):
         RGI = gl.load_RGI(
             pth = '/home/prethicktor/data/RGI/rgi60-attribs/',
@@ -73,7 +71,9 @@ for index in (model_statistics.index):
 
         RGI['region'] = RGI['RGIId'].str[6:8]
         RGI = RGI.reset_index()
-        RGI = RGI.drop('index', axis=1)
+        RGI = RGI.drop(['RGIId', 'region', 'index'], axis=1)
+#         print(RGI)
+        
     #         print(region_selection)
     #             if region_selection != '19':
     #                 drops = RGI[
@@ -102,44 +102,44 @@ for index in (model_statistics.index):
 
         dnn_model = {}
         rootdir = 'saved_models/' + parameterization + '/'
-        RS = range(0,25,1)
+        RS = range(0,0,1)
         dfs = pd.DataFrame()
-        for rs in (RS):
-            rs = str(rs)
+#         for rs in (RS):
+        rs = str(0)
 
-        # each series is one random state of an ensemble of 25.
-        # predictions are made on each random state and appended to a df as a column
-            model = (
-                rs
+    # each series is one random state of an ensemble of 25.
+    # predictions are made on each random state and appended to a df as a column
+        model = (
+            rs
+        )
+
+        model_path = (
+            rootdir + arch + '/' + str(rs)
+        )
+        results_path = 'saved_results/' + parameterization + '/' + arch + '/'
+
+        history_name = (
+            rs
+        )
+
+        dnn_history ={}
+        dnn_history[rs] = pd.read_csv(results_path + rs)
+
+        if abs((
+            dnn_history[history_name]['loss'].iloc[-1]
+        ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
+
+            pass
+        else:
+
+            dnn_model = tf.keras.models.load_model(model_path)
+
+            s = pd.Series(
+                dnn_model.predict(RGI, verbose=0).flatten(), 
+                name = rs
             )
 
-            model_path = (
-                rootdir + 'sm_' + arch + '/' + str(rs)
-            )
-            results_path = 'saved_results/' + parameterization + '/' + arch + '/'
-
-            history_name = (
-                rs
-            )
-
-            dnn_history ={}
-            dnn_history[rs] = pd.read_csv(results_path + rs)
-
-            if abs((
-                dnn_history[history_name]['loss'].iloc[-1]
-            ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
-
-                pass
-            else:
-
-                dnn_model = tf.keras.models.load_model(model_path)
-
-                s = pd.Series(
-                    dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
-                    name = rs
-                )
-
-                dfs[rs] = s
+            dfs[rs] = s
 
 
         # make a copy of RGI to add predicted thickness and their statistics
@@ -162,6 +162,6 @@ for index in (model_statistics.index):
 
         RGI_prethicked.to_csv(
             'zults/RGI_predicted_' +
-            dataset.name + '_' + arch + '_' + str(region_selection) + '.csv'          
+            parameterization + '_' + arch + '_' + str(region_selection) + '.csv'          
         )    
 

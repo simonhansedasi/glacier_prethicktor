@@ -72,12 +72,10 @@ def main():
                 arch = str(layer_1_input) + '-' + str(layer_2_input)
                 dropout = True
                 print('')
-                print(
-                    'Running multi-variable DNN regression on ' + 
-                    str(data.name) + 
-                    ' dataset with layer architecture = ' +
-                    arch
-                    )
+                print('Running multi-variable DNN regression with parameterization ' + 
+                    str(parameterization) + 
+                    ', layer architecture = ' +
+                    arch)
 
                 for rs in tqdm(RS):
             #             for lr in LR:
