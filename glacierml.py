@@ -741,11 +741,11 @@ def load_global_predictions(
 
 
 def load_notebook_data(
-    coregistration = 'df8'
+    parameterization = '1'
 ):
     df = pd.read_csv(
             'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_'+
-            coregistration + '.csv'
+            parameterization + '.csv'
         )
     df['region'] = df['RGIId'].str[6:8]
 
