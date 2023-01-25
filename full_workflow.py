@@ -19,6 +19,8 @@ tf.random.set_seed(42)
 # chosen_parameterization = input()   
     
 for i in range(1,4,1):
+    
+    # load training data information
     parameterization = str(i)
     config = configparser.ConfigParser()
     config.read('model_parameterization.txt')
@@ -45,17 +47,11 @@ for i in range(1,4,1):
     ], axis = 1)
 
 
-
+#     # build models
 #     RS = range(0,25,1)
-#     # print('')
-#     # print(data.name)
-#     print(data)  
-#     #     print(len(dataset))
-
-#     #     ep_input = '2000'
+#     print(data)
 #     layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 #     layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-#     #     lr_input = '0.01'
 
 #     for layer_2_input in (layer_2_list):
 #         for layer_1_input in (layer_1_list):
@@ -72,7 +68,6 @@ for i in range(1,4,1):
 #                     arch)
 
 #                 for rs in tqdm(RS):
-#             #             for lr in LR:
 
 #                     gl.build_and_train_model(
 #                         data, 
@@ -84,6 +79,8 @@ for i in range(1,4,1):
 #                     )   
 
 
+                    
+#     # evaluate model loss and then calculate model statistics
 #     model_predictions = pd.DataFrame()
 #     model_statistics = pd.DataFrame()
 #     # dropout_input = dropout_input_iter
@@ -163,22 +160,22 @@ for i in range(1,4,1):
 #         parameterization + 
 #         '.csv'
 #     )
-
-    model_statistics = pd.read_csv('zults/model_statistics_' + parameterization + '.csv')
-    model_statistics = model_statistics.reset_index()
-
-    model_statistics = model_statistics[[
-    'layer architecture',
-    ]]
-    
-#     for arch in model_statistics['layer architecture'].unique()
-
-
-    gl.estimate_thickness(
-        model_statistics, parameterization, useMP = False, verbose = True
-    )
     
     
+#     # make glacier thickness estimates
+#     model_statistics = pd.read_csv('zults/model_statistics_' + parameterization + '.csv')
+#     model_statistics = model_statistics.reset_index()
+
+#     model_statistics = model_statistics[[
+#     'layer architecture',
+#     ]]
+    
+#     gl.estimate_thickness(
+#         model_statistics, parameterization, useMP = False, verbose = True
+#     )
+    
+    
+    # aggregate model thicknesses
     print('Gathering architectures...')
     arch_list = gl.list_architectures(parameterization = parameterization)
     arch_list = arch_list.reset_index()
@@ -189,7 +186,6 @@ for i in range(1,4,1):
             '11','12','13','14','15','16','17','18','19','20','21',
             '22','23','24',
     })
-    print(arch_list)
     arch_list = arch_list.sort_values('layer architecture')
     print('Architectures listed')
     print('Compiling predictions...')
@@ -201,13 +197,12 @@ for i in range(1,4,1):
 
 
         df = pd.concat([df,df_glob])
-
+        
     statistics = pd.DataFrame()
     for file in (os.listdir('zults/')):
         if 'statistics_' + parameterization in file:
             file_reader = pd.read_csv('zults/' + file)
             statistics = pd.concat([statistics, file_reader], ignore_index = True)
-
     df = pd.merge(df, statistics, on = 'layer architecture')
 
     df = df[[

@@ -804,7 +804,7 @@ def list_architectures(
         
         if 'RGI_predicted_' + parameterization in file :
             file_reader = pd.read_csv(root_dir + file)
-            arch = pd.Series(file[16:-7])
+            arch = pd.Series(file[16:-4])
             arch_list = pd.concat([arch_list, arch], ignore_index = True)
             arch_list = arch_list.reset_index()
             arch_list = arch_list.drop('index', axis = 1)
@@ -827,15 +827,11 @@ def load_global_predictions(
     
 #     print(architecture)
     root_dir = 'zults/'
-    RGI_predicted = pd.DataFrame()
     for file in (os.listdir(root_dir)):
             # print(file)
-        if ('RGI_predicted_' + parameterization + '_' + architecture + '_' in file):
-            print(file)
-            file_reader = pd.read_csv(root_dir + file)
+        if ('RGI_predicted_' + parameterization + '_' + architecture in file):
+            RGI_predicted = pd.read_csv(root_dir + file)
 
-            file_reader = file_reader.dropna()
-            RGI_predicted = pd.concat([RGI_predicted, file_reader], ignore_index = True)  
             RGI_predicted['layer architecture'] =  architecture
 
     RGI_predicted['parameterization'] =  parameterization
