@@ -74,7 +74,7 @@ def load_RGI(
     return RGI
 
 def load_training_data(
-    root_dir = '/data/fast1/glacierml/data/',
+    root_dir = '/home/prethicktor/data/',
     alt_pth = '/home/prethicktor/data/',
     RGI_input = 'y',
     scale = 'g',
@@ -256,9 +256,9 @@ def match_GlaThiDa_RGI_index(
 ):
     
     import os
-    pth_1 = os.path.join(pth, '/T_data/')
-    pth_2 = os.path.join(pth, '/RGI/rgi60-attribs/')
-    pth_3 = os.path.join(pth, '/matched_indexes/', version)
+    pth_1 = os.path.join(pth, 'T_data/')
+    pth_2 = os.path.join(pth, 'RGI/rgi60-attribs/')
+    pth_3 = os.path.join(pth, 'matched_indexes/', version)
     
     if version == 'v2':
         glathida = pd.read_csv(pth_1 + 'T.csv')
@@ -289,12 +289,15 @@ def match_GlaThiDa_RGI_index(
         import multiprocessing
         pool = multiprocessing.pool.Pool(processes=48)         # create a process pool with 4 workers
         newfunc = partial(get_id,RGI,glathida,version,verbose) #now we can call newfunc(i)
-        output = pool.map(newfunc,glathida.index )
-        
-    for i in tqdm(glathida.index):         
+        output = pool.map(newfunc, glathida.index)
+        print(output)
+#         print(output)
+    for i in tqdm(glathida.index):      
+#         print(output)
+
         glathida.loc[glathida.index[i], 'RGIId'] = output[i][0]
         glathida.loc[glathida.index[i], 'RGI Centroid Distance'] = output[i][1]
-
+#         print(output)
     isdir = os.path.isdir(pth_3)
     if isdir == False:
         os.makedirs(pth_3)
@@ -304,9 +307,6 @@ def match_GlaThiDa_RGI_index(
 def get_id(RGI,glathida,version,verbose,i):
     if verbose: print(f'Working on Glathida ID {i}')
     #obtain lat and lon from glathida 
-#     if version == 'v1':
-#         glathida_ll = (glathida.loc[i].lat,glathida.loc[i].lon)
-#     if version == 'v2':
     glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
 
     # find distance between selected glathida glacier and all RGI
@@ -315,14 +315,6 @@ def get_id(RGI,glathida,version,verbose,i):
             axis = 1
     )
     
-#     distances = RGI.apply(
-#         lambda row: geopy.distance.great_circle((row.CenLat,row.CenLon),glathida_ll),
-#             axis = 1
-#     )
-    
-#         print(distances)
-
-    # find index of minimum distance between glathida and RGI glacier
     RGI_index = pd.Series(np.argmin(distances), name = 'RGI_indexes')
     centroid_distance = distances.min()
     number_glaciers_matched = len(RGI_index)
@@ -688,12 +680,105 @@ def calculate_model_avg_statistics(
 
 
 
+def estimate_thickness(
+        model_statistics,
+#         arch,
+        parameterization = '1',
+        useMP = False,
+        
+    ):
+    RGI = load_RGI()
+    RGI['region'] = RGI['RGIId'].str[6:8]
+    RGI = RGI.reset_index()
+    RGI = RGI.drop(['RGIId', 'region', 'index'], axis=1)
+    
+    print(RGI)
+    if useMP == False:
+        
+        for arch in model_statistics['layer architecture'].unique():
+            make_estimates(
+                RGI,
+                parameterization, 
+                arch,
+            )
+            
+    else:
+        arch = model_statistics['layer architecture']
+        from functools import partial
+        import multiprocessing
+        pool = multiprocessing.pool.Pool(processes=48) 
+        
+        newfunc = partial(
+            make_estimates,
+            RGI,
+            parameterization, 
+#             arch
+        )
+    output = (newfunc, arch.unique())
+    for i in arch:
+        print(output)
+        
+
+        
+def make_estimates(
+    RGI,
+    parameterization,
+    arch,
+#     verbose,
+):
+    print(f'Estimating RGI with layer architecture {arch}')
+    for rs in tqdm(range(0,25,1)):
+        rs = str(rs)
+        results_path = 'saved_results/' + parameterization + '/' + arch + '/'
+        history_name = rs
+        dnn_history = {}
+        dnn_history[rs] = pd.read_csv(results_path + rs)
+
+        if abs((
+            dnn_history[history_name]['loss'].iloc[-1]
+        ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
+            pass
+        else:
+            dfs = pd.DataFrame()
+            model_path = (
+                'saved_models/' + parameterization + '/' + arch + '/' + rs
+            )
+
+            dnn_model = tf.keras.models.load_model(model_path)
+
+            s = pd.Series(
+                dnn_model.predict(RGI, verbose=0).flatten(), 
+                name = rs
+            )
+    #     return s
+            dfs[rs] = s
+
+    RGI_prethicked = RGI.copy() 
+    RGI_prethicked['avg predicted thickness'] = 'NaN'
+    RGI_prethicked['predicted thickness std dev'] = 'NaN'
+    RGI_prethicked = pd.concat([RGI_prethicked, s], axis = 1)
+    print('Averaging estimated thicknesses')
+    for i in tqdm(dfs.index):
+        RGI_prethicked['avg predicted thickness'].loc[i] = np.mean(dfs.loc[i])
+
+    print('Finding standard deviation of estimated thicknesses')
+    for i in tqdm(dfs.index):
+        RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
+
+    RGI_prethicked.to_csv(
+        'zults/RGI_predicted_' +
+        parameterization + '_' + arch + '.csv'          
+    )    
+    return RGI_prethicked
+
+
+
 '''
 '''
 def list_architectures(
     parameterization = '1'
 ):
-#     root_dir = 'zults/'
+    root_dir = 'zults/'
     arch_list = pd.DataFrame()
     for file in tqdm(os.listdir(root_dir)):
         
