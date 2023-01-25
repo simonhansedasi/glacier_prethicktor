@@ -768,7 +768,7 @@ def make_estimates(
                 name = rs
             )
             dfs[rs] = s
-    print(dfs)
+#     print(dfs)
     RGI_prethicked = RGI.copy() 
 #     RGI_prethicked['avg predicted thickness'] = 'NaN'
 #     RGI_prethicked['predicted thickness std dev'] = 'NaN'
