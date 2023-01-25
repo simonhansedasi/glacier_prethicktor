@@ -470,11 +470,12 @@ def build_and_train_model(dataset,
 #                           learning_rate = 0.01,
 #                           validation_split = 0.2,
 #                           epochs = 100,
-                          random_state = 0,
+                          
                           parameterization = 'sm',
-                          res = 'sr',
+#                           res = 'sr',
                           layer_1 = 10,
                           layer_2 = 5,
+                          random_state = 0,
                           dropout = True,
                           verbose = False,
                           writeToFile = True,
@@ -592,6 +593,70 @@ def load_dnn_model(
 '''
 Workflow functions
 '''
+
+
+
+def build_model_ensemble(
+    data, parameterization, useMP = False, verbose = True
+):
+    # build models
+    RS = range(0,25,1)
+    print(data)
+    layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+    layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    if useMP == False:
+        for layer_2_input in (layer_2_list):
+            for layer_1_input in (layer_1_list):
+                if layer_1_input <= layer_2_input:
+                    pass
+                elif layer_1_input > layer_2_input:
+
+                    arch = str(layer_1_input) + '-' + str(layer_2_input)
+                    dropout = True
+                    print('Running multi-variable DNN regression with parameterization ' + 
+                        str(parameterization) + 
+                        ', layer architecture = ' +
+                        arch)
+
+                    for rs in tqdm(RS):
+
+                        build_and_train_model(
+                            data, 
+                            parameterization = parameterization, 
+#                             res = parameterization,
+                            layer_1 = layer_1_input,
+                            layer_2 = layer_2_input,
+                            random_state = rs, 
+                        )   
+    else:
+        for layer_2_input in (layer_2_list):
+            for layer_1_input in (layer_1_list):
+                if layer_1_input <= layer_2_input:
+                    pass
+                elif layer_1_input > layer_2_input:
+                    arch = str(layer_1_input) + '-' + str(layer_2_input)
+                    if verbose: print(
+                        'Running multi-variable DNN regression with parameterization ' + 
+                        str(parameterization) + 
+                        ', layer architecture = ' +
+                        arch)
+#                     arch = model_statistics['layer architecture']
+                    from functools import partial
+                    import multiprocessing
+                    pool = multiprocessing.pool.Pool(processes=5) 
+
+                    newfunc = partial(
+                        build_and_train_model,
+                        data,
+                        parameterization,
+                        layer_1_input,
+                        layer_2_input
+            #             verbose
+            #             arch
+                    )
+                    output = pool.map(newfunc, RS)
+
+
 def evaluate_model(
     arch,
     rs,
