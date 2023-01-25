@@ -728,7 +728,7 @@ def estimate_thickness(
             verbose
 #             arch
         )
-    output = pool.map(newfunc, arch.unique())
+        output = pool.map(newfunc, arch.unique())
 #     print(output[1])
 #     for i in arch:
 #         print(output[i])
