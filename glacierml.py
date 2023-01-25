@@ -19,8 +19,17 @@ from yellowbrick.cluster import KElbowVisualizer
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import silhouette_score, silhouette_samples
 import matplotlib.ticker as ticker
+import warnings
+from tensorflow.python.util import deprecation
+import os
+import logging
 tf.random.set_seed(42)
-
+tf.get_logger().setLevel(logging.ERROR)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+pd.set_option('mode.chained_assignment', None)
 
 pd.set_option('mode.chained_assignment',None)
 
@@ -290,7 +299,7 @@ def match_GlaThiDa_RGI_index(
         pool = multiprocessing.pool.Pool(processes=48)         # create a process pool with 4 workers
         newfunc = partial(get_id,RGI,glathida,version,verbose) #now we can call newfunc(i)
         output = pool.map(newfunc, glathida.index)
-        print(output)
+#         print(output)
 #         print(output)
     for i in tqdm(glathida.index):      
 #         print(output)
@@ -684,10 +693,13 @@ def estimate_thickness(
         model_statistics,
 #         arch,
         parameterization = '1',
+        verbose = True,
         useMP = False,
         
     ):
-    RGI = load_RGI()
+    RGI = load_RGI(pth = '/home/prethicktor/data/RGI/rgi60-attribs/')
+#     RGI = load_RGI(pth = '/data/fast1/glacierml/data/RGI/rgi60-attribs/')
+
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.reset_index()
     RGI = RGI.drop(['RGIId', 'region', 'index'], axis=1)
@@ -699,6 +711,7 @@ def estimate_thickness(
             make_estimates(
                 RGI,
                 parameterization, 
+                verbose,
                 arch,
             )
             
@@ -706,27 +719,30 @@ def estimate_thickness(
         arch = model_statistics['layer architecture']
         from functools import partial
         import multiprocessing
-        pool = multiprocessing.pool.Pool(processes=48) 
+        pool = multiprocessing.pool.Pool(processes=5) 
         
         newfunc = partial(
             make_estimates,
             RGI,
             parameterization, 
+            verbose
 #             arch
         )
-    output = (newfunc, arch.unique())
-    for i in arch:
-        print(output)
+    output = pool.map(newfunc, arch.unique())
+#     print(output[1])
+#     for i in arch:
+#         print(output[i])
         
 
         
 def make_estimates(
     RGI,
     parameterization,
+    verbose,
     arch,
-#     verbose,
+    
 ):
-    print(f'Estimating RGI with layer architecture {arch}')
+    if verbose: print(f'Estimating RGI with layer architecture {arch}')
     for rs in tqdm(range(0,25,1)):
         rs = str(rs)
         results_path = 'saved_results/' + parameterization + '/' + arch + '/'
@@ -754,16 +770,20 @@ def make_estimates(
             dfs[rs] = s
 
     RGI_prethicked = RGI.copy() 
-    RGI_prethicked['avg predicted thickness'] = 'NaN'
-    RGI_prethicked['predicted thickness std dev'] = 'NaN'
-    RGI_prethicked = pd.concat([RGI_prethicked, s], axis = 1)
-    print('Averaging estimated thicknesses')
-    for i in tqdm(dfs.index):
-        RGI_prethicked['avg predicted thickness'].loc[i] = np.mean(dfs.loc[i])
-
-    print('Finding standard deviation of estimated thicknesses')
-    for i in tqdm(dfs.index):
-        RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
+#     RGI_prethicked['avg predicted thickness'] = 'NaN'
+#     RGI_prethicked['predicted thickness std dev'] = 'NaN'
+    RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
+    RGI_prethicked['avg predicted thickness'] = dfs.mean()
+    RGI_prethicked['predicted thickness std dev'] = dfs.std()
+#     if verbose: print(f'Averaging estimated thicknesses of layer architecture {arch}')
+# #     print('Averaging estimated thicknesses')
+#     for i in tqdm(dfs.index):
+#         RGI_prethicked['avg predicted thickness'].loc[i] = np.mean(dfs.loc[i])
+        
+#     if verbose: print(f'Finding standard deviation of layer architecture {arch}')
+# #     print('Finding standard deviation of estimated thicknesses')
+#     for i in tqdm(dfs.index):
+#         RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
 
     RGI_prethicked.to_csv(
         'zults/RGI_predicted_' +
