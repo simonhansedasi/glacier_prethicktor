@@ -46,123 +46,123 @@ for i in range(1,4,1):
 
 
 
-    RS = range(0,25,1)
-    # print('')
-    # print(data.name)
-    print(data)  
-    #     print(len(dataset))
+#     RS = range(0,25,1)
+#     # print('')
+#     # print(data.name)
+#     print(data)  
+#     #     print(len(dataset))
 
-    #     ep_input = '2000'
-    layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-    layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-    #     lr_input = '0.01'
+#     #     ep_input = '2000'
+#     layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+#     layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+#     #     lr_input = '0.01'
 
-    for layer_2_input in (layer_2_list):
-        for layer_1_input in (layer_1_list):
-            if layer_1_input <= layer_2_input:
-                pass
-            elif layer_1_input > layer_2_input:
+#     for layer_2_input in (layer_2_list):
+#         for layer_1_input in (layer_1_list):
+#             if layer_1_input <= layer_2_input:
+#                 pass
+#             elif layer_1_input > layer_2_input:
 
-                arch = str(layer_1_input) + '-' + str(layer_2_input)
-                dropout = True
-                print('')
-                print('Running multi-variable DNN regression with parameterization ' + 
-                    str(parameterization) + 
-                    ', layer architecture = ' +
-                    arch)
+#                 arch = str(layer_1_input) + '-' + str(layer_2_input)
+#                 dropout = True
+#                 print('')
+#                 print('Running multi-variable DNN regression with parameterization ' + 
+#                     str(parameterization) + 
+#                     ', layer architecture = ' +
+#                     arch)
 
-                for rs in tqdm(RS):
-            #             for lr in LR:
+#                 for rs in tqdm(RS):
+#             #             for lr in LR:
 
-                    gl.build_and_train_model(
-                        data, 
-                        random_state = rs, 
-                        parameterization = parameterization, 
-                        res = parameterization,
-                        layer_1 = layer_1_input,
-                        layer_2 = layer_2_input,
-                    )   
-
-
-    model_predictions = pd.DataFrame()
-    model_statistics = pd.DataFrame()
-    # dropout_input = dropout_input_iter
-    rootdir = 'saved_models/' + parameterization + '/'
-
-    print('loading and evaluating models...')
-    for arch in tqdm( os.listdir(rootdir)):       
-    #     print('layer architecture: ' + arch[3:])
-        pth = os.path.join(rootdir, arch)
-        for folder in (os.listdir(pth)):
-            architecture = arch
-    #         print(architecture)
-            model_loc = (
-                rootdir + 
-                arch + 
-                '/' + 
-                folder
-            )
-
-            model_name = folder
-            dnn_model = gl.load_dnn_model(model_loc)
-    #         print(dnn_model)
-            df = gl.evaluate_model(architecture, model_name, data, dnn_model, parameterization)
-
-            model_predictions = pd.concat([model_predictions, df], ignore_index = True)
-    #     break
-    # print(model_predictions['architecture'])
-    # print(list(model_predictions))
-    model_predictions.rename(columns = {0:'avg train thickness'},inplace = True)
-    model_predictions.to_csv('zults/model_predictions_' + parameterization + '.csv')
-    # calculate statistics
-    print('calculating statistics...')
-    dnn_model = {}
-
-    for arch in tqdm(list(model_predictions['layer architecture'].unique())):
-        model_thicknesses = model_predictions[model_predictions['layer architecture'] == arch]
+#                     gl.build_and_train_model(
+#                         data, 
+#                         random_state = rs, 
+#                         parameterization = parameterization, 
+#                         res = parameterization,
+#                         layer_1 = layer_1_input,
+#                         layer_2 = layer_2_input,
+#                     )   
 
 
-        model_name = ('0')
+#     model_predictions = pd.DataFrame()
+#     model_statistics = pd.DataFrame()
+#     # dropout_input = dropout_input_iter
+#     rootdir = 'saved_models/' + parameterization + '/'
 
-        model_loc = (
-            rootdir + 
-            arch + 
-            '/' +
-            '0'
-        )
-    #     print(model_loc)
-        isdir = os.path.isdir(model_loc)
-    #     print(isdir)
-        if isdir == False:
-            print('model not here, calculating next model')
-        elif isdir == True:
+#     print('loading and evaluating models...')
+#     for arch in tqdm( os.listdir(rootdir)):       
+#     #     print('layer architecture: ' + arch[3:])
+#         pth = os.path.join(rootdir, arch)
+#         for folder in (os.listdir(pth)):
+#             architecture = arch
+#     #         print(architecture)
+#             model_loc = (
+#                 rootdir + 
+#                 arch + 
+#                 '/' + 
+#                 folder
+#             )
+
+#             model_name = folder
+#             dnn_model = gl.load_dnn_model(model_loc)
+#     #         print(dnn_model)
+#             df = gl.evaluate_model(architecture, model_name, data, dnn_model, parameterization)
+
+#             model_predictions = pd.concat([model_predictions, df], ignore_index = True)
+#     #     break
+#     # print(model_predictions['architecture'])
+#     # print(list(model_predictions))
+#     model_predictions.rename(columns = {0:'avg train thickness'},inplace = True)
+#     model_predictions.to_csv('zults/model_predictions_' + parameterization + '.csv')
+#     # calculate statistics
+#     print('calculating statistics...')
+#     dnn_model = {}
+
+#     for arch in tqdm(list(model_predictions['layer architecture'].unique())):
+#         model_thicknesses = model_predictions[model_predictions['layer architecture'] == arch]
 
 
-            dnn_model = gl.load_dnn_model(model_loc)
-            df = gl.calculate_model_avg_statistics(
-                dnn_model,
-                arch,
-                data,
-                model_thicknesses
-            )
+#         model_name = ('0')
 
-            model_statistics = pd.concat(
-                [model_statistics, df], ignore_index = True
-            )
-            #         print(list(model_statistics))
+#         model_loc = (
+#             rootdir + 
+#             arch + 
+#             '/' +
+#             '0'
+#         )
+#     #     print(model_loc)
+#         isdir = os.path.isdir(model_loc)
+#     #     print(isdir)
+#         if isdir == False:
+#             print('model not here, calculating next model')
+#         elif isdir == True:
 
 
-    model_statistics['architecture weight 1'] = (
-        sum(model_statistics['test mae avg']) / model_statistics['test mae avg']
-    )
-    model_statistics['architecture weight 2'] = (
-        model_statistics['test mae avg'] / sum(model_statistics['test mae avg'])
-    )
-    model_statistics.to_csv(
-        'zults/model_statistics_' + 
-        parameterization + 
-        '.csv'
-    )
+#             dnn_model = gl.load_dnn_model(model_loc)
+#             df = gl.calculate_model_avg_statistics(
+#                 dnn_model,
+#                 arch,
+#                 data,
+#                 model_thicknesses
+#             )
+
+#             model_statistics = pd.concat(
+#                 [model_statistics, df], ignore_index = True
+#             )
+#             #         print(list(model_statistics))
+
+
+#     model_statistics['architecture weight 1'] = (
+#         sum(model_statistics['test mae avg']) / model_statistics['test mae avg']
+#     )
+#     model_statistics['architecture weight 2'] = (
+#         model_statistics['test mae avg'] / sum(model_statistics['test mae avg'])
+#     )
+#     model_statistics.to_csv(
+#         'zults/model_statistics_' + 
+#         parameterization + 
+#         '.csv'
+#     )
 
     model_statistics = pd.read_csv('zults/model_statistics_' + parameterization + '.csv')
     model_statistics = model_statistics.reset_index()

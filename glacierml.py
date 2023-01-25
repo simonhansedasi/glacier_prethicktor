@@ -743,6 +743,7 @@ def make_estimates(
     
 ):
     if verbose: print(f'Estimating RGI with layer architecture {arch}')
+    dfs = pd.DataFrame()
     for rs in tqdm(range(0,25,1)):
         rs = str(rs)
         results_path = 'saved_results/' + parameterization + '/' + arch + '/'
@@ -755,7 +756,7 @@ def make_estimates(
         ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
             pass
         else:
-            dfs = pd.DataFrame()
+            
             model_path = (
                 'saved_models/' + parameterization + '/' + arch + '/' + rs
             )
@@ -766,9 +767,8 @@ def make_estimates(
                 dnn_model.predict(RGI, verbose=0).flatten(), 
                 name = rs
             )
-    #     return s
             dfs[rs] = s
-
+    print(dfs)
     RGI_prethicked = RGI.copy() 
 #     RGI_prethicked['avg predicted thickness'] = 'NaN'
 #     RGI_prethicked['predicted thickness std dev'] = 'NaN'
