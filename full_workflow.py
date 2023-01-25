@@ -163,6 +163,7 @@ for i in range(1,4,1):
         parameterization + 
         '.csv'
     )
+
     model_statistics = pd.read_csv('zults/model_statistics_' + parameterization + '.csv')
     model_statistics = model_statistics.reset_index()
 
@@ -171,8 +172,10 @@ for i in range(1,4,1):
     ]]
     
 #     for arch in model_statistics['layer architecture'].unique()
+
+
     gl.estimate_thickness(
-        model_statistics, parameterization, useMP = False
+        model_statistics, parameterization, useMP = False, verbose = True
     )
     
     
