@@ -172,7 +172,7 @@ for i in range(1,4,1):
     
 #     for arch in model_statistics['layer architecture'].unique()
     gl.estimate_thickness(
-        model_statistics, parameterization, useMP = True
+        model_statistics, parameterization, useMP = False
     )
     
     
