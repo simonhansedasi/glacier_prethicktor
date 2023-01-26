@@ -1,23 +1,21 @@
-import pandas as pd
-import numpy as np
+# import pandas as pd
+# import numpy as np
 import glacierml as gl
-from tqdm import tqdm
-import tensorflow as tf
-import warnings
-from tensorflow.python.util import deprecation
-import os
-import logging
-tf.get_logger().setLevel(logging.ERROR)
-warnings.filterwarnings('ignore', category=DeprecationWarning)
-warnings.filterwarnings('ignore', category=FutureWarning)
-deprecation._PRINT_DEPRECATION_WARNINGS = False
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-pd.set_option('mode.chained_assignment', None)
-import configparser
-from scipy.stats import shapiro
+# from tqdm import tqdm
+# import tensorflow as tf
+# import warnings
+# from tensorflow.python.util import deprecation
+# import os
+# import logging
+# tf.get_logger().setLevel(logging.ERROR)
+# warnings.filterwarnings('ignore', category=DeprecationWarning)
+# warnings.filterwarnings('ignore', category=FutureWarning)
+# deprecation._PRINT_DEPRECATION_WARNINGS = False
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+# pd.set_option('mode.chained_assignment', None)
+# import configparser
 
 tf.random.set_seed(42)
-# chosen_parameterization = input()   
     
 for i in range(1,4,1):
     

@@ -5,15 +5,14 @@ import pandas as pd
 import numpy as np
 from tensorflow import keras
 from keras import backend as K
-
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 import geopy.distance
-import matplotlib.patches as mpatches
-import plotly.express as px
+# import matplotlib.patches as mpatches
+# import plotly.express as px
 from sklearn.cluster import KMeans
 from yellowbrick.cluster import KElbowVisualizer
 from sklearn.metrics import silhouette_score
@@ -21,8 +20,9 @@ from sklearn.metrics import silhouette_score, silhouette_samples
 import matplotlib.ticker as ticker
 import warnings
 from tensorflow.python.util import deprecation
-import os
 import logging
+from scipy.stats import shapiro
+
 tf.random.set_seed(42)
 tf.get_logger().setLevel(logging.ERROR)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
