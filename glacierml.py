@@ -966,7 +966,7 @@ def calculate_RGI_thickness_statistics(model_statistics, parameterization, useMP
 #     arch_list = arch_list.reset_index()
 #     arch_list = arch_list.drop('index', axis = 1)
 
-    aggregate_statistics(arch_list):
+    aggregate_statistics(arch_list)
 
 
 def aggregate_statistics(arch):
@@ -977,7 +977,7 @@ def aggregate_statistics(arch):
     })
 #     print('Architectures listed')
     print('Compiling predictions...')
-    for arch in tqdm(arch_list['layer architecture'].unique())
+    for arch in tqdm(arch_list['layer architecture'].unique()):
         df_glob = gl.load_global_predictions(
             parameterization = parameterization,
             architecture = arch
