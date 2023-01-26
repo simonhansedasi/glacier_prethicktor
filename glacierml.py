@@ -779,7 +779,7 @@ def estimate_thickness(
                 verbose,
                 arch,
             )
-            break
+            
             
     else:
         arch = model_statistics['layer architecture']
@@ -851,7 +851,6 @@ def make_estimates(
 # #     print('Finding standard deviation of estimated thicknesses')
 #     for i in tqdm(dfs.index):
 #         RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
-    print(RGI_prethicked)
     RGI_prethicked.to_csv(
         'zults/RGI_predicted_' +
         parameterization + '_' + arch + '.csv'          

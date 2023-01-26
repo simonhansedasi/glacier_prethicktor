@@ -51,16 +51,13 @@ for i in range(1,4,1):
     # evaluate model loss and then calculate model statistics
     model_predictions = pd.DataFrame()
     model_statistics = pd.DataFrame()
-    # dropout_input = dropout_input_iter
     rootdir = 'saved_models/' + parameterization + '/'
 
     print('loading and evaluating models...')
     for arch in tqdm( os.listdir(rootdir)):       
-    #     print('layer architecture: ' + arch[3:])
         pth = os.path.join(rootdir, arch)
         for folder in (os.listdir(pth)):
             architecture = arch
-    #         print(architecture)
             model_loc = (
                 rootdir + 
                 arch + 
@@ -70,13 +67,9 @@ for i in range(1,4,1):
 
             model_name = folder
             dnn_model = gl.load_dnn_model(model_loc)
-    #         print(dnn_model)
             df = gl.evaluate_model(architecture, model_name, data, dnn_model, parameterization)
 
             model_predictions = pd.concat([model_predictions, df], ignore_index = True)
-    #     break
-    # print(model_predictions['architecture'])
-    # print(list(model_predictions))
     model_predictions.rename(columns = {0:'avg train thickness'},inplace = True)
     model_predictions.to_csv('zults/model_predictions_' + parameterization + '.csv')
     # calculate statistics
@@ -95,9 +88,7 @@ for i in range(1,4,1):
             '/' +
             '0'
         )
-    #     print(model_loc)
         isdir = os.path.isdir(model_loc)
-    #     print(isdir)
         if isdir == False:
             print('model not here, calculating next model')
         elif isdir == True:
@@ -114,7 +105,6 @@ for i in range(1,4,1):
             model_statistics = pd.concat(
                 [model_statistics, df], ignore_index = True
             )
-            #         print(list(model_statistics))
 
 
         model_statistics['architecture weight 1'] = (
@@ -173,8 +163,7 @@ for i in range(1,4,1):
         if 'statistics_' + parameterization in file:
             file_reader = pd.read_csv('zults/' + file)
             statistics = pd.concat([statistics, file_reader], ignore_index = True)
-    # print(list(statistics))
-    # print(statistics['RGIId'])
+            
     df = pd.merge(df, statistics, on = 'layer architecture')
     df = df[[
             'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
