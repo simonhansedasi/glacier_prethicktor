@@ -957,7 +957,7 @@ def make_estimates(
     return RGI_prethicked
 
 
-def calculate_RGI_thickness_statistics(model_statistics, parameterization, useMP = False)
+def calculate_RGI_thickness_statistics(model_statistics, parameterization, useMP = False):
     # aggregate model thicknesses
 #     print('Gathering architectures...')
     arch_list = model_statistics.sort_values('layer architecture')
