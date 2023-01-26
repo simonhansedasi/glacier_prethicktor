@@ -109,7 +109,7 @@ def parameterize_data(parameterization = '1'):
 
 def load_training_data(
     root_dir = '/home/prethicktor/data/',
-    alt_pth = '/home/prethicktor/data/',
+#     alt_pth = '/home/prethicktor/data/',
     RGI_input = 'y',
     scale = 'g',
     region_selection = 1,
