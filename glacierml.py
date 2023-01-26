@@ -643,7 +643,7 @@ def build_model_ensemble(
 #                     arch = model_statistics['layer architecture']
                     from functools import partial
                     import multiprocessing
-                    pool = multiprocessing.pool.Pool(processes=5) 
+                    pool = multiprocessing.pool.Pool(processes=25) 
 
                     newfunc = partial(
                         build_and_train_model,
@@ -767,8 +767,8 @@ def estimate_thickness(
 
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.reset_index()
-    RGI = RGI.drop(['RGIId', 'region', 'index'], axis=1)
-    
+    RGI = RGI.drop('index', axis=1)
+#     RGI = RGI.drop(['RGIId', 'region', 'index'], axis=1)
     print(RGI)
     if useMP == False:
         
@@ -779,6 +779,7 @@ def estimate_thickness(
                 verbose,
                 arch,
             )
+            break
             
     else:
         arch = model_statistics['layer architecture']
@@ -809,6 +810,7 @@ def make_estimates(
 ):
     if verbose: print(f'Estimating RGI with layer architecture {arch}')
     dfs = pd.DataFrame()
+    RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
     for rs in tqdm(range(0,25,1)):
         rs = str(rs)
         results_path = 'saved_results/' + parameterization + '/' + arch + '/'
@@ -829,7 +831,7 @@ def make_estimates(
             dnn_model = tf.keras.models.load_model(model_path)
 
             s = pd.Series(
-                dnn_model.predict(RGI, verbose=0).flatten(), 
+                dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
                 name = rs
             )
             dfs[rs] = s
@@ -849,7 +851,7 @@ def make_estimates(
 # #     print('Finding standard deviation of estimated thicknesses')
 #     for i in tqdm(dfs.index):
 #         RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
-
+    print(RGI_prethicked)
     RGI_prethicked.to_csv(
         'zults/RGI_predicted_' +
         parameterization + '_' + arch + '.csv'          
