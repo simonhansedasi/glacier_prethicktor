@@ -105,7 +105,7 @@ def parameterize_data(parameterization = '1'):
             'distance test', 
         'size difference'
     ], axis = 1)
-
+    return data
 
 def load_training_data(
     root_dir = '/home/prethicktor/data/',
