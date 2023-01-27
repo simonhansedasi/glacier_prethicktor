@@ -26,7 +26,7 @@ data = gl.parameterize_data(parameterization)
 
 gl.build_model_ensemble(data, parameterization, useMP = False)
 
-gl.assess_model_performance(parameterization)
+gl.assess_model_performance(data, parameterization)
 
 # make glacier thickness estimates
 model_statistics = pd.read_csv('zults/model_statistics_' + parameterization + '.csv')

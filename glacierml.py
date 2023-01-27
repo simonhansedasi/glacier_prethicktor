@@ -684,7 +684,7 @@ def build_model_ensemble(
                     output = pool.map(newfunc, RS)
 
                     
-def assess_model_performance(parameterization = '1'):
+def assess_model_performance(data, parameterization = '1'):
     # evaluate model loss and then calculate model statistics
     model_predictions = pd.DataFrame()
     model_statistics = pd.DataFrame()
