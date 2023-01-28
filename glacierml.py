@@ -7,7 +7,7 @@ from tensorflow import keras
 from keras import backend as K
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 import geopy.distance
@@ -939,8 +939,8 @@ def make_estimates(
 #     RGI_prethicked['avg predicted thickness'] = 'NaN'
 #     RGI_prethicked['predicted thickness std dev'] = 'NaN'
     RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
-    RGI_prethicked['avg predicted thickness'] = dfs.mean()
-    RGI_prethicked['predicted thickness std dev'] = dfs.std()
+    RGI_prethicked['avg predicted thickness'] = dfs.mean(axis = 1)
+    RGI_prethicked['predicted thickness std dev'] = dfs.std(axis = 1)
 #     if verbose: print(f'Averaging estimated thicknesses of layer architecture {arch}')
 # #     print('Averaging estimated thicknesses')
 #     for i in tqdm(dfs.index):
