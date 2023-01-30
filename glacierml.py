@@ -83,13 +83,13 @@ def load_RGI(
     return RGI
 
 
-def parameterize_data(parameterization = '1'):
+def parameterize_data(parameterization = '1', pth = '/data/fast1/glacierml/data/'):
     import configparser
     config = configparser.ConfigParser()
     config.read('model_parameterization.txt')
 
     data = load_training_data(
-    #         root_dir = '/home/prethicktor/data/',
+        pth = pth,
         area_scrubber = config[parameterization]['area scrubber'],
         anomaly_input = float(config[parameterization]['size threshold'])
     )
@@ -108,7 +108,7 @@ def parameterize_data(parameterization = '1'):
     return data
 
 def load_training_data(
-    root_dir = '/home/prethicktor/data/',
+    pth = '/data/fast1/glacierml/data/',
 #     alt_pth = '/home/prethicktor/data/',
     RGI_input = 'y',
     scale = 'g',
@@ -118,10 +118,10 @@ def load_training_data(
 #     data_version = 'v1'
 ):        
     import os
-    pth_1 = os.path.join(root_dir, 'T_data/')
-    pth_2 = os.path.join(root_dir, 'RGI/rgi60-attribs/')
-    pth_3 = os.path.join(root_dir, 'matched_indexes/', 'v2')
-    pth_4 = os.path.join(root_dir, 'regional_data/training_data/', 'v2')
+    pth_1 = os.path.join(pth, 'T_data/')
+    pth_2 = os.path.join(pth, 'RGI/rgi60-attribs/')
+    pth_3 = os.path.join(pth, 'matched_indexes/', 'v2')
+    pth_4 = os.path.join(pth, 'regional_data/training_data/', 'v2')
     
     
     pth_5 = pth_3 + '/GlaThiDa_with_RGIId_' + 'v2' + '.csv'                        
@@ -160,7 +160,7 @@ def load_training_data(
 
     # add in RGI attributes
     elif RGI_input == 'y':
-        RGI = load_RGI(pth = os.path.join(root_dir, 'RGI/rgi60-attribs/'))
+        RGI = load_RGI(pth = os.path.join(pth, 'RGI/rgi60-attribs/'))
 #         print(RGI)
         RGI['region'] = RGI['RGIId'].str[6:8]
 
@@ -251,14 +251,7 @@ def load_training_data(
                 'RGI Centroid Distance',
                 'size difference'
             ]]
-            if anomaly_input == .25:
-                indices_to_drop_25 = [114, 122, 140, 141, 142, 244, 245, 252, 253, 254,258,
-                           259,276,277,278,290,291,293,294,295,307,308,321,322,323,
-                           325,326,329,330,341,342,343,432,433]
-                df = df.drop(indices_to_drop_25)
-
-#             return df
-        
+    
     # convert everything to common units (m)
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'].str[:-2].astype(float)
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'] * 1e3
