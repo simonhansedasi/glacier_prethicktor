@@ -105,6 +105,16 @@ def parameterize_data(parameterization = '1', pth = '/data/fast1/glacierml/data/
             'distance test', 
         'size difference'
     ], axis = 1)
+    
+    
+    if parameterization == '5':
+        data['Area'] = np.log(data['Area'])
+        
+        data = data.drop(data[
+            (data['Zmed'] < 0) |
+            (data['Lmax'] < 0)
+        ].index)
+    
     return data
 
 def load_training_data(
@@ -860,10 +870,16 @@ def estimate_thickness(
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.reset_index()
     RGI = RGI.drop('index', axis=1)
-#     RGI = RGI.drop(['RGIId', 'region', 'index'], axis=1)
+    if parameterization == '5':
+        RGI['Area'] = np.log(RGI['Area'])
+#         RGI = RGI.drop(RGI[
+#                 (RGI['Zmed'] < 0) |
+#                 (RGI['Lmax'] < 0)
+#             ].index)
+    RGI = RGI.drop(['RGIId', 'region', 'index'], axis=1)
     print(RGI)
     if useMP == False:
-        
+
         for arch in model_statistics['layer architecture'].unique():
             make_estimates(
                 RGI,
@@ -871,14 +887,14 @@ def estimate_thickness(
                 verbose,
                 arch,
             )
-            
-            
+
+
     else:
         arch = model_statistics['layer architecture']
         from functools import partial
         import multiprocessing
         pool = multiprocessing.pool.Pool(processes=5) 
-        
+
         newfunc = partial(
             make_estimates,
             RGI,
@@ -890,7 +906,7 @@ def estimate_thickness(
 #     print(output[1])
 #     for i in arch:
 #         print(output[i])
-        
+
 
         
 def make_estimates(

@@ -1,8 +1,8 @@
 [DEFAULT]
-parameterization = testing
-size threshold = 0
-distance threshold = 9999
-area scrubber = off
+parameterization = DEFAULT
+size threshold = 0.25
+distance threshold = 0.25
+area scrubber = on
 
 [1]
 parameterization = 1
@@ -26,4 +26,10 @@ area scrubber = on
 parameterization = 4
 size threshold = 0.25
 distance threshold = 0.25
+area scrubber = on
+
+[5]
+parameterization = 5
+size threshold = 0.75
+distance threshold = 0.75
 area scrubber = on
