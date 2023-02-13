@@ -4,7 +4,7 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 from tensorflow import keras
-from keras import backend as K
+# from keras import backend as K
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 import matplotlib.pyplot as plt
@@ -75,8 +75,8 @@ def load_RGI(
         'Area',
         'Aspect',
         'Lmax',
-#         'Name',
-#         'GLIMSId',
+        'Name',
+        'GLIMSId',
     ]]
     RGI['region'] = RGI['RGIId'].str[6:8]
     
@@ -106,14 +106,24 @@ def parameterize_data(parameterization = '1', pth = '/data/fast1/glacierml/data/
         'size difference'
     ], axis = 1)
     
-    
     if parameterization == '5':
         data['Area'] = np.log(data['Area'])
+            
+    if parameterization == '6':
+        data['Area'] = np.log(data['Area'])
+        data = data.drop(['CenLat', 'CenLon'], axis = 1)
         
-        data = data.drop(data[
-            (data['Zmed'] < 0) |
-            (data['Lmax'] < 0)
-        ].index)
+    if parameterization == '7':
+        data['Area'] = np.log(data['Area'])
+        data = data.drop(
+            ['Zmin', 'Zmed', 'Zmax', 'Lmax','Aspect'], axis = 1
+        )
+    
+    if parameterization == '8':
+        data['Area'] = np.log(data['Area'])
+        data = data.drop(
+            ['CenLat', 'CenLon', 'Zmin', 'Zmed', 'Zmax', 'Aspect','Lmax' ], axis = 1
+        )
     
     return data
 
@@ -870,13 +880,26 @@ def estimate_thickness(
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.reset_index()
     RGI = RGI.drop('index', axis=1)
+    
     if parameterization == '5':
         RGI['Area'] = np.log(RGI['Area'])
-#         RGI = RGI.drop(RGI[
-#                 (RGI['Zmed'] < 0) |
-#                 (RGI['Lmax'] < 0)
-#             ].index)
-    RGI = RGI.drop(['RGIId', 'region', 'index'], axis=1)
+#         RGI = RGI.drop(['CenLat', 'CenLon'], axis = 1)
+    
+    if parameterization == '6':
+        RGI['Area'] = np.log(RGI['Area'])
+        RGI = RGI.drop(['CenLat', 'CenLon'], axis = 1)
+    
+    if parameterization == '7':
+        RGI['Area'] = np.log(RGI['Area'])
+        RGI = RGI.drop(
+            ['Zmin', 'Zmed', 'Zmax', 'Lmax', 'Aspect'], axis = 1
+        )
+    
+    if parameterization == '8':
+        RGI['Area'] = np.log(RGI['Area'])
+        RGI = RGI.drop(
+            ['CenLat', 'CenLon','Zmin', 'Zmed', 'Zmax', 'Aspect', 'Lmax'], axis = 1
+        )
     print(RGI)
     if useMP == False:
 
@@ -1181,7 +1204,7 @@ def load_notebook_data(
     ref['Farinotti Volume (km3)'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
 
     ref['region'] = ref['RGIId'].str[6:8]
-    ref = ref.dropna(subset = ['Farinotti Mean Thickness'])
+#     ref = ref.dropna(subset = ['Farinotti Mean Thickness'])
 #     print(ref)
     ref = ref.rename(columns = {
          'Mean Thickness':'Farinotti Mean Thickness',
