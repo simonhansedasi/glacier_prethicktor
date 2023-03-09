@@ -646,8 +646,8 @@ def build_model_ensemble(
     layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
     if useMP == False:
-        print('Building model ensemble')
-        for layer_2_input in tqdm(layer_2_list):
+#         print('Building model ensemble')
+        for layer_2_input in (layer_2_list):
             for layer_1_input in (layer_1_list):
                 if layer_1_input <= layer_2_input:
                     pass
@@ -655,12 +655,12 @@ def build_model_ensemble(
 
                     arch = str(layer_1_input) + '-' + str(layer_2_input)
                     dropout = True
-#                     print('Running multi-variable DNN regression with parameterization ' + 
-#                         str(parameterization) + 
-#                         ', layer architecture = ' +
-#                         arch)
+                    print('Running multi-variable DNN regression with parameterization ' + 
+                        str(parameterization) + 
+                        ', layer architecture = ' +
+                        arch)
 
-                    for rs in (RS):
+                    for rs in tqdm(RS):
 
                         build_and_train_model(
                             data, 
@@ -905,7 +905,7 @@ def estimate_thickness(
         )
 #     print(RGI)
     if useMP == False:
-        
+        print('Estimating thicknesses')
         for arch in tqdm(model_statistics['layer architecture'].unique()):
             make_estimates(
                 RGI,
@@ -956,23 +956,23 @@ def make_estimates(
         dnn_history = {}
         dnn_history[rs] = pd.read_csv(results_path + rs)
 #         if exclude == True:
-        if abs((
-            dnn_history[history_name]['loss'].iloc[-1]
-        ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
-            pass
-        else:
+#         if abs((
+#             dnn_history[history_name]['loss'].iloc[-1]
+#         ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
+#             pass
+#         else:
 
-            model_path = (
-                'saved_models/' + parameterization + '/' + arch + '/' + rs
-            )
+        model_path = (
+            'saved_models/' + parameterization + '/' + arch + '/' + rs
+        )
 
-            dnn_model = tf.keras.models.load_model(model_path)
+        dnn_model = tf.keras.models.load_model(model_path)
 
-            s = pd.Series(
-                dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
-                name = rs
-            )
-            dfs[rs] = s
+        s = pd.Series(
+            dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
+            name = rs
+        )
+        dfs[rs] = s
 
     RGI_prethicked = RGI.copy() 
 #     RGI_prethicked['avg predicted thickness'] = 'NaN'
@@ -1262,15 +1262,15 @@ def load_notebook_data(
     df['Upper Bound'] = df['Upper Bound'] - df['Mean Thickness']
     df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
 
-    volume = np.round(
-        sum(df['Weighted Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
+#     volume = np.round(
+#         sum(df['Weighted Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
 
-    std = np.round(
-        sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
+#     std = np.round(
+#         sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
 
 
-    df['Weighted Volume (km3)'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
-    df['Weighted Volume Std Dev (km3)'] = df['Weighted Thickness Uncertainty'] / 1e3 * df['Area']
+#     df['Weighted Volume (km3)'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
+#     df['Weighted Volume Std Dev (km3)'] = df['Weighted Thickness Uncertainty'] / 1e3 * df['Area']
     
     reference_path = 'reference_thicknesses/'
     ref = pd.DataFrame()
@@ -1313,10 +1313,10 @@ def load_notebook_data(
          'Median Thickness',
          'Thickness Std Dev',
         
-         'Weighted Mean Thickness',
-         'Weighted Thickness Uncertainty',
-         'Weighted Volume (km3)',
-         'Weighted Volume Std Dev (km3)',
+#          'Weighted Mean Thickness',
+#          'Weighted Thickness Uncertainty',
+#          'Weighted Volume (km3)',
+#          'Weighted Volume Std Dev (km3)',
         
          'Lower Bound',
          'Upper Bound',
