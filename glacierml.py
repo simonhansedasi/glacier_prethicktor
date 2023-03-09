@@ -64,20 +64,21 @@ def load_RGI(
             file_reader = pd.read_csv(pth + file, encoding_errors = 'replace', on_bad_lines = 'skip')
             RGI_extra = pd.concat([RGI_extra,file_reader], ignore_index = True)
             
-    RGI = RGI_extra[[
-        'RGIId',
-        'CenLat',
-        'CenLon',
-        'Slope',
-        'Zmin',
-        'Zmed',
-        'Zmax',
-        'Area',
-        'Aspect',
-        'Lmax',
-        'Name',
-        'GLIMSId',
-    ]]
+    RGI = RGI_extra
+#     [[
+#         'RGIId',
+#         'CenLat',
+#         'CenLon',
+#         'Slope',
+#         'Zmin',
+#         'Zmed',
+#         'Zmax',
+#         'Area',
+#         'Aspect',
+#         'Lmax',
+#         'Name',
+#         'GLIMSId',
+#     ]]
     RGI['region'] = RGI['RGIId'].str[6:8]
     
     return RGI
@@ -98,7 +99,7 @@ def parameterize_data(parameterization = '1', pth = '/data/fast1/glacierml/data/
     data = data.drop(
         data[data['distance test'] >= float(config[parameterization]['distance threshold'])].index
     )
-
+    data['Area'] = np.log(data['Area'])
     data = data.drop([
         'RGIId','region', 'RGI Centroid Distance', 
         'AVG Radius', 'Roundness', 
@@ -492,7 +493,7 @@ def plot_loss(history):
     )
     #   plt.ylim([0, 10])
     plt.xlabel('Epoch')
-    plt.ylabel('Error')
+    plt.ylabel('Error (m)')
     plt.legend()
     plt.grid(True)
     
@@ -586,12 +587,12 @@ def build_and_train_model(dataset,
         verbose=0, 
         epochs=2000
     )
-
+    df = pd.DataFrame(dnn_history['MULTI'].history)
     #save model, results, and history
 
     if writeToFile:
 
-        df = pd.DataFrame(dnn_history['MULTI'].history)
+#         df = pd.DataFrame(dnn_history['MULTI'].history)
 
 
         history_filename = (
@@ -612,7 +613,7 @@ def build_and_train_model(dataset,
         return history_filename, model_filename
     
     else:
-        return dnn_model
+        return dnn_model, df
     
 
     
@@ -645,7 +646,8 @@ def build_model_ensemble(
     layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
     if useMP == False:
-        for layer_2_input in (layer_2_list):
+        print('Building model ensemble')
+        for layer_2_input in tqdm(layer_2_list):
             for layer_1_input in (layer_1_list):
                 if layer_1_input <= layer_2_input:
                     pass
@@ -653,12 +655,12 @@ def build_model_ensemble(
 
                     arch = str(layer_1_input) + '-' + str(layer_2_input)
                     dropout = True
-                    print('Running multi-variable DNN regression with parameterization ' + 
-                        str(parameterization) + 
-                        ', layer architecture = ' +
-                        arch)
+#                     print('Running multi-variable DNN regression with parameterization ' + 
+#                         str(parameterization) + 
+#                         ', layer architecture = ' +
+#                         arch)
 
-                    for rs in tqdm(RS):
+                    for rs in (RS):
 
                         build_and_train_model(
                             data, 
@@ -880,7 +882,8 @@ def estimate_thickness(
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.reset_index()
     RGI = RGI.drop('index', axis=1)
-    
+    RGI['Area'] = np.log(RGI['Area'])
+#     print(list(RGI))
     if parameterization == '5':
         RGI['Area'] = np.log(RGI['Area'])
 #         RGI = RGI.drop(['CenLat', 'CenLon'], axis = 1)
@@ -900,10 +903,10 @@ def estimate_thickness(
         RGI = RGI.drop(
             ['CenLat', 'CenLon','Zmin', 'Zmed', 'Zmax', 'Aspect', 'Lmax'], axis = 1
         )
-    print(RGI)
+#     print(RGI)
     if useMP == False:
-
-        for arch in model_statistics['layer architecture'].unique():
+        
+        for arch in tqdm(model_statistics['layer architecture'].unique()):
             make_estimates(
                 RGI,
                 parameterization, 
@@ -941,20 +944,24 @@ def make_estimates(
 ):
     if verbose: print(f'Estimating RGI with layer architecture {arch}')
     dfs = pd.DataFrame()
-    RGI_for_predictions = RGI.drop(['region', 'RGIId'], axis = 1)
+    RGI_for_predictions = RGI[[
+        'CenLon', 'CenLat', 'Area', 'Zmin', 'Zmed', 'Zmax', 'Slope', 'Aspect', 'Lmax'
+    ]]
+    
+#     .drop(['region', 'RGIId'], axis = 1)
     for rs in tqdm(range(0,25,1)):
         rs = str(rs)
         results_path = 'saved_results/' + parameterization + '/' + arch + '/'
         history_name = rs
         dnn_history = {}
         dnn_history[rs] = pd.read_csv(results_path + rs)
-
+#         if exclude == True:
         if abs((
             dnn_history[history_name]['loss'].iloc[-1]
         ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
             pass
         else:
-            
+
             model_path = (
                 'saved_models/' + parameterization + '/' + arch + '/' + rs
             )
@@ -966,7 +973,7 @@ def make_estimates(
                 name = rs
             )
             dfs[rs] = s
-#     print(dfs)
+
     RGI_prethicked = RGI.copy() 
 #     RGI_prethicked['avg predicted thickness'] = 'NaN'
 #     RGI_prethicked['predicted thickness std dev'] = 'NaN'
@@ -982,14 +989,16 @@ def make_estimates(
 # #     print('Finding standard deviation of estimated thicknesses')
 #     for i in tqdm(dfs.index):
 #         RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
+
     RGI_prethicked.to_csv(
         'zults/RGI_predicted_' +
         parameterization + '_' + arch + '.csv'          
     )    
+
     return RGI_prethicked
 
 
-def calculate_RGI_thickness_statistics(model_statistics, parameterization, useMP = False):
+def calculate_RGI_thickness_statistics(model_statistics, parameterization):
     # aggregate model thicknesses
 #     print('Gathering architectures...')
     arch_list = model_statistics.sort_values('layer architecture')
@@ -1001,13 +1010,15 @@ def calculate_RGI_thickness_statistics(model_statistics, parameterization, useMP
     aggregate_statistics(arch_list, parameterization)
 
 
-def aggregate_statistics(arch_list, parameterization):
+def aggregate_statistics(arch_list, parameterization, verbose = True):
     df = pd.DataFrame(columns = {
             'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
             '11','12','13','14','15','16','17','18','19','20','21',
             '22','23','24',
     })
 #     print('Architectures listed')
+
+    
     print('Compiling predictions...')
     for arch in tqdm(arch_list['layer architecture'].unique()):
         df_glob = load_global_predictions(
@@ -1016,66 +1027,135 @@ def aggregate_statistics(arch_list, parameterization):
         )
 
         df = pd.concat([df,df_glob])
-
+#         break
     statistics = pd.DataFrame()
     for file in (os.listdir('zults/')):
         if 'statistics_' + parameterization in file:
             file_reader = pd.read_csv('zults/' + file)
             statistics = pd.concat([statistics, file_reader], ignore_index = True)
-
+            
     df = pd.merge(df, statistics, on = 'layer architecture')
     df = df[[
-            'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+            'layer architecture','RGIId','0', '1', '2', '3', '4',
+            '5', '6', '7', '8', '9','10',
             '11','12','13','14','15','16','17','18','19','20','21',
-            '22','23','24','architecture weight 1'
+            '22','23','24'
     ]]
+    
+    # insert model weights here with layer arch column
+    
+    
     compiled_raw = df.groupby('RGIId')[
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+            'layer architecture','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
             '11','12','13','14','15','16','17','18','19','20','21',
-            '22','23','24','architecture weight 1'
+            '22','23','24'
     ]
 
     print('Predictions compiled')
-    print('Aggregating statistics...')
+    print('Applying weights...')
+    
+#     weights = pd.read_csv('model_weights.csv')
+    architecture_weights = pd.read_csv('architecture_weights.csv')
+    architecture_weights = architecture_weights.drop('Unnamed: 0', axis = 1)
+
+#     print(list(architecture_weights))
+#     print(architecture_weights)
+#     print(weights)
+#     print(df)
+#     print('Aggregating statistics...')
+    
     dft = pd.DataFrame()
+    
+    
+    
+    
     for this_rgi_id, obj in tqdm(compiled_raw):
+        
         rgi_id = pd.Series(this_rgi_id, name = 'RGIId')
-#         print(f"Data associated with RGI_ID = {this_rgi_id}:")
+    #         print(f"Data associated with RGI_ID = {this_rgi_id}:")
         dft = pd.concat([dft, rgi_id])
         dft = dft.reset_index()
         dft = dft.drop('index', axis = 1)
+        obj = obj[[
+            'layer architecture','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+            '11','12','13','14','15','16','17','18','19','20','21',
+            '22','23','24',
+        ]]
+    #         print(weights)
+#         print(list(obj))
+        obj = pd.merge(obj, architecture_weights, how = 'inner', on = 'layer architecture')
+#         print(obj)
+        
+#         obj = pd.merge(obj, weights, how = 'inner', on = 'layer architecture',
+#                        suffixes = ('','mw'))
+#         print(list(obj))
+        predictions = obj[[
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+            '11','12','13','14','15','16','17','18','19','20','21',
+            '22','23','24',
+        ]]
+#         print('predictions')
+#         print(predictions)
+#         model_weights = obj[[
+#             'w_0', 'w_1', 'w_2', 'w_3', 'w_4', 'w_5', 'w_6', 'w_7', 'w_8', 'w_9','w_10',
+#             'w_11','w_12','w_13','w_14','w_15','w_16','w_17','w_18','w_19','w_20','w_21',
+#             'w_22','w_23','w_24',
+#         ]]
+
+        arch_weight = obj[['architecture weight']]
+        aw = arch_weight.values.flatten()
+        pr = np.array(predictions.values)
+        
+        std = predictions.std(axis = 1)
+        sd = np.array(std)
+        
+        weighted_std = 0
+        for s, w in zip(sd, aw):
+    #         print(p)
+    #         print(w)
+    #         print(p/w)
+        #     break
+            weighted_std = weighted_std + np.nanmean(s/w)
+        weighted_std = weighted_std / sum(1/aw)
+        
+        weighted_mean = 0
+        for p, w in zip(pr, aw):
+    #         print(p)
+    #         print(w)
+    #         print(p/w)
+        #     break
+            weighted_mean = weighted_mean + np.nanmean(p/w)
+        weighted_mean = weighted_mean / sum(1/aw)
+        
+
+        
+
+        
 
 
-        obj['weight'] = obj['architecture weight 1'] + 1 / (obj[
-            ['0', '1', '2', '3', '4',
-             '5', '6', '7', '8', '9',
-             '10','11','12','13','14',
-             '15','16','17','18','19',
-             '20','21','22','23','24']
-        ].var(axis = 1))
-
-
-        obj['weighted mean'] = obj['weight'] * obj[
-            ['0', '1', '2', '3', '4',
-             '5', '6', '7', '8', '9',
-             '10','11','12','13','14',
-             '15','16','17','18','19',
-             '20','21','22','23','24']
-        ].mean(axis = 1)
-
-
-        weighted_glacier_mean = sum(obj['weighted mean']) / sum(obj['weight'])
-
-
+#         arch_weighted_thickness = np.nansum(
+#             predictions.div(arch_weight.values).values        
+#         ) / np.nansum(1/arch_weight.values)
+        
+#         composite_uncertainty = np.nansum(
+#             (uncertainty.div(arch_weight.values))
+#         ) / np.nansum(1/arch_weight.values)
+        
+#         mean_uncertainty = uncertainty.mean().mean()
+#         break
         stacked_object = obj[[
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
             '11','12','13','14','15','16','17','18','19','20','21',
             '22','23','24',
         ]].stack()
-
         glacier_count = len(stacked_object)
-    #     dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_glacier_mean
         dft.loc[dft.index[-1], 'Mean Thickness'] = stacked_object.mean()
+        
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_mean
+#         dft.loc[dft.index[-1], 'Composite Mean Thickness'] = arch_weighted_thickness
+        dft.loc[dft.index[-1], 'Weighted Thickness Uncertainty'
+               ] = weighted_std
+
         dft.loc[dft.index[-1], 'Median Thickness'] = stacked_object.median()
         dft.loc[dft.index[-1],'Thickness Std Dev'] = stacked_object.std()
 
@@ -1095,7 +1175,7 @@ def aggregate_statistics(arch_list, parameterization):
         dft.loc[dft.index[-1],'Upper Bound'] = upper_bound
         dft.loc[dft.index[-1],'Median Value'] = median
         dft.loc[dft.index[-1],'Total estimates'] = glacier_count
-
+#         break
     dft = dft.rename(columns = {
         0:'RGIId'
     })
@@ -1103,7 +1183,7 @@ def aggregate_statistics(arch_list, parameterization):
     dft.to_csv(
         'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
         parameterization + '.csv'
-              )
+    ) 
 
 
 '''
@@ -1183,14 +1263,14 @@ def load_notebook_data(
     df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
 
     volume = np.round(
-        sum(df['Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
+        sum(df['Weighted Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
 
     std = np.round(
         sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
 
 
-    df['Edasi Volume (km3)'] = df['Mean Thickness'] / 1e3 * df['Area']
-    df['Volume Std Dev (km3)'] = df['Thickness Std Dev'] / 1e3 * df['Area']
+    df['Weighted Volume (km3)'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
+    df['Weighted Volume Std Dev (km3)'] = df['Weighted Thickness Uncertainty'] / 1e3 * df['Area']
     
     reference_path = 'reference_thicknesses/'
     ref = pd.DataFrame()
@@ -1232,11 +1312,17 @@ def load_notebook_data(
          'Mean Thickness',
          'Median Thickness',
          'Thickness Std Dev',
+        
+         'Weighted Mean Thickness',
+         'Weighted Thickness Uncertainty',
+         'Weighted Volume (km3)',
+         'Weighted Volume Std Dev (km3)',
+        
+         'Lower Bound',
+         'Upper Bound',
          'Shapiro-Wilk statistic',
          'Shapiro-Wilk p_value',
          'IQR',
-         'Lower Bound',
-         'Upper Bound',
     #      'Median Value',
          'Total estimates',
          'region',
@@ -1249,25 +1335,27 @@ def load_notebook_data(
          'Area',
          'Aspect',
          'Lmax',
-         'Edasi Volume (km3)',
-         'Volume Std Dev (km3)'
+#          'Weighted Mean Thickness',
+#           'Architecture Weighted Mean Thickness'
+
     ]]
 
-    df = df.rename(columns = {
-        'Weighted Mean Thickness':'Edasi Weighted Mean Thickness',
-        'Mean Thickness':'Edasi Mean Thickness',
-        'Median Thickness':'Edasi Median Thickness',
-        'Thickness Std Dev':'Edasi Thickness Std Dev',
-        'Shapiro-Wilk statistic':'Edasi Shapiro-Wilk statistic',
-        'Shapiro-Wilk p_value':'Edasi Shapiro-Wilk p_value',
-        'IQR':'Edasi IQR',
-        'Lower Bound':'Edasi Lower Bound',
-        'Upper Bound':'Edasi Upper Bound',
-        'Volume Std Dev (km3)':'Edasi Volume Std Dev (km3)'
+#     df = df.rename(columns = {
+# #         'Weighted Mean Thickness':'Edasi Weighted Mean Thickness',
+# #         'Mean Thickness':'Edasi Mean Thickness',
+# #         'Median Thickness':'Edasi Median Thickness',
+# #         'Thickness Std Dev':'Edasi Thickness Std Dev',
+# #         'Shapiro-Wilk statistic':'Edasi Shapiro-Wilk statistic',
+# #         'Shapiro-Wilk p_value':'Edasi Shapiro-Wilk p_value',
+# #         'IQR':'Edasi IQR',
+# #         'Lower Bound':'Edasi Lower Bound',
+# #         'Upper Bound':'Edasi Upper Bound',
+# #         'Volume Std Dev (km3)':'Edasi Volume Std Dev (km3)',
+# #         'Weighted Mean Thickness':'Edasi Weighted Mean Thickness'
 
-    #     'Median Value':,
+#     #     'Median Value':,
 
-    })
+#     })
     
     df = pd.merge(df, ref, on = 'RGIId', how = 'inner')
 
