@@ -80,7 +80,7 @@ def load_RGI(
 #         'GLIMSId',
 #     ]]
     RGI['region'] = RGI['RGIId'].str[6:8]
-    
+#     RGI['Area'] = np.log10(RGI['Area']
     return RGI
 
 
@@ -99,32 +99,31 @@ def parameterize_data(parameterization = '1', pth = '/data/fast1/glacierml/data/
     data = data.drop(
         data[data['distance test'] >= float(config[parameterization]['distance threshold'])].index
     )
-    data['Area'] = np.log(data['Area'])
     data = data.drop([
         'RGIId','region', 'RGI Centroid Distance', 
         'AVG Radius', 'Roundness', 
-            'distance test', 
+        'distance test', 
         'size difference'
     ], axis = 1)
     
-    if parameterization == '5':
-        data['Area'] = np.log(data['Area'])
+#     if parameterization == '5':
+#         data['Area'] = np.log(data['Area'])
             
-    if parameterization == '6':
-        data['Area'] = np.log(data['Area'])
-        data = data.drop(['CenLat', 'CenLon'], axis = 1)
+#     if parameterization == '6':
+#         data['Area'] = np.log(data['Area'])
+#         data = data.drop(['CenLat', 'CenLon'], axis = 1)
         
-    if parameterization == '7':
-        data['Area'] = np.log(data['Area'])
-        data = data.drop(
-            ['Zmin', 'Zmed', 'Zmax', 'Lmax','Aspect'], axis = 1
-        )
+#     if parameterization == '7':
+#         data['Area'] = np.log(data['Area'])
+#         data = data.drop(
+#             ['Zmin', 'Zmed', 'Zmax', 'Lmax','Aspect'], axis = 1
+#         )
     
-    if parameterization == '8':
-        data['Area'] = np.log(data['Area'])
-        data = data.drop(
-            ['CenLat', 'CenLon', 'Zmin', 'Zmed', 'Zmax', 'Aspect','Lmax' ], axis = 1
-        )
+#     if parameterization == '8':
+#         data['Area'] = np.log(data['Area'])
+#         data = data.drop(
+#             ['CenLat', 'CenLon', 'Zmin', 'Zmed', 'Zmax', 'Aspect','Lmax' ], axis = 1
+#         )
     
     return data
 
@@ -882,27 +881,27 @@ def estimate_thickness(
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.reset_index()
     RGI = RGI.drop('index', axis=1)
-    RGI['Area'] = np.log(RGI['Area'])
+#     RGI['Area'] = np.log10(RGI['Area'])
 #     print(list(RGI))
-    if parameterization == '5':
-        RGI['Area'] = np.log(RGI['Area'])
+#     if parameterization == '5':
+#         RGI['Area'] = np.log(RGI['Area'])
+# #         RGI = RGI.drop(['CenLat', 'CenLon'], axis = 1)
+    
+#     if parameterization == '6':
+#         RGI['Area'] = np.log(RGI['Area'])
 #         RGI = RGI.drop(['CenLat', 'CenLon'], axis = 1)
     
-    if parameterization == '6':
-        RGI['Area'] = np.log(RGI['Area'])
-        RGI = RGI.drop(['CenLat', 'CenLon'], axis = 1)
+#     if parameterization == '7':
+#         RGI['Area'] = np.log(RGI['Area'])
+#         RGI = RGI.drop(
+#             ['Zmin', 'Zmed', 'Zmax', 'Lmax', 'Aspect'], axis = 1
+#         )
     
-    if parameterization == '7':
-        RGI['Area'] = np.log(RGI['Area'])
-        RGI = RGI.drop(
-            ['Zmin', 'Zmed', 'Zmax', 'Lmax', 'Aspect'], axis = 1
-        )
-    
-    if parameterization == '8':
-        RGI['Area'] = np.log(RGI['Area'])
-        RGI = RGI.drop(
-            ['CenLat', 'CenLon','Zmin', 'Zmed', 'Zmax', 'Aspect', 'Lmax'], axis = 1
-        )
+#     if parameterization == '8':
+#         RGI['Area'] = np.log(RGI['Area'])
+#         RGI = RGI.drop(
+#             ['CenLat', 'CenLon','Zmin', 'Zmed', 'Zmax', 'Aspect', 'Lmax'], axis = 1
+#         )
 #     print(RGI)
     if useMP == False:
         print('Estimating thicknesses')
@@ -942,10 +941,10 @@ def make_estimates(
     arch,
     
 ):
-    if verbose: print(f'Estimating RGI with layer architecture {arch}')
+    if verbose: print(f'Estimating RGI with layer architecture {arch}, parameterization {parameterization}')
     dfs = pd.DataFrame()
     RGI_for_predictions = RGI[[
-        'CenLon', 'CenLat', 'Area', 'Zmin', 'Zmed', 'Zmax', 'Slope', 'Aspect', 'Lmax'
+        'CenLon', 'CenLat', 'Slope', 'Zmin', 'Zmed', 'Zmax', 'Area', 'Aspect', 'Lmax'
     ]]
     
 #     .drop(['region', 'RGIId'], axis = 1)
@@ -1111,38 +1110,15 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
         
         weighted_std = 0
         for s, w in zip(sd, aw):
-    #         print(p)
-    #         print(w)
-    #         print(p/w)
-        #     break
             weighted_std = weighted_std + np.nanmean(s/w)
         weighted_std = weighted_std / sum(1/aw)
         
         weighted_mean = 0
         for p, w in zip(pr, aw):
-    #         print(p)
-    #         print(w)
-    #         print(p/w)
-        #     break
             weighted_mean = weighted_mean + np.nanmean(p/w)
         weighted_mean = weighted_mean / sum(1/aw)
         
 
-        
-
-        
-
-
-#         arch_weighted_thickness = np.nansum(
-#             predictions.div(arch_weight.values).values        
-#         ) / np.nansum(1/arch_weight.values)
-        
-#         composite_uncertainty = np.nansum(
-#             (uncertainty.div(arch_weight.values))
-#         ) / np.nansum(1/arch_weight.values)
-        
-#         mean_uncertainty = uncertainty.mean().mean()
-#         break
         stacked_object = obj[[
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
             '11','12','13','14','15','16','17','18','19','20','21',
@@ -1269,8 +1245,8 @@ def load_notebook_data(
 #         sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
 
 
-#     df['Weighted Volume (km3)'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
-#     df['Weighted Volume Std Dev (km3)'] = df['Weighted Thickness Uncertainty'] / 1e3 * df['Area']
+    df['Weighted Volume (km3)'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
+    df['Weighted Volume Std Dev (km3)'] = df['Weighted Thickness Uncertainty'] / 1e3 * df['Area']
     
     reference_path = 'reference_thicknesses/'
     ref = pd.DataFrame()
@@ -1313,10 +1289,10 @@ def load_notebook_data(
          'Median Thickness',
          'Thickness Std Dev',
         
-#          'Weighted Mean Thickness',
-#          'Weighted Thickness Uncertainty',
-#          'Weighted Volume (km3)',
-#          'Weighted Volume Std Dev (km3)',
+         'Weighted Mean Thickness',
+         'Weighted Thickness Uncertainty',
+         'Weighted Volume (km3)',
+         'Weighted Volume Std Dev (km3)',
         
          'Lower Bound',
          'Upper Bound',
