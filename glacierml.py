@@ -1105,13 +1105,20 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
         aw = arch_weight.values.flatten()
         pr = np.array(predictions.values)
         
-        std = predictions.std(axis = 1)
-        sd = np.array(std)
+#         q75, q25 = np.nanpercentile(dft[pool_list], [75,25])
         
-        weighted_std = 0
-        for s, w in zip(sd, aw):
-            weighted_std = weighted_std + np.nanmean(s/w)
-        weighted_std = weighted_std / sum(1/aw)
+#         std = predictions.std(axis = 1)
+#         sd = np.array(std)
+        
+#         var = sd**2
+        
+#         comp_var = 1 / sum(1/var)
+#         weighted_std = 0
+#         for s, w in zip(sd, aw):
+#             weighted_std = weighted_std + np.nanmean(s/w)
+#         weighted_std = weighted_std / sum(1/aw)
+
+        variance = pr.var()
         
         weighted_mean = 0
         for p, w in zip(pr, aw):
@@ -1129,8 +1136,10 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
         
         dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_mean
 #         dft.loc[dft.index[-1], 'Composite Mean Thickness'] = arch_weighted_thickness
-        dft.loc[dft.index[-1], 'Weighted Thickness Uncertainty'
-               ] = weighted_std
+        dft.loc[dft.index[-1], 'Model Variance'
+               ] = variance
+#         dft.loc[dft.index[-1], 'Composite STD'
+#                ] = np.sqrt(comp_var)
 
         dft.loc[dft.index[-1], 'Median Thickness'] = stacked_object.median()
         dft.loc[dft.index[-1],'Thickness Std Dev'] = stacked_object.std()
@@ -1211,10 +1220,10 @@ def load_global_predictions(
 
 
 def load_notebook_data(
-    parameterization = '1'
+    parameterization = '1', pth = ''
 ):
     df = pd.read_csv(
-            'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_'+
+            pth + 'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_'+
             parameterization + '.csv'
         )
     df['region'] = df['RGIId'].str[6:8]
@@ -1246,7 +1255,7 @@ def load_notebook_data(
 
 
     df['Weighted Volume (km3)'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
-    df['Weighted Volume Std Dev (km3)'] = df['Weighted Thickness Uncertainty'] / 1e3 * df['Area']
+#     df['Weighted Volume Std Dev (km3)'] = df['Weighted Thickness Uncertainty'] / 1e3 * df['Area']
     
     reference_path = 'reference_thicknesses/'
     ref = pd.DataFrame()
@@ -1290,9 +1299,10 @@ def load_notebook_data(
          'Thickness Std Dev',
         
          'Weighted Mean Thickness',
-         'Weighted Thickness Uncertainty',
+         'Model Variance',
+#          'Weighted Thickness Uncertainty',
          'Weighted Volume (km3)',
-         'Weighted Volume Std Dev (km3)',
+#          'Weighted Volume Std Dev (km3)',
         
          'Lower Bound',
          'Upper Bound',
