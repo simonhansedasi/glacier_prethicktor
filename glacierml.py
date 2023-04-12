@@ -1105,42 +1105,43 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
         aw = arch_weight.values.flatten()
         pr = np.array(predictions.values)
         
-#         q75, q25 = np.nanpercentile(dft[pool_list], [75,25])
+        ### UNCERTAINTY CALCULATIONS ###
         
-#         std = predictions.std(axis = 1)
-#         sd = np.array(std)
+        var_pool = pr.var(axis = 1)   # take the mean across k validatin splits
+        pooled_variance = np.mean(var_pool) # take the mean of i model variances
+        dft.loc[dft.index[-1], 'Pooled Variance'
+               ] = pooled_variance
         
-#         var = sd**2
         
-#         comp_var = 1 / sum(1/var)
-#         weighted_std = 0
-#         for s, w in zip(sd, aw):
-#             weighted_std = weighted_std + np.nanmean(s/w)
-#         weighted_std = weighted_std / sum(1/aw)
-
-        variance = pr.var()
+        variance = pr.var()    # take the overal mean across i models and k splits at once
+        dft.loc[dft.index[-1], 'Model Variance'
+               ] = variance
         
+        
+        fvariance = 1 / sum(1/obj['var'])    # inverted sum of inverted model variances from weights
+        dft.loc[dft.index[-1], 'F Variance'
+               ] = fvariance
+        
+        
+        
+        ### WEIGHTED MEAN ###
         weighted_mean = 0
         for p, w in zip(pr, aw):
             weighted_mean = weighted_mean + np.nanmean(p/w)
         weighted_mean = weighted_mean / sum(1/aw)
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_mean
         
-
+        
+        
+        ### UN-WEIGHTED MEAN & UNCERTAINTY ###
         stacked_object = obj[[
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
             '11','12','13','14','15','16','17','18','19','20','21',
             '22','23','24',
         ]].stack()
-        glacier_count = len(stacked_object)
         dft.loc[dft.index[-1], 'Mean Thickness'] = stacked_object.mean()
         
-        dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_mean
-#         dft.loc[dft.index[-1], 'Composite Mean Thickness'] = arch_weighted_thickness
-        dft.loc[dft.index[-1], 'Model Variance'
-               ] = variance
-#         dft.loc[dft.index[-1], 'Composite STD'
-#                ] = np.sqrt(comp_var)
-
+        glacier_count = len(stacked_object)
         dft.loc[dft.index[-1], 'Median Thickness'] = stacked_object.median()
         dft.loc[dft.index[-1],'Thickness Std Dev'] = stacked_object.std()
 
@@ -1302,6 +1303,8 @@ def load_notebook_data(
          'Model Variance',
 #          'Weighted Thickness Uncertainty',
          'Weighted Volume (km3)',
+         'F Variance',
+         'Pooled Variance',
 #          'Weighted Volume Std Dev (km3)',
         
          'Lower Bound',
