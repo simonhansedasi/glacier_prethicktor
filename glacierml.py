@@ -1057,12 +1057,6 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
     architecture_weights = pd.read_csv('architecture_weights.csv')
     architecture_weights = architecture_weights.drop('Unnamed: 0', axis = 1)
 
-#     print(list(architecture_weights))
-#     print(architecture_weights)
-#     print(weights)
-#     print(df)
-#     print('Aggregating statistics...')
-    
     dft = pd.DataFrame()
     
     
@@ -1071,7 +1065,6 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
     for this_rgi_id, obj in tqdm(compiled_raw):
         
         rgi_id = pd.Series(this_rgi_id, name = 'RGIId')
-    #         print(f"Data associated with RGI_ID = {this_rgi_id}:")
         dft = pd.concat([dft, rgi_id])
         dft = dft.reset_index()
         dft = dft.drop('index', axis = 1)
@@ -1080,49 +1073,75 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
             '11','12','13','14','15','16','17','18','19','20','21',
             '22','23','24',
         ]]
-    #         print(weights)
-#         print(list(obj))
+
         obj = pd.merge(obj, architecture_weights, how = 'inner', on = 'layer architecture')
-#         print(obj)
-        
-#         obj = pd.merge(obj, weights, how = 'inner', on = 'layer architecture',
-#                        suffixes = ('','mw'))
-#         print(list(obj))
+
         predictions = obj[[
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
             '11','12','13','14','15','16','17','18','19','20','21',
             '22','23','24',
         ]]
-#         print('predictions')
-#         print(predictions)
-#         model_weights = obj[[
-#             'w_0', 'w_1', 'w_2', 'w_3', 'w_4', 'w_5', 'w_6', 'w_7', 'w_8', 'w_9','w_10',
-#             'w_11','w_12','w_13','w_14','w_15','w_16','w_17','w_18','w_19','w_20','w_21',
-#             'w_22','w_23','w_24',
-#         ]]
 
         arch_weight = obj[['architecture weight']]
         aw = arch_weight.values.flatten()
         pr = np.array(predictions.values)
         
+
+        
+        
+        
+        
+        
         ### UNCERTAINTY CALCULATIONS ###
         
-        var_pool = pr.var(axis = 1)   # take the mean across k validatin splits
-        pooled_variance = np.mean(var_pool) # take the mean of i model variances
-        dft.loc[dft.index[-1], 'Pooled Variance'
-               ] = pooled_variance
+
         
-        
+        # Raw Variance
         variance = pr.var()    # take the overal mean across i models and k splits at once
-        dft.loc[dft.index[-1], 'Model Variance'
+        dft.loc[dft.index[-1], 'Unc1'
                ] = variance
         
+        # Pooled Variance
+        var_pool = pr.var(axis = 1)   # take the mean across k validatin splits
+        pooled_variance = np.mean(var_pool) # take the mean of i model variances
+        dft.loc[dft.index[-1], 'Unc2'
+               ] = pooled_variance
+        dft.loc[dft.index[-1], 'Unc3'
+               ] = var_pool.var()            # variance of the variances. Probably nothing
         
-        fvariance = 1 / sum(1/obj['var'])    # inverted sum of inverted model variances from weights
-        dft.loc[dft.index[-1], 'F Variance'
-               ] = fvariance
+
+        
+        # Standard Residual Error
+        H_RGI = predictions.mean(axis = 1)    # series of mean thick across xval        
+        sigma_RGI = (obj['IQR'] / 1.5) * H_RGI    # est unc a la Farinotti
+        est_var = sigma_RGI**2    
+        comp_est_var = 1 / sum(1/est_var.to_numpy())    # take the inverse of the sum of inverted var
+        dft.loc[dft.index[-1], 'Unc4'
+               ] = comp_est_var
         
         
+        
+        # MAE base uncertainty
+        dft.loc[dft.index[-1], 'Unc5'     # Graybill-Deal best estimate of composite MAE
+               ] = 16.321
+        
+        
+        # Bootstrap uncertainty
+        boot_var = predictions.var(axis = 1)    # model variance across k x vals
+        comp_boot_var = 1 / sum(1 / boot_var)    # inverted sum of inverse variances
+        dft.loc[dft.index[-1], 'Unc6'
+               ] = comp_est_var
+        
+        
+        
+        
+#         dft.loc[dft.index[-1], 'Estimated STD'
+#                ] = np.sqrt(comp_est_var)
+        
+#         # 
+#         fvariance = 1 / sum(1/obj['var'])    # inverted sum of inverted model variances from weights
+#         dft.loc[dft.index[-1], 'Unc4'
+#                ] = fvariance       
         
         ### WEIGHTED MEAN ###
         weighted_mean = 0
@@ -1305,6 +1324,8 @@ def load_notebook_data(
          'Weighted Volume (km3)',
          'F Variance',
          'Pooled Variance',
+         'Estimated Variance',
+         'Estimated STD',
 #          'Weighted Volume Std Dev (km3)',
         
          'Lower Bound',
