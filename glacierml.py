@@ -22,6 +22,9 @@ import warnings
 from tensorflow.python.util import deprecation
 import logging
 from scipy.stats import shapiro
+# import pickle5 as pickle
+import pickle
+  
 
 tf.random.set_seed(42)
 tf.get_logger().setLevel(logging.ERROR)
@@ -296,7 +299,6 @@ def load_training_data(
 GlaThiDa_RGI_index_matcher:
 '''
 def match_GlaThiDa_RGI_index(
-    version = 'v2',
     pth = '/home/prethicktor/data/',
     verbose = False,
     useMP = False
@@ -307,9 +309,8 @@ def match_GlaThiDa_RGI_index(
     pth_2 = os.path.join(pth, 'RGI/rgi60-attribs/')
     pth_3 = os.path.join(pth, 'matched_indexes/', version)
     
-    if version == 'v2':
-        glathida = pd.read_csv(pth_1 + 'T.csv')
-        glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
+    glathida = pd.read_csv(pth_1 + 'T.csv')
+    glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
     glathida['RGIId'] = np.nan
     glathida['RGI Centroid Distance'] = np.nan
     glathida = glathida.reset_index()
@@ -600,7 +601,7 @@ def build_and_train_model(dataset,
             str(random_state)
         )
 
-        df.to_csv(  history_filename  )
+        df.to_pickle(  history_filename + '.pkl' )
 
         model_filename =  (
             svd_mod_pth + 
@@ -722,7 +723,7 @@ def assess_model_performance(data, parameterization = '1'):
 
             model_predictions = pd.concat([model_predictions, df], ignore_index = True)
     model_predictions.rename(columns = {0:'avg train thickness'},inplace = True)
-    model_predictions.to_csv('zults/model_predictions_' + parameterization + '.csv')
+    model_predictions.to_pickle('zults/model_predictions_' + parameterization + '.pkl')
     # calculate statistics
     print('calculating statistics...')
     dnn_model = {}
@@ -764,10 +765,10 @@ def assess_model_performance(data, parameterization = '1'):
         model_statistics['architecture weight 2'] = (
             model_statistics['test mae avg'] / sum(model_statistics['test mae avg'])
         )
-        model_statistics.to_csv(
+        model_statistics.to_pickle(
             'zults/model_statistics_' + 
             parameterization + 
-            '.csv'
+            '.pkl'
         )
 
 def evaluate_model(
@@ -881,28 +882,7 @@ def estimate_thickness(
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.reset_index()
     RGI = RGI.drop('index', axis=1)
-#     RGI['Area'] = np.log10(RGI['Area'])
-#     print(list(RGI))
-#     if parameterization == '5':
-#         RGI['Area'] = np.log(RGI['Area'])
-# #         RGI = RGI.drop(['CenLat', 'CenLon'], axis = 1)
     
-#     if parameterization == '6':
-#         RGI['Area'] = np.log(RGI['Area'])
-#         RGI = RGI.drop(['CenLat', 'CenLon'], axis = 1)
-    
-#     if parameterization == '7':
-#         RGI['Area'] = np.log(RGI['Area'])
-#         RGI = RGI.drop(
-#             ['Zmin', 'Zmed', 'Zmax', 'Lmax', 'Aspect'], axis = 1
-#         )
-    
-#     if parameterization == '8':
-#         RGI['Area'] = np.log(RGI['Area'])
-#         RGI = RGI.drop(
-#             ['CenLat', 'CenLon','Zmin', 'Zmed', 'Zmax', 'Aspect', 'Lmax'], axis = 1
-#         )
-#     print(RGI)
     if useMP == False:
         print('Estimating thicknesses')
         for arch in tqdm(model_statistics['layer architecture'].unique()):
@@ -974,93 +954,259 @@ def make_estimates(
         dfs[rs] = s
 
     RGI_prethicked = RGI.copy() 
-#     RGI_prethicked['avg predicted thickness'] = 'NaN'
-#     RGI_prethicked['predicted thickness std dev'] = 'NaN'
     RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
     RGI_prethicked['avg predicted thickness'] = dfs.mean(axis = 1)
     RGI_prethicked['predicted thickness std dev'] = dfs.std(axis = 1)
-#     if verbose: print(f'Averaging estimated thicknesses of layer architecture {arch}')
-# #     print('Averaging estimated thicknesses')
-#     for i in tqdm(dfs.index):
-#         RGI_prethicked['avg predicted thickness'].loc[i] = np.mean(dfs.loc[i])
-        
-#     if verbose: print(f'Finding standard deviation of layer architecture {arch}')
-# #     print('Finding standard deviation of estimated thicknesses')
-#     for i in tqdm(dfs.index):
-#         RGI_prethicked['predicted thickness std dev'].loc[i] = np.std(dfs.loc[i])
 
-    RGI_prethicked.to_csv(
+    RGI_prethicked.to_pickle(
         'zults/RGI_predicted_' +
-        parameterization + '_' + arch + '.csv'          
+        parameterization + '_' + arch + '.pkl'          
     )    
 
     return RGI_prethicked
 
 
-def calculate_RGI_thickness_statistics(model_statistics, parameterization):
+
+
+
+
+
+
+
+def compute_model_weights(model_statistics, parameterization, pth = '/home/prethicktor/data/'):
+    path = 'model_weights/'
+    file = path + 'architecture_weights_' + parameterization + '.pkl'   
+    if os.path.isfile(file) == True:
+        architecture_weights = pd.read_pickle(file)
+        residual_model = np.load('model_weights/residual_model_' + parameterization + '.npy',)
+    if os.path.isfile(file) == False:
+    
+    
+        glac = load_training_data(RGI_input = 'y', pth = pth)
+        print('Loading architectures')
+        arch = list_architectures(parameterization = parameterization)
+        print('Compiling residuals')
+        dft = pd.DataFrame()
+        for architecture in tqdm(model_statistics['layer architecture'].unique()):
+        #     print(architecture)
+            df_glob = load_global_predictions(
+                parameterization = parameterization, architecture = architecture
+            )
+            dft = pd.concat([dft, df_glob])
+
+        df = dft[[
+                'layer architecture','RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+                '11','12','13','14','15','16','17','18','19','20','21',
+                '22','23','24',
+        ]]
+
+        glathida_estimates = pd.merge(glac, df, how = 'inner', on = 'RGIId')
+
+        est = glathida_estimates
+
+        for i in range(0,25,1):
+            est['pr_'+str(i)] = (est[str(i)] - est['Thickness']) / est['Thickness']
+
+
+        model_list = [
+             '0', '1', '2', '3', '4', '5', '6', '7', '8',
+             '9', '10', '11', '12', '13', '14', '15', '16',
+             '17', '18', '19', '20', '21', '22', '23', '24',
+        ]
+        pool_list = [
+             'pr_0', 'pr_1', 'pr_2', 'pr_3', 'pr_4', 'pr_5', 'pr_6', 'pr_7', 'pr_8',
+             'pr_9', 'pr_10', 'pr_11', 'pr_12', 'pr_13', 'pr_14', 'pr_15', 'pr_16',
+             'pr_17', 'pr_18', 'pr_19', 'pr_20', 'pr_21', 'pr_22', 'pr_23', 'pr_24',
+        ]
+        weight_list = [
+             'w_0', 'w_1', 'w_2', 'w_3', 'w_4', 'w_5', 'w_6', 'w_7', 'w_8',
+             'w_9', 'w_10', 'w_11', 'w_12', 'w_13', 'w_14', 'w_15', 'w_16',
+             'w_17', 'w_18', 'w_19', 'w_20', 'w_21', 'w_22', 'w_23', 'w_24',
+        ]
+
+        weights = pd.DataFrame()
+        architecture_weights = pd.DataFrame()
+        print('Calculating weights')
+        for i in tqdm(est['layer architecture'].unique()):
+            dft = est[est['layer architecture'] == str(i)]
+
+
+            q75, q25 = np.nanpercentile(est[pool_list], [75,25])
+            IQR = q75 - q25
+            sigma = (IQR * np.mean(dft[model_list].to_numpy())) / 1.5
+
+            w = pd.Series(sigma**2, name = 'weight')
+
+
+
+
+            architecture_weights = pd.concat([architecture_weights, w])
+            architecture_weights = architecture_weights.reset_index()
+            architecture_weights = architecture_weights.drop('index', axis = 1)
+            architecture_weights.loc[architecture_weights.index[-1], 'layer architecture'] = i
+            architecture_weights.loc[architecture_weights.index[-1], 'std'] = sigma
+            architecture_weights.loc[architecture_weights.index[-1], 'IQR'] = IQR
+
+
+
+
+        print('calculating residual curve...')
+        df = pd.DataFrame()
+        for i in range(0,25,1):
+            x = pd.DataFrame(
+                    pd.Series(
+                        glathida_estimates[str(i)] - glathida_estimates['Thickness'],
+                        name = 'Residual'
+                )
+            )
+            y = pd.DataFrame(
+                pd.Series(
+                    glathida_estimates['Thickness'],
+                    name = 'GlaThiDa Survey Thickness'
+                )
+            )
+            dft = x.join(y)
+            df = pd.concat([df, dft])
+        x = df['GlaThiDa Survey Thickness']
+        y = df['Residual']
+
+
+        residual_model = np.polyfit(x,y,2)
+        print(residual_model)
+
+        architecture_weights = architecture_weights.rename(columns = {0:'architecture weight'})
+        architecture_weights['var'] = architecture_weights['std']**2
+        architecture_weights.to_pickle('model_weights/architecture_weights_' + 
+                                       parameterization + '.pkl')
+#         residual_model.to_pickle('model_weights/residual_model_' + parameterization + '.pkl')
+        
+        np.save(
+            'model_weights/residual_model_' + parameterization,
+            residual_model, 
+            allow_pickle=True, 
+            fix_imports=True)
+
+        
+        
+        
+        
+        
+        
+    return architecture_weights, residual_model
+
+
+
+
+
+def calculate_RGI_thickness_statistics(architecture_weights, residual_model, model_statistics, parameterization):
     # aggregate model thicknesses
 #     print('Gathering architectures...')
     arch_list = model_statistics.sort_values('layer architecture')
+#     print(arch_list)
 #     arch_list = list_architectures(parameterization = parameterization)
 #     arch_list = arch_list.sort_values('layer architecture')
 #     arch_list = arch_list.reset_index()
 #     arch_list = arch_list.drop('index', axis = 1)
 
-    aggregate_statistics(arch_list, parameterization)
+    aggregate_statistics(architecture_weights, residual_model, arch_list, parameterization)
 
-
-def aggregate_statistics(arch_list, parameterization, verbose = True):
-    df = pd.DataFrame(columns = {
-            'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-            '11','12','13','14','15','16','17','18','19','20','21',
-            '22','23','24',
-    })
-#     print('Architectures listed')
 
     
-    print('Compiling predictions...')
-    for arch in tqdm(arch_list['layer architecture'].unique()):
-        df_glob = load_global_predictions(
-            parameterization = parameterization,
-            architecture = arch
+    
+
+def GB_D_common_estimator(n, S, X):
+    mu = sum((n / S)*X) / sum(n / S)
+    
+    return mu
+
+def unbiased_variance_estimator(n_m, n_x, sigma_m, sigma_x):
+    
+    q_1 = 4 / (n_m - 1)
+    q_2 = (n_m / sigma_m) / sum(n_x/sigma_x)
+    q_3 = (n_m / sigma_m**2) / sum(n_x/sigma_x)**2
+    q_4 = sum(n_m / sigma_m)
+    
+    var = (
+        (1 + sum(q_1 * (q_2 - q_3))) / q_4
+    )
+    return var
+    
+    
+    
+    
+    
+    
+def aggregate_statistics(
+    architecture_weights, 
+    residual_model, 
+    arch_list, 
+    parameterization, 
+    verbose = True
+):
+    
+    
+    pth = 'predicted_thicknesses/compiled_raw_' + parameterization + '.h5'   
+    if os.path.isfile(pth) == True:
+        df = pd.read_hdf(
+            'predicted_thicknesses/compiled_raw_' + parameterization + '.h5',
+            key = 'compiled_raw', mode = 'a'
         )
 
-        df = pd.concat([df,df_glob])
-#         break
-    statistics = pd.DataFrame()
-    for file in (os.listdir('zults/')):
-        if 'statistics_' + parameterization in file:
-            file_reader = pd.read_csv('zults/' + file)
-            statistics = pd.concat([statistics, file_reader], ignore_index = True)
-            
-    df = pd.merge(df, statistics, on = 'layer architecture')
-    df = df[[
-            'layer architecture','RGIId','0', '1', '2', '3', '4',
-            '5', '6', '7', '8', '9','10',
-            '11','12','13','14','15','16','17','18','19','20','21',
-            '22','23','24'
-    ]]
-    
-    # insert model weights here with layer arch column
-    
-    
-    compiled_raw = df.groupby('RGIId')[
-            'layer architecture','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-            '11','12','13','14','15','16','17','18','19','20','21',
-            '22','23','24'
-    ]
+    if os.path.isfile(pth) == False:
+        df = pd.DataFrame(columns = [
+                'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+                '11','12','13','14','15','16','17','18','19','20','21',
+                '22','23','24',
+        ])
+    #     print('Architectures listed')
 
+
+        print('Compiling predictions...')
+    #     print(arch_list)
+        for arch in tqdm(arch_list['layer architecture'].unique()):
+            df_glob = load_global_predictions(
+                parameterization = parameterization,
+                architecture = arch
+            )
+
+            df = pd.concat([df,df_glob])
+        statistics = pd.DataFrame()
+        for file in (os.listdir('zults/')):
+            if 'statistics_' + parameterization in file:
+                file_reader = pd.read_pickle('zults/' + file)
+                statistics = pd.concat([statistics, file_reader], ignore_index = True)
+
+        df = pd.merge(df, statistics, on = 'layer architecture')
+        df = df[[
+                'layer architecture','RGIId','0', '1', '2', '3', '4',
+                '5', '6', '7', '8', '9','10',
+                '11','12','13','14','15','16','17','18','19','20','21',
+                '22','23','24'
+        ]]
+
+
+        print('Grouping predictions')
+        compiled_raw = df.groupby('RGIId')[[
+                'layer architecture','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+                '11','12','13','14','15','16','17','18','19','20','21',
+                '22','23','24'
+        ]]
+        
+        df.to_hdf('predicted_thicknesses/compiled_raw_' + parameterization + '.h5', 
+                  key = 'compiled_raw', mode = 'a')
+        
+        
     print('Predictions compiled')
     print('Applying weights...')
     
-#     weights = pd.read_csv('model_weights.csv')
-    architecture_weights = pd.read_csv('architecture_weights.csv')
-    architecture_weights = architecture_weights.drop('Unnamed: 0', axis = 1)
-
     dft = pd.DataFrame()
     
     
-    
+    compiled_raw = df.groupby('RGIId')[[
+                'layer architecture','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+                '11','12','13','14','15','16','17','18','19','20','21',
+                '22','23','24'
+        ]]
     
     for this_rgi_id, obj in tqdm(compiled_raw):
         
@@ -1087,6 +1233,23 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
         pr = np.array(predictions.values)
         
 
+        ### WEIGHTED MEAN ###
+#         hat_h = GB_D_common_estimator(
+#             n = 25, 
+#             S = predictions.var(axis = 0), 
+#             X = predictions.mean(axis = 0)
+#         )
+        bar_H = predictions.mean(axis = 1)
+        
+        hat_mu = sum( (bar_H) / (aw) ) / sum(1/aw)
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = hat_mu
+        
+        
+#         weighted_mean = 0
+#         for p, w in zip(pr, aw):
+#             weighted_mean = weighted_mean + np.nanmean(p/w)
+#         weighted_mean = weighted_mean / sum(1/aw)
+#         dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_mean
         
         
         
@@ -1094,61 +1257,64 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
         
         ### UNCERTAINTY CALCULATIONS ###
         
-
+        # model uncertainty
+        var_mu = unbiased_variance_estimator(
+            n_m = 161, 
+            n_x = 25, 
+            sigma_m = predictions.var(axis = 1), 
+            sigma_x = predictions.var(axis = 0)
+        )
+        dft.loc[dft.index[-1], 'Bootstrap Uncertainty'] = var_mu
         
-        # Raw Variance
-        variance = pr.var()    # take the overal mean across i models and k splits at once
-        dft.loc[dft.index[-1], 'Unc1'
-               ] = variance
         
-        # Pooled Variance
-        var_pool = pr.var(axis = 1)   # take the mean across k validatin splits
-        pooled_variance = np.mean(var_pool) # take the mean of i model variances
-        dft.loc[dft.index[-1], 'Unc2'
-               ] = pooled_variance
-        dft.loc[dft.index[-1], 'Unc3'
-               ] = var_pool.var()            # variance of the variances. Probably nothing
+        # Residual Correction Factor
         
-
+        gamma = (obj['IQR'][0] / 1.5)
+        p_mean = predictions.mean(axis = 1)
+        R_RGI = residual_model[0]*p_mean**2 + residual_model[1]*p_mean + residual_model[2]
+        sigma_RGI = gamma * R_RGI
         
-        # Standard Residual Error
-        H_RGI = predictions.mean(axis = 1)    # series of mean thick across xval        
-        sigma_RGI = (obj['IQR'] / 1.5) * H_RGI    # est unc a la Farinotti
-        est_var = sigma_RGI**2    
-        comp_est_var = 1 / sum(1/est_var.to_numpy())    # take the inverse of the sum of inverted var
-        dft.loc[dft.index[-1], 'Unc4'
-               ] = comp_est_var
+        residual_x_mean = predictions.mean(axis = 0)
+        R_RGI_x = residual_model[0]*residual_x_mean**2 + residual_model[1]*residual_x_mean + residual_model[2]
+        sigma_residual_x = gamma * R_RGI_x
+        
+        GD_residual = GB_D_common_estimator(
+            n = 161, 
+            S = sigma_RGI**2, 
+            X = R_RGI
+        )
+        
+        residual_variance = unbiased_variance_estimator(
+            n_m = 161, 
+            n_x = 25, 
+            sigma_m = sigma_RGI**2,
+            sigma_x = sigma_residual_x**2
+        )
+        
+        
+        dft.loc[dft.index[-1], 'Residual Correction'] = GD_residual
+        dft.loc[dft.index[-1], 'Residual Variance'] = residual_variance
         
         
         
         # MAE base uncertainty
-        dft.loc[dft.index[-1], 'Unc5'     # Graybill-Deal best estimate of composite MAE
-               ] = 16.321
+        
+        MAE_GD = 16.321**2
+        dft.loc[dft.index[-1], 'MAE Uncertainty'] = MAE_GD
+
         
         
-        # Bootstrap uncertainty
-        boot_var = predictions.var(axis = 1)    # model variance across k x vals
-        comp_boot_var = 1 / sum(1 / boot_var)    # inverted sum of inverse variances
-        dft.loc[dft.index[-1], 'Unc6'
-               ] = comp_est_var
+        # deviation modeled uncertainty (Farinotti)
+        
+        sigma_d = gamma * bar_H
+        
+        sigma_mu = 1 / sum(1/sigma_d)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty'] = sigma_mu
         
         
+#         total_uncertainty = residual_variance + MAE_GD + var_mu
+#         dft.loc[dft.index[-1], 'Total Uncertainty'] = total_uncertainty
         
-        
-#         dft.loc[dft.index[-1], 'Estimated STD'
-#                ] = np.sqrt(comp_est_var)
-        
-#         # 
-#         fvariance = 1 / sum(1/obj['var'])    # inverted sum of inverted model variances from weights
-#         dft.loc[dft.index[-1], 'Unc4'
-#                ] = fvariance       
-        
-        ### WEIGHTED MEAN ###
-        weighted_mean = 0
-        for p, w in zip(pr, aw):
-            weighted_mean = weighted_mean + np.nanmean(p/w)
-        weighted_mean = weighted_mean / sum(1/aw)
-        dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = weighted_mean
         
         
         
@@ -1185,9 +1351,9 @@ def aggregate_statistics(arch_list, parameterization, verbose = True):
         0:'RGIId'
     })
     dft = dft.drop_duplicates()
-    dft.to_csv(
+    dft.to_pickle(
         'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
-        parameterization + '.csv'
+        parameterization + '.pkl'
     ) 
 
 
@@ -1201,7 +1367,7 @@ def list_architectures(
     for file in tqdm(os.listdir(root_dir)):
         
         if 'RGI_predicted_' + parameterization in file :
-            file_reader = pd.read_csv(root_dir + file)
+            file_reader = pd.read_pickle(root_dir + file)
             arch = pd.Series(file[16:-4])
             arch_list = pd.concat([arch_list, arch], ignore_index = True)
             arch_list = arch_list.reset_index()
@@ -1228,11 +1394,11 @@ def load_global_predictions(
     for file in (os.listdir(root_dir)):
             # print(file)
         if ('RGI_predicted_' + parameterization + '_' + architecture in file):
-            RGI_predicted = pd.read_csv(root_dir + file)
+            RGI_predicted = pd.read_pickle(root_dir + file)
 
-            RGI_predicted['layer architecture'] =  architecture
+            RGI_predicted['layer architecture'] = architecture
 
-    RGI_predicted['parameterization'] =  parameterization
+            RGI_predicted['parameterization'] =  parameterization
 
 
     return RGI_predicted
@@ -1242,9 +1408,9 @@ def load_global_predictions(
 def load_notebook_data(
     parameterization = '1', pth = ''
 ):
-    df = pd.read_csv(
+    df = pd.read_pickle(
             pth + 'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_'+
-            parameterization + '.csv'
+            parameterization + '.pkl'
         )
     df['region'] = df['RGIId'].str[6:8]
 
@@ -1319,13 +1485,25 @@ def load_notebook_data(
          'Thickness Std Dev',
         
          'Weighted Mean Thickness',
-         'Model Variance',
+         'Residual Correction',
+         'Residual Variance',
+         'Bootstrap Uncertainty',
+         'Composite Deviation Uncertainty',
 #          'Weighted Thickness Uncertainty',
-         'Weighted Volume (km3)',
-         'F Variance',
-         'Pooled Variance',
-         'Estimated Variance',
-         'Estimated STD',
+#          'Unc1',
+#          'Unc2',
+#          'Unc3',
+#          'Unc4',
+#          'Unc5', 
+#          'Unc6',
+#          'Unc7',
+#          'Unc8',
+         
+        'MAE Uncertainty',
+#         'Total Uncertainty',
+        'Weighted Volume (km3)',
+
+#          'Total Uncertainty 2',
 #          'Weighted Volume Std Dev (km3)',
         
          'Lower Bound',
