@@ -1308,9 +1308,16 @@ def aggregate_statistics(
         
         sigma_d = gamma * bar_H
         
-        sigma_mu = 1 / sum(1/sigma_d)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty'] = sigma_mu
+        sigma_sq_mu = 1 / sum(1/sigma_d**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty'] = sigma_sq_mu
         
+        sigma_d_3 = gamma * bar_H[0:3]
+        sigma_sq_mu_3 = 1 / sum(1/sigma_d_3**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 3'] = sigma_sq_mu_3
+        
+        
+        weighted_variance = sum(sigma_d**2 / aw) / sum(1 / aw)
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty'] = weighted_variance
         
 #         total_uncertainty = residual_variance + MAE_GD + var_mu
 #         dft.loc[dft.index[-1], 'Total Uncertainty'] = total_uncertainty
@@ -1489,6 +1496,8 @@ def load_notebook_data(
          'Residual Variance',
          'Bootstrap Uncertainty',
          'Composite Deviation Uncertainty',
+         'Composite Deviation Uncertainty 3',
+         'Weighted Deviation Uncertainty',
 #          'Weighted Thickness Uncertainty',
 #          'Unc1',
 #          'Unc2',
