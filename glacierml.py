@@ -103,8 +103,11 @@ def parameterize_data(parameterization = '1', pth = '/data/fast1/glacierml/data/
         data[data['distance test'] >= float(config[parameterization]['distance threshold'])].index
     )
     data = data.drop([
-        'RGIId','region', 'RGI Centroid Distance', 
-        'AVG Radius', 'Roundness', 
+#         'RGIId',
+        'region', 
+        'RGI Centroid Distance', 
+        'AVG Radius', 
+        'Roundness', 
         'distance test', 
         'size difference'
     ], axis = 1)
@@ -220,9 +223,10 @@ def load_training_data(
         
         # calculate the difference in size as a percentage
         df['size difference'] = abs(
-            ( (df['Area_x'] - df['Area_y']) / df['Area_y'] )
-        )                
+            ( (df['Area_x'] - df['Area_y']) )/ df['Area_y'] )
+                       
         df = df.rename(columns = {'Area_x':'Area',})
+#         df = df.rename(columns = {'Area_y':'Area_GlaThiDa',})
         df = df[[
             'RGIId',
             'CenLat',
@@ -230,7 +234,7 @@ def load_training_data(
 #             'Lat',
 #             'Lon',
             'Area',
-#             'Area_y',
+#             'Area_GlaThiDa',
             'Zmin',
             'Zmed',
             'Zmax',
@@ -267,6 +271,8 @@ def load_training_data(
                 'Zmed',
                 'Zmax',
                 'Area',
+#                 'Area_RGI',
+#                 'Area_GlaThiDa',
                 'Aspect',
                 'Lmax',
                 'Thickness',
@@ -299,7 +305,7 @@ def load_training_data(
 GlaThiDa_RGI_index_matcher:
 '''
 def match_GlaThiDa_RGI_index(
-    pth = '/home/prethicktor/data/',
+    pth = '/data/fast1/glacierml/data/',
     verbose = False,
     useMP = False
 ):
@@ -545,7 +551,7 @@ def build_and_train_model(dataset,
 #     split data
     (
         train_features, test_features, train_labels, test_labels
-    ) = split_data(dataset)
+    ) = split_data(dataset, random_state)
 #         print(dataset.name)
 
 #     normalize data
@@ -613,7 +619,7 @@ def build_and_train_model(dataset,
         return history_filename, model_filename
     
     else:
-        return dnn_model, df
+        return dnn_model, df, normalizer
     
 
     
@@ -802,9 +808,9 @@ def evaluate_model(
     df['layer architecture'] = arch
     df['parameterization'] = parameterization
     df['total parameters'] = dnn_model.count_params() 
-    df['GlaThiDa Thickness'] = labels
-    df['E&L Thickness'] = thicknesses
-    df['Residual'] = df['GlaThiDa Thickness'] - df['E&L Thickness']
+    df['Thickness'] = labels
+    df['Estimated Thickness'] = thicknesses
+    df['Residual'] = df['Estimated Thickness'] - df['Thickness']
 
     return df
 
@@ -966,32 +972,20 @@ def make_estimates(
     return RGI_prethicked
 
 
+def compile_model_weighting_data():
 
+    for j in tqdm(range(1,5,1)):
 
+        parameterization = str(j)
 
+        # glac = gl.load_training_data(RGI_input = 'y')
+        glac = parameterize_data(parameterization)
+        arch = list_architectures(parameterization)
 
-
-
-
-def compute_model_weights(model_statistics, parameterization, pth = '/home/prethicktor/data/'):
-    path = 'model_weights/'
-    file = path + 'architecture_weights_' + parameterization + '.pkl'   
-    if os.path.isfile(file) == True:
-        architecture_weights = pd.read_pickle(file)
-        residual_model = np.load('model_weights/residual_model_' + parameterization + '.npy',)
-    if os.path.isfile(file) == False:
-    
-    
-        glac = load_training_data(RGI_input = 'y', pth = pth)
-        print('Loading architectures')
-        arch = list_architectures(parameterization = parameterization)
-        print('Compiling residuals')
         dft = pd.DataFrame()
-        for architecture in tqdm(model_statistics['layer architecture'].unique()):
+        for architecture in (arch['layer architecture'].unique()):
         #     print(architecture)
-            df_glob = load_global_predictions(
-                parameterization = parameterization, architecture = architecture
-            )
+            df_glob = load_global_predictions(parameterization, architecture = architecture)
             dft = pd.concat([dft, df_glob])
 
         df = dft[[
@@ -1005,9 +999,26 @@ def compute_model_weights(model_statistics, parameterization, pth = '/home/preth
         est = glathida_estimates
 
         for i in range(0,25,1):
-            est['pr_'+str(i)] = (est[str(i)] - est['Thickness']) / est['Thickness']
+            est['pr_'+str(i)] = ((est[str(i)] - est['Thickness'])) / est['Thickness']
+
+        for i in range(0,25,1):
+            est['r_'+str(i)] = ((est[str(i)] - est['Thickness']))
+
+        est.to_pickle('model_weights/param' + str(j) + '_weighting_data.pkl')
 
 
+
+
+def compute_model_weights(model_statistics, parameterization, pth = '/home/prethicktor/data/'):
+    path = 'model_weights/'
+    file = path + 'architecture_weights_' + parameterization + '.pkl'   
+    if os.path.isfile(file) == True:
+        architecture_weights = pd.read_pickle(file)
+        residual_model = np.load('model_weights/residual_model_' + parameterization + '.npy',)
+    if os.path.isfile(file) == False:
+    
+
+        est = pd.read_pickle('model_weights/param' + parameterization + '_weighting_data.pkl')
         model_list = [
              '0', '1', '2', '3', '4', '5', '6', '7', '8',
              '9', '10', '11', '12', '13', '14', '15', '16',
@@ -1024,44 +1035,79 @@ def compute_model_weights(model_statistics, parameterization, pth = '/home/preth
              'w_17', 'w_18', 'w_19', 'w_20', 'w_21', 'w_22', 'w_23', 'w_24',
         ]
 
+        res_list = [
+             'r_0', 'r_1', 'r_2', 'r_3', 'r_4', 'r_5', 'r_6', 'r_7', 'r_8',
+             'r_9', 'r_10', 'r_11', 'r_12', 'r_13', 'r_14', 'r_15', 'r_16',
+             'r_17', 'r_18', 'r_19', 'r_20', 'r_21', 'r_22', 'r_23', 'r_24',
+        ]
+
         weights = pd.DataFrame()
         architecture_weights = pd.DataFrame()
         print('Calculating weights')
         for i in tqdm(est['layer architecture'].unique()):
             dft = est[est['layer architecture'] == str(i)]
+            
+            simple_var = np.var(dft[res_list].to_numpy().flatten())
+            q75, q25 = np.nanpercentile(dft[res_list], [75,25])
+            sigma_simple = ((q75 - q25) ) / 1.34896
+            
+            bias_1 = np.mean(dft[pool_list].to_numpy()) * np.mean(dft[model_list].to_numpy())
+            q75, q25 = np.nanpercentile(dft[pool_list], [75,25])
+            IQR_1 = q75 - q25
+            sigma_1 = (IQR_1 * np.mean(dft[model_list].to_numpy())) / 1.34896
 
+            w_1 = pd.Series(abs(bias_1) + sigma_1**2, name = 'weight')
 
+            bias_2 = np.mean(dft[pool_list].to_numpy() * dft[model_list].to_numpy())
             q75, q25 = np.nanpercentile(est[pool_list], [75,25])
-            IQR = q75 - q25
-            sigma = (IQR * np.mean(dft[model_list].to_numpy())) / 1.5
+            IQR_2 = q75 - q25
+            sigma_2 = (IQR_2 * np.mean(dft[model_list].to_numpy())) / 1.34896
 
-            w = pd.Series(sigma**2, name = 'weight')
+            w_2 = (abs(bias_2) + sigma_2**2)
+            
+            
+            bias_3 = np.mean(est[pool_list].to_numpy()) * np.mean(dft[model_list].to_numpy())
+            q75, q25 = np.nanpercentile(est[pool_list], [75,25])
+            IQR_3 = q75 - q25
+            sigma_3 = (IQR_3 * np.mean(dft[model_list].to_numpy())) / 1.34896
+
+            w_3 = (abs(bias_3) + sigma_3**2)
+            w_4 = simple_var
 
 
-
-
-            architecture_weights = pd.concat([architecture_weights, w])
+            architecture_weights = pd.concat([architecture_weights, w_1])
             architecture_weights = architecture_weights.reset_index()
             architecture_weights = architecture_weights.drop('index', axis = 1)
             architecture_weights.loc[architecture_weights.index[-1], 'layer architecture'] = i
-            architecture_weights.loc[architecture_weights.index[-1], 'std'] = sigma
-            architecture_weights.loc[architecture_weights.index[-1], 'IQR'] = IQR
+            architecture_weights.loc[architecture_weights.index[-1], 'simple var'] = simple_var
 
+            architecture_weights.loc[architecture_weights.index[-1], 'std_1'] = sigma_1
+            architecture_weights.loc[architecture_weights.index[-1], 'IQR_1'] = IQR_1
+            architecture_weights.loc[architecture_weights.index[-1], 'bias_1'] = bias_1
+            architecture_weights.loc[architecture_weights.index[-1], 'std_2'] = sigma_2
+            architecture_weights.loc[architecture_weights.index[-1], 'IQR_2'] = IQR_2
+            architecture_weights.loc[architecture_weights.index[-1], 'bias_2'] = bias_2
+            architecture_weights.loc[architecture_weights.index[-1], 'std_3'] = sigma_3
+            architecture_weights.loc[architecture_weights.index[-1], 'IQR_3'] = IQR_3
+            architecture_weights.loc[architecture_weights.index[-1], 'bias_3'] = bias_3
+            architecture_weights.loc[architecture_weights.index[-1], 'IQR_4'] = sigma_simple
 
-
+            architecture_weights.loc[architecture_weights.index[-1], 'aw_2'] = w_2
+            architecture_weights.loc[architecture_weights.index[-1], 'aw_3'] = w_3
+            architecture_weights.loc[architecture_weights.index[-1], 'aw_4'] = w_4
 
         print('calculating residual curve...')
         df = pd.DataFrame()
         for i in range(0,25,1):
             x = pd.DataFrame(
                     pd.Series(
-                        glathida_estimates[str(i)] - glathida_estimates['Thickness'],
+                        est[str(i)] - est['Thickness'],
                         name = 'Residual'
                 )
             )
             y = pd.DataFrame(
                 pd.Series(
-                    glathida_estimates['Thickness'],
+                    est['Thickness'],
                     name = 'GlaThiDa Survey Thickness'
                 )
             )
@@ -1074,8 +1120,11 @@ def compute_model_weights(model_statistics, parameterization, pth = '/home/preth
         residual_model = np.polyfit(x,y,2)
         print(residual_model)
 
-        architecture_weights = architecture_weights.rename(columns = {0:'architecture weight'})
-        architecture_weights['var'] = architecture_weights['std']**2
+        architecture_weights = architecture_weights.rename(columns = {0:'aw_1'})
+        architecture_weights['var_1'] = architecture_weights['std_1']**2
+        architecture_weights['var_2'] = architecture_weights['std_2']**2
+        architecture_weights['var_3'] = architecture_weights['std_3']**2
+
         architecture_weights.to_pickle('model_weights/architecture_weights_' + 
                                        parameterization + '.pkl')
 #         residual_model.to_pickle('model_weights/residual_model_' + parameterization + '.pkl')
@@ -1228,8 +1277,16 @@ def aggregate_statistics(
             '22','23','24',
         ]]
 
-        arch_weight = obj[['architecture weight']]
-        aw = arch_weight.values.flatten()
+        arch_weight_1 = obj[['aw_1']]
+        arch_weight_2 = obj[['aw_2']]
+        arch_weight_3 = obj[['aw_3']]
+        arch_weight_4 = obj[['aw_4']]
+
+        aw_1 = arch_weight_1.values.flatten()
+        aw_2 = arch_weight_2.values.flatten()
+        aw_3 = arch_weight_3.values.flatten()
+        aw_4 = arch_weight_4.values.flatten()
+
         pr = np.array(predictions.values)
         
 
@@ -1241,10 +1298,14 @@ def aggregate_statistics(
 #         )
         bar_H = predictions.mean(axis = 1)
         
-        hat_mu = sum( (bar_H) / (aw) ) / sum(1/aw)
-        dft.loc[dft.index[-1], 'Weighted Mean Thickness'] = hat_mu
-        
-        
+        hat_mu_1 = sum( (bar_H) / (aw_1) ) / sum(1/aw_1)
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness 1'] = hat_mu_1
+        hat_mu_2 = sum( (bar_H) / (aw_2) ) / sum(1/aw_2)
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness 2'] = hat_mu_2       
+        hat_mu_3 = sum( (bar_H) / (aw_3) ) / sum(1/aw_3)
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness 3'] = hat_mu_3 
+        hat_mu_4 = sum( (bar_H) / (aw_4) ) / sum(1/aw_4)
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness 4'] = hat_mu_4 
 #         weighted_mean = 0
 #         for p, w in zip(pr, aw):
 #             weighted_mean = weighted_mean + np.nanmean(p/w)
@@ -1256,7 +1317,73 @@ def aggregate_statistics(
         
         
         ### UNCERTAINTY CALCULATIONS ###
+         # deviation modeled uncertainty (Farinotti)
+        gamma_1 = (obj['IQR_1'] / 1.34896)
+        sigma_d_1 = gamma_1 * bar_H
+        gamma_2 = (obj['IQR_2'] / 1.34896)
+        sigma_d_2 = gamma_2 * bar_H
+        gamma_3 = (obj['IQR_3'] / 1.34896)
+        sigma_d_3 = gamma_3 * bar_H
+        gamma_4 = (obj['IQR_4'] / 1.34896)
+        sigma_d_4 = gamma_4 * bar_H
         
+        sigma_sq_mu_1 = 1 / sum(1/sigma_d_1**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_1'] = sigma_sq_mu_1
+        sigma_sq_mu_2 = 1 / sum(1/sigma_d_2**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_2'] = sigma_sq_mu_2
+        sigma_sq_mu_3 = 1 / sum(1/sigma_d_3**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_3'] = sigma_sq_mu_3
+        sigma_sq_mu_4 = 1 / sum(1/sigma_d_4**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_4'] = sigma_sq_mu_4
+        
+        
+        
+        
+        
+        
+        sigma_d_31 = gamma_1 * bar_H[0:3]
+        sigma_sq_mu_31 = 1 / sum(1/sigma_d_31**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 3'] = sigma_sq_mu_31
+        
+        sigma_d_20 = gamma_1 * bar_H[0:32]
+        sigma_sq_mu_20 = 1 / sum(1/sigma_d_20**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 20'] = sigma_sq_mu_20
+                
+        sigma_d_40 = gamma_1 * bar_H[0:64]
+        sigma_sq_mu_40 = 1 / sum(1/sigma_d_40**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 40'] = sigma_sq_mu_40
+        
+        sigma_d_60 = gamma_1 * bar_H[0:96]
+        sigma_sq_mu_60 = 1 / sum(1/sigma_d_60**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 60'] = sigma_sq_mu_60
+        
+        sigma_d_80 = gamma_1 * bar_H[0:128]
+        sigma_sq_mu_80 = 1 / sum(1/sigma_d_80**2)
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 80'] = sigma_sq_mu_80
+        
+        
+        
+        weighted_variance_1 = sum(sigma_d_1**2 / aw_1) / sum(1 / aw_1)
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_1'] = weighted_variance_1
+        weighted_variance_2 = sum(sigma_d_2**2 / aw_2) / sum(1 / aw_2)
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_2'] = weighted_variance_2
+        
+        weighted_variance_3 = sum(sigma_d_3**2 / aw_3) / sum(1 / aw_3)
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_3'] = weighted_variance_3
+        
+        weighted_variance_4 = sum(sigma_d_1**2 / aw_4) / sum(1 / aw_4)
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4'] = weighted_variance_4
+        
+        weighted_variance_4 = sum(sigma_d_4**2 / aw_4) / sum(1 / aw_4)
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4_1'] = weighted_variance_4
+        
+        sigma_d_simple = np.mean(predictions * 0.290)
+        weighted_variance_4 = sum(sigma_d_simple**2 / aw_4) / sum(1 / aw_4)
+        dft.loc[dft.index[-1], 'Simple Deviation Uncertainty_4'] = weighted_variance_4
+        
+        
+#         total_uncertainty = residual_variance + MAE_GD + var_mu
+#         dft.loc[dft.index[-1], 'Total Uncertainty'] = total_uncertainty       
         # model uncertainty
         var_mu = unbiased_variance_estimator(
             n_m = 161, 
@@ -1267,35 +1394,52 @@ def aggregate_statistics(
         dft.loc[dft.index[-1], 'Bootstrap Uncertainty'] = var_mu
         
         
+        
+        
+        boot = predictions.var(axis = 1)
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4_2'] = 1 / sum(1/boot)
+
+        weighted_boot = sum(boot / aw_1) / sum(1/aw_1)
+        
+        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_1'] = weighted_boot
+        
+        weighted_boot = sum(boot / aw_2) / sum(1/aw_2)
+        
+        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_2'] = weighted_boot
+        
+        weighted_boot = sum(boot / aw_3) / sum(1/aw_3)
+        
+        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_3'] = weighted_boot
+        
+        weighted_boot = sum(boot / aw_4) / sum(1/aw_4)
+        
+        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_4'] = weighted_boot
+        
         # Residual Correction Factor
         
-        gamma = (obj['IQR'][0] / 1.5)
+        gamma = (obj['IQR_1'][0] / 1.5)
         p_mean = predictions.mean(axis = 1)
-        R_RGI = residual_model[0]*p_mean**2 + residual_model[1]*p_mean + residual_model[2]
-        sigma_RGI = gamma * R_RGI
+        rc = residual_model[0]*p_mean**2 + residual_model[1]*p_mean + residual_model[2]
         
-        residual_x_mean = predictions.mean(axis = 0)
-        R_RGI_x = residual_model[0]*residual_x_mean**2 + residual_model[1]*residual_x_mean + residual_model[2]
-        sigma_residual_x = gamma * R_RGI_x
-        
-        GD_residual = GB_D_common_estimator(
-            n = 161, 
-            S = sigma_RGI**2, 
-            X = R_RGI
-        )
-        
-        residual_variance = unbiased_variance_estimator(
-            n_m = 161, 
-            n_x = 25, 
-            sigma_m = sigma_RGI**2,
-            sigma_x = sigma_residual_x**2
-        )
+        weighted_residual = sum(rc / aw_1) / sum(1/aw_1)
         
         
-        dft.loc[dft.index[-1], 'Residual Correction'] = GD_residual
-        dft.loc[dft.index[-1], 'Residual Variance'] = residual_variance
+        
+        dft.loc[dft.index[-1], 'Residual Correction'] = weighted_residual
+                                  
+        sigma_rc = gamma * rc
+        
+        weighted_residual_uncertainty = sum(sigma_rc**2 / aw_1) / sum(1/aw_1)
+        dft.loc[dft.index[-1], 'Residual Correction Uncertainty'] = weighted_residual_uncertainty
         
         
+        if weighted_residual <= 0:
+            corrected_thickness = hat_mu_1 - weighted_residual
+            dft.loc[dft.index[-1], 'Corrected Thickness'] = corrected_thickness
+            dft.loc[dft.index[-1], 'Corrected Thickness Uncertainty'] = weighted_variance_1 + weighted_residual_uncertainty
+        if weighted_residual > 0:
+            dft.loc[dft.index[-1], 'Corrected Thickness'] = hat_mu_1
+            dft.loc[dft.index[-1], 'Corrected Thickness Uncertainty'] = weighted_variance_1 
         
         # MAE base uncertainty
         
@@ -1304,23 +1448,7 @@ def aggregate_statistics(
 
         
         
-        # deviation modeled uncertainty (Farinotti)
-        
-        sigma_d = gamma * bar_H
-        
-        sigma_sq_mu = 1 / sum(1/sigma_d**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty'] = sigma_sq_mu
-        
-        sigma_d_3 = gamma * bar_H[0:3]
-        sigma_sq_mu_3 = 1 / sum(1/sigma_d_3**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 3'] = sigma_sq_mu_3
-        
-        
-        weighted_variance = sum(sigma_d**2 / aw) / sum(1 / aw)
-        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty'] = weighted_variance
-        
-#         total_uncertainty = residual_variance + MAE_GD + var_mu
-#         dft.loc[dft.index[-1], 'Total Uncertainty'] = total_uncertainty
+
         
         
         
@@ -1437,8 +1565,8 @@ def load_notebook_data(
 
 
     df = pd.merge(df, RGI, on = 'RGIId')
-    df['Upper Bound'] = df['Upper Bound'] - df['Mean Thickness']
-    df['Lower Bound'] = df['Mean Thickness'] - df['Lower Bound']
+#     df['Upper Bound'] = df['Upper Bound'] - df['Weighted Mean Thickness']
+#     df['Lower Bound'] = df['Weighted Mean Thickness'] - df['Lower Bound']
 
 #     volume = np.round(
 #         sum(df['Weighted Mean Thickness'] / 1e3 * df['Area']) / 1e3, 2)
@@ -1447,7 +1575,7 @@ def load_notebook_data(
 #         sum(df['Thickness Std Dev'] / 1e3 * df['Area']) / 1e3, 2)
 
 
-    df['Weighted Volume (km3)'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
+#     df['Weighted Volume (km3)'] = df['Weighted Mean Thickness'] / 1e3 * df['Area']
 #     df['Weighted Volume Std Dev (km3)'] = df['Weighted Thickness Uncertainty'] / 1e3 * df['Area']
     
     reference_path = 'reference_thicknesses/'
@@ -1491,13 +1619,35 @@ def load_notebook_data(
          'Median Thickness',
          'Thickness Std Dev',
         
-         'Weighted Mean Thickness',
+         'Weighted Mean Thickness 1',
+         'Weighted Mean Thickness 2',
+         'Weighted Mean Thickness 3',
+         'Weighted Mean Thickness 4',
+         'Corrected Thickness',
+         'Corrected Thickness Uncertainty',
          'Residual Correction',
-         'Residual Variance',
+         'Residual Correction Uncertainty',
          'Bootstrap Uncertainty',
-         'Composite Deviation Uncertainty',
+         'Weighted Bootstrap Uncertainty_1',
+         'Weighted Bootstrap Uncertainty_2',
+         'Weighted Bootstrap Uncertainty_3',
+         'Weighted Bootstrap Uncertainty_4',
+         'Composite Deviation Uncertainty_1',
+         'Composite Deviation Uncertainty_2',
+         'Composite Deviation Uncertainty_3',
+         'Composite Deviation Uncertainty_4',
          'Composite Deviation Uncertainty 3',
-         'Weighted Deviation Uncertainty',
+         'Composite Deviation Uncertainty 20',
+         'Composite Deviation Uncertainty 40',
+         'Composite Deviation Uncertainty 60',
+         'Composite Deviation Uncertainty 80',
+         'Weighted Deviation Uncertainty_1',
+         'Weighted Deviation Uncertainty_2',
+         'Weighted Deviation Uncertainty_3',
+         'Weighted Deviation Uncertainty_4',
+         'Weighted Deviation Uncertainty_4_1',
+         'Weighted Deviation Uncertainty_4_2',
+         'Simple Deviation Uncertainty_4',
 #          'Weighted Thickness Uncertainty',
 #          'Unc1',
 #          'Unc2',
@@ -1510,7 +1660,7 @@ def load_notebook_data(
          
         'MAE Uncertainty',
 #         'Total Uncertainty',
-        'Weighted Volume (km3)',
+#         'Weighted Volume (km3)',
 
 #          'Total Uncertainty 2',
 #          'Weighted Volume Std Dev (km3)',
