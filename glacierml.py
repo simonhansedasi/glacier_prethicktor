@@ -225,16 +225,17 @@ def load_training_data(
         df['size difference'] = abs(
             ( (df['Area_x'] - df['Area_y']) )/ df['Area_y'] )
                        
-        df = df.rename(columns = {'Area_x':'Area',})
-#         df = df.rename(columns = {'Area_y':'Area_GlaThiDa',})
+        df = df.rename(columns = {'Area_x':'Area_RGI',})
+        df = df.rename(columns = {'Area_y':'Area_GlaThiDa',})
         df = df[[
             'RGIId',
             'CenLat',
             'CenLon',
 #             'Lat',
 #             'Lon',
-            'Area',
-#             'Area_GlaThiDa',
+#             'Area',
+            'Area_RGI',
+            'Area_GlaThiDa',
             'Zmin',
             'Zmed',
             'Zmax',
@@ -270,9 +271,9 @@ def load_training_data(
                 'Zmin',
                 'Zmed',
                 'Zmax',
-                'Area',
-#                 'Area_RGI',
-#                 'Area_GlaThiDa',
+#                 'Area',
+                'Area_RGI',
+                'Area_GlaThiDa',
                 'Aspect',
                 'Lmax',
                 'Thickness',
@@ -285,15 +286,15 @@ def load_training_data(
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'].str[:-2].astype(float)
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'] * 1e3
 
-    df['Area'] = df['Area'] * 1e6     # Put area to meters for radius and roundness calc
+    df['Area_RGI'] = df['Area_RGI'] * 1e6     # Put area to meters for radius and roundness calc
 
     # make a guess of an average radius and "roundness" -- ratio of avg radius / width
-    df['AVG Radius'] = np.sqrt(df['Area'] / np.pi)
+    df['AVG Radius'] = np.sqrt(df['Area_RGI'] / np.pi)
     df['Roundness'] = (df['AVG Radius']) / (df['Lmax'])
     df['distance test'] = df['RGI Centroid Distance'] / df['AVG Radius']
     
     
-    df['Area'] = df['Area'] / 1e6     # Put area back to sq km
+    df['Area_RGI'] = df['Area_RGI'] / 1e6     # Put area back to sq km
 #     df['Area'] = np.log10(df['Area'])
 #     df['Lmax'] = np.log10(df['Lmax'])
         
@@ -1318,13 +1319,13 @@ def aggregate_statistics(
         
         ### UNCERTAINTY CALCULATIONS ###
          # deviation modeled uncertainty (Farinotti)
-        gamma_1 = (obj['IQR_1'] / 1.34896)
+        gamma_1 = obj['IQR_1'] / 1.34896
         sigma_d_1 = gamma_1 * bar_H
-        gamma_2 = (obj['IQR_2'] / 1.34896)
+        gamma_2 = obj['IQR_2'] / 1.34896
         sigma_d_2 = gamma_2 * bar_H
-        gamma_3 = (obj['IQR_3'] / 1.34896)
+        gamma_3 = obj['IQR_3'] / 1.34896
         sigma_d_3 = gamma_3 * bar_H
-        gamma_4 = (obj['IQR_4'] / 1.34896)
+        gamma_4 = obj['IQR_4'] / 1.34896
         sigma_d_4 = gamma_4 * bar_H
         
         sigma_sq_mu_1 = 1 / sum(1/sigma_d_1**2)
@@ -1341,23 +1342,23 @@ def aggregate_statistics(
         
         
         
-        sigma_d_31 = gamma_1 * bar_H[0:3]
+        sigma_d_31 = gamma_1[0:3] * bar_H[0:3]
         sigma_sq_mu_31 = 1 / sum(1/sigma_d_31**2)
         dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 3'] = sigma_sq_mu_31
         
-        sigma_d_20 = gamma_1 * bar_H[0:32]
+        sigma_d_20 = gamma_1[0:32] * bar_H[0:32]
         sigma_sq_mu_20 = 1 / sum(1/sigma_d_20**2)
         dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 20'] = sigma_sq_mu_20
                 
-        sigma_d_40 = gamma_1 * bar_H[0:64]
+        sigma_d_40 = gamma_1[0:64] * bar_H[0:64]
         sigma_sq_mu_40 = 1 / sum(1/sigma_d_40**2)
         dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 40'] = sigma_sq_mu_40
         
-        sigma_d_60 = gamma_1 * bar_H[0:96]
+        sigma_d_60 = gamma_1[0:96] * bar_H[0:96]
         sigma_sq_mu_60 = 1 / sum(1/sigma_d_60**2)
         dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 60'] = sigma_sq_mu_60
         
-        sigma_d_80 = gamma_1 * bar_H[0:128]
+        sigma_d_80 = gamma_1[0:128] * bar_H[0:128]
         sigma_sq_mu_80 = 1 / sum(1/sigma_d_80**2)
         dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 80'] = sigma_sq_mu_80
         
@@ -1710,7 +1711,87 @@ def load_notebook_data(
 
 
 
+def assign_arrays(
+    parameterization = '4',method = '1',
+    analysis = 'vol',
+    size_thresh_1 = 1e-5, size_thresh_2 = 1e4
+):
+    data = load_notebook_data(parameterization)
+    data = data.dropna(subset = 'Farinotti Mean Thickness')
+    
+    
+    thick_est_unc = (
+        data['Weighted Mean Thickness ' + method].to_numpy() + 
+        data['Weighted Deviation Uncertainty_' + method].to_numpy() + 
+        data['MAE Uncertainty'].to_numpy()
+    )
+        
+    thick_est = data['Weighted Mean Thickness '+ method].to_numpy()
+    
+    thick_far = data['Farinotti Mean Thickness'].to_numpy()
 
+    area = data['Area'].to_numpy()
+
+    if analysis == 'vol':
+        x = thick_far / 1e3 * area
+        y = thick_est / 1e3 * area
+        unc = np.sqrt(thick_est_unc) / 1e3 * area
+    if analysis == 'thick':
+        x = thick_far
+        y = thick_est
+        unc = np.sqrt(thick_est_unc) / 1e3 
+
+#         print(x.max())
+#         print(y.max())
+        
+        
+        
+    far_ind = np.where(
+        (x<size_thresh_2)&(x>size_thresh_1)&(y<size_thresh_2)&(y>size_thresh_1)
+    )
+    
+    x_new = x[far_ind]
+
+    
+    est_ind = np.where(
+        (y<size_thresh_2)&(y>size_thresh_1)&(x<size_thresh_2)&(x>size_thresh_1)
+    )
+    y_new = y[est_ind]
+    
+    unc_ind = np.where(
+        (y<size_thresh_2)&(y>size_thresh_1)&(x<size_thresh_2)&(x>size_thresh_1)
+    )
+    unc_new = unc[unc_ind]
+    
+    pth = 'arrays/'+parameterization+method+'_'+analysis+'_density.npy'
+    if os.path.isfile(pth) == True:
+        print('density array found')
+        z = np.load(pth)
+    elif os.path.isfile(pth) == False:
+        print('calculating density array')
+        from scipy.stats import gaussian_kde
+        xy = np.vstack([np.log10(x),np.log10(y)])
+        z = gaussian_kde(xy)(xy)
+        np.save(pth, z)
+    
+    z_new_pth = (
+        'arrays/'+parameterization+method+'_'+analysis+
+        str(size_thresh_1) + '-' + str(size_thresh_2)+'_density.npy'
+    )
+    if os.path.isfile(z_new_pth) == True:
+        print('threshold density array found')
+        z_new = np.load(z_new_pth)
+        
+    elif os.path.isfile(z_new_pth) == False:
+        print('calculating density of desired threshold')
+        from scipy.stats import gaussian_kde
+        xy = np.vstack([np.log10(x_new),np.log10(y_new)])
+        print(xy)
+        z_new = gaussian_kde(xy)(xy)
+        np.save(z_new_pth, z_new)
+        
+    
+    return x,y,z,unc,x_new,y_new,z_new,unc_new,far_ind,est_ind,unc_ind
 
 
     
