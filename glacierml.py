@@ -225,17 +225,17 @@ def load_training_data(
         df['size difference'] = abs(
             ( (df['Area_x'] - df['Area_y']) )/ df['Area_y'] )
                        
-        df = df.rename(columns = {'Area_x':'Area_RGI',})
-        df = df.rename(columns = {'Area_y':'Area_GlaThiDa',})
+        df = df.rename(columns = {'Area_x':'Area',})
+#         df = df.rename(columns = {'Area_y':'Area_GlaThiDa',})
         df = df[[
             'RGIId',
             'CenLat',
             'CenLon',
 #             'Lat',
 #             'Lon',
-#             'Area',
-            'Area_RGI',
-            'Area_GlaThiDa',
+            'Area',
+#             'Area_RGI',
+#             'Area_GlaThiDa',
             'Zmin',
             'Zmed',
             'Zmax',
@@ -271,8 +271,8 @@ def load_training_data(
                 'Zmin',
                 'Zmed',
                 'Zmax',
-#                 'Area',
-                'Area_RGI',
+                'Area',
+#                 'Area_RGI',
                 'Area_GlaThiDa',
                 'Aspect',
                 'Lmax',
@@ -286,15 +286,15 @@ def load_training_data(
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'].str[:-2].astype(float)
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'] * 1e3
 
-    df['Area_RGI'] = df['Area_RGI'] * 1e6     # Put area to meters for radius and roundness calc
+    df['Area'] = df['Area'] * 1e6     # Put area to meters for radius and roundness calc
 
     # make a guess of an average radius and "roundness" -- ratio of avg radius / width
-    df['AVG Radius'] = np.sqrt(df['Area_RGI'] / np.pi)
+    df['AVG Radius'] = np.sqrt(df['Area'] / np.pi)
     df['Roundness'] = (df['AVG Radius']) / (df['Lmax'])
     df['distance test'] = df['RGI Centroid Distance'] / df['AVG Radius']
     
     
-    df['Area_RGI'] = df['Area_RGI'] / 1e6     # Put area back to sq km
+    df['Area'] = df['Area'] / 1e6     # Put area back to sq km
 #     df['Area'] = np.log10(df['Area'])
 #     df['Lmax'] = np.log10(df['Lmax'])
         
@@ -1566,6 +1566,14 @@ def load_notebook_data(
 
 
     df = pd.merge(df, RGI, on = 'RGIId')
+    
+    
+    df['Slope'][df['Slope'] == -9] = np.nan
+
+    df['Lmax'][df['Lmax'] == -9] = np.nan
+    df['Zmin'][df['Zmin'] == -999] = np.nan
+    df['Zmax'][df['Zmax'] == -999] = np.nan
+    df['Zmed'][df['Zmed'] == -999] = np.nan
 #     df['Upper Bound'] = df['Upper Bound'] - df['Weighted Mean Thickness']
 #     df['Lower Bound'] = df['Weighted Mean Thickness'] - df['Lower Bound']
 
@@ -1713,85 +1721,181 @@ def load_notebook_data(
 
 def assign_arrays(
     parameterization = '4',method = '1',
-    analysis = 'vol',
-    size_thresh_1 = 1e-5, size_thresh_2 = 1e4
+    size_thresh_1 = 1e-5, size_thresh_2 = 1e4,
+    new_data = True
 ):
     data = load_notebook_data(parameterization)
     data = data.dropna(subset = 'Farinotti Mean Thickness')
-    
-    
+
+
     thick_est_unc = (
         data['Weighted Mean Thickness ' + method].to_numpy() + 
         data['Weighted Deviation Uncertainty_' + method].to_numpy() + 
         data['MAE Uncertainty'].to_numpy()
     )
-        
+
     thick_est = data['Weighted Mean Thickness '+ method].to_numpy()
-    
+
     thick_far = data['Farinotti Mean Thickness'].to_numpy()
 
     area = data['Area'].to_numpy()
 
-    if analysis == 'vol':
-        x = thick_far / 1e3 * area
-        y = thick_est / 1e3 * area
-        unc = np.sqrt(thick_est_unc) / 1e3 * area
-    if analysis == 'thick':
-        x = thick_far
-        y = thick_est
-        unc = np.sqrt(thick_est_unc) / 1e3 
+    x = thick_far / 1e3 * area
+    y = thick_est / 1e3 * area
+    unc = np.sqrt(thick_est_unc) / 1e3 * area
+
 
 #         print(x.max())
 #         print(y.max())
         
         
         
-    far_ind = np.where(
+    index = np.where(
         (x<size_thresh_2)&(x>size_thresh_1)&(y<size_thresh_2)&(y>size_thresh_1)
     )
+    x_new = x[index]
+    y_new = y[index]
+    unc_new = unc[index]
     
-    x_new = x[far_ind]
-
-    
-    est_ind = np.where(
-        (y<size_thresh_2)&(y>size_thresh_1)&(x<size_thresh_2)&(x>size_thresh_1)
-    )
-    y_new = y[est_ind]
-    
-    unc_ind = np.where(
-        (y<size_thresh_2)&(y>size_thresh_1)&(x<size_thresh_2)&(x>size_thresh_1)
-    )
-    unc_new = unc[unc_ind]
-    
-    pth = 'arrays/'+parameterization+method+'_'+analysis+'_density.npy'
+    pth = 'arrays/'+parameterization+method+'_vol_density.npy'
     if os.path.isfile(pth) == True:
-        print('density array found')
+#         print('density array found')
         z = np.load(pth)
     elif os.path.isfile(pth) == False:
-        print('calculating density array')
+#         print('calculating density array')
         from scipy.stats import gaussian_kde
         xy = np.vstack([np.log10(x),np.log10(y)])
         z = gaussian_kde(xy)(xy)
         np.save(pth, z)
     
     z_new_pth = (
-        'arrays/'+parameterization+method+'_'+analysis+
+        'arrays/'+parameterization+method+'_vol' + 
         str(size_thresh_1) + '-' + str(size_thresh_2)+'_density.npy'
     )
     if os.path.isfile(z_new_pth) == True:
-        print('threshold density array found')
+#         print('threshold density array found')
         z_new = np.load(z_new_pth)
         
     elif os.path.isfile(z_new_pth) == False:
-        print('calculating density of desired threshold')
+#         print('calculating density of desired threshold')
         from scipy.stats import gaussian_kde
         xy = np.vstack([np.log10(x_new),np.log10(y_new)])
-        print(xy)
+#         print(xy)
         z_new = gaussian_kde(xy)(xy)
         np.save(z_new_pth, z_new)
         
     
-    return x,y,z,unc,x_new,y_new,z_new,unc_new,far_ind,est_ind,unc_ind
+    return x,y,z,unc,x_new,y_new,z_new,unc_new,data,index
+
+
+def assign_sub_arrays(
+    est_ind,i,j,
+    parameterization = '4',method = '1', 
+    feature = 'Area'
+    
+#     size_thresh_1 = 1e-5, size_thresh_2 = 1e4,
+):
+    data = load_notebook_data(parameterization)
+    data = data.dropna(subset = 'Farinotti Mean Thickness')
+
+    data = data.iloc[est_ind]
+    data['Slope'][data['Slope'] == -9] = np.nan
+    data['Lmax'][data['Lmax'] == -9] = np.nan
+    data['Zmin'][data['Zmin'] == -999] = np.nan
+    data['Zmax'][data['Zmax'] == -999] = np.nan
+    data['Zmed'][data['Zmed'] == -999] = np.nan
+
+#     data = data.drop(
+#         data[
+#             ( |
+#             (data['Zmin'] == -999) |
+#             (data['Zmax'] == -999) |
+#             (data['Zmed'] == -999)
+#         ].index, axis = 0
+#     )
+    thick_est_unc = (
+        data['Weighted Mean Thickness ' + method].to_numpy() + 
+        data['Weighted Deviation Uncertainty_' + method].to_numpy() + 
+        data['MAE Uncertainty'].to_numpy()
+    )
+
+    thick_est = data['Weighted Mean Thickness '+ method].to_numpy()
+
+    thick_far = data['Farinotti Mean Thickness'].to_numpy()
+
+    feat = data[feature].to_numpy()
+
+
+    x = thick_far
+    y = thick_est
+    unc = np.sqrt(thick_est_unc) 
+
+#         print(x.max())
+#         print(y.max())
+        
+        
+    st1 = np.floor(x.min())
+    st2 = np.ceil(x.max())
+
+
+    
+    
+    pth = (
+        'arrays/'+parameterization+method+'_thickness_z_'+
+        str(
+            min(np.floor(np.min(x)), np.floor(np.min(y)))
+        ) + '-' + str(
+            max(np.ceil(np.max(x)), np.ceil(np.max(y)))
+        )+ 
+        '-' + str(i) + '-' + str(j) + '_density.npy'
+    )
+    if os.path.isfile(pth) == True:
+#         print('threshold density array found')
+        z = np.load(pth)
+        
+    elif os.path.isfile(pth) == False:
+#         print('calculating thickness density of desired threshold')
+        from scipy.stats import gaussian_kde
+        xy = np.vstack([np.log10(x),np.log10(y)])
+        print(xy)
+        z = gaussian_kde(xy)(xy)
+        np.save(pth, z)
+        
+        
+        
+        
+        
+    pth_f = (
+        'arrays/'+parameterization+method+'_' + feature + '-thickness_f_'+
+        str(np.floor(np.min(x))) + '-' + str(np.ceil(np.max(x)))+ 
+        '-' + str(i) + '-' + str(j) + '_density.npy'
+    )
+    pth_e = (
+        'arrays/'+parameterization+method+'_' + feature + '-thickness_e_'+
+        str(np.floor(np.min(y))) + '-' + str(np.ceil(np.max(y)))+ 
+        '-' + str(i) + '-' + str(j) + '_density.npy'
+    )
+    if os.path.isfile(pth_f) == True:
+#         print(feature + '-thickness density arrays found')
+        zf = np.load(pth_f)
+        ze = np.load(pth_e)
+        
+    elif os.path.isfile(pth_f) == False:
+#         zf = 1
+#         ze = 1
+#         print('calculating '+feature + '-thickness density of desired threshold')
+        from scipy.stats import gaussian_kde
+        xy = np.vstack([np.log10(x),np.log10(feat)])
+        print(xy)
+        zf = gaussian_kde(xy)(xy)
+        np.save(pth_f,zf)
+        
+        xy = np.vstack([np.log10(y),np.log10(feat)])
+        ze = gaussian_kde(xy)(xy)
+        np.save(pth_e,ze)
+    data['Slope'] = data['Slope'] + .00001
+    data['Zmin'] = data['Zmin'] + .00001
+    return x,y,z,zf,ze,unc, data, feat
 
 
     
