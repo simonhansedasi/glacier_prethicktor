@@ -988,7 +988,6 @@ def compile_model_weighting_data():
         #     print(architecture)
             df_glob = load_global_predictions(parameterization, architecture = architecture)
             dft = pd.concat([dft, df_glob])
-
         df = dft[[
                 'layer architecture','RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
                 '11','12','13','14','15','16','17','18','19','20','21',
@@ -1500,7 +1499,7 @@ def list_architectures(
 ):
     root_dir = 'zults/'
     arch_list = pd.DataFrame()
-    for file in tqdm(os.listdir(root_dir)):
+    for file in (os.listdir(root_dir)):
         
         if 'RGI_predicted_' + parameterization in file :
             file_reader = pd.read_pickle(root_dir + file)
