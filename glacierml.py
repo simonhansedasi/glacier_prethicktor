@@ -273,7 +273,7 @@ def load_training_data(
                 'Zmax',
                 'Area',
 #                 'Area_RGI',
-                'Area_GlaThiDa',
+#                 'Area_GlaThiDa',
                 'Aspect',
                 'Lmax',
                 'Thickness',
@@ -975,7 +975,7 @@ def make_estimates(
 
 def compile_model_weighting_data():
 
-    for j in tqdm(range(1,5,1)):
+    for j in tqdm(reversed(range(1,5,1))):
 
         parameterization = str(j)
 
@@ -1000,10 +1000,10 @@ def compile_model_weighting_data():
         est = glathida_estimates
 
         for i in range(0,25,1):
-            est['pr_'+str(i)] = ((est[str(i)] - est['Thickness'])) / est['Thickness']
+            est['pr_'+str(i)] = ((np.round(est[str(i)], 0) - est['Thickness'])) / est['Thickness']
 
         for i in range(0,25,1):
-            est['r_'+str(i)] = ((est[str(i)] - est['Thickness']))
+            est['r_'+str(i)] = ((np.round(est[str(i)], 0) - est['Thickness']))
 
         est.to_pickle('model_weights/param' + str(j) + '_weighting_data.pkl')
 
