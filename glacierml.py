@@ -1010,7 +1010,7 @@ def compile_model_weighting_data():
 
 
 
-def compute_model_weights(model_statistics, parameterization, pth = '/home/prethicktor/data/'):
+def compute_model_weights( parameterization, pth = '/home/prethicktor/data/'):
     path = 'model_weights/'
     file = path + 'architecture_weights_' + parameterization + '.pkl'   
     if os.path.isfile(file) == True:
@@ -1300,13 +1300,13 @@ def aggregate_statistics(
         bar_H = predictions.mean(axis = 1)
         
         hat_mu_1 = sum( (bar_H) / (aw_1) ) / sum(1/aw_1)
-        dft.loc[dft.index[-1], 'Weighted Mean Thickness 1'] = hat_mu_1
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness 1'] = np.round(hat_mu_1, 0)
         hat_mu_2 = sum( (bar_H) / (aw_2) ) / sum(1/aw_2)
-        dft.loc[dft.index[-1], 'Weighted Mean Thickness 2'] = hat_mu_2       
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness 2'] = np.round(hat_mu_2, 0)
         hat_mu_3 = sum( (bar_H) / (aw_3) ) / sum(1/aw_3)
-        dft.loc[dft.index[-1], 'Weighted Mean Thickness 3'] = hat_mu_3 
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness 3'] = np.round(hat_mu_3, 0)
         hat_mu_4 = sum( (bar_H) / (aw_4) ) / sum(1/aw_4)
-        dft.loc[dft.index[-1], 'Weighted Mean Thickness 4'] = hat_mu_4 
+        dft.loc[dft.index[-1], 'Weighted Mean Thickness 4'] = np.round(hat_mu_4, 0)
 #         weighted_mean = 0
 #         for p, w in zip(pr, aw):
 #             weighted_mean = weighted_mean + np.nanmean(p/w)
@@ -1329,13 +1329,13 @@ def aggregate_statistics(
         sigma_d_4 = gamma_4 * bar_H
         
         sigma_sq_mu_1 = 1 / sum(1/sigma_d_1**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_1'] = sigma_sq_mu_1
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_1'] = np.round(sigma_sq_mu_1, 0)
         sigma_sq_mu_2 = 1 / sum(1/sigma_d_2**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_2'] = sigma_sq_mu_2
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_2'] = np.round(sigma_sq_mu_2, 0)
         sigma_sq_mu_3 = 1 / sum(1/sigma_d_3**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_3'] = sigma_sq_mu_3
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_3'] = np.round(sigma_sq_mu_3, 0)
         sigma_sq_mu_4 = 1 / sum(1/sigma_d_4**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_4'] = sigma_sq_mu_4
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty_4'] = np.round(sigma_sq_mu_4, 0)
         
         
         
@@ -1344,43 +1344,43 @@ def aggregate_statistics(
         
         sigma_d_31 = gamma_1[0:3] * bar_H[0:3]
         sigma_sq_mu_31 = 1 / sum(1/sigma_d_31**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 3'] = sigma_sq_mu_31
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 3'] = np.round(sigma_sq_mu_31, 0)
         
         sigma_d_20 = gamma_1[0:32] * bar_H[0:32]
         sigma_sq_mu_20 = 1 / sum(1/sigma_d_20**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 20'] = sigma_sq_mu_20
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 20'] = np.round(sigma_sq_mu_20, 0)
                 
         sigma_d_40 = gamma_1[0:64] * bar_H[0:64]
         sigma_sq_mu_40 = 1 / sum(1/sigma_d_40**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 40'] = sigma_sq_mu_40
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 40'] = np.round(sigma_sq_mu_40, 0)
         
         sigma_d_60 = gamma_1[0:96] * bar_H[0:96]
         sigma_sq_mu_60 = 1 / sum(1/sigma_d_60**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 60'] = sigma_sq_mu_60
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 60'] = np.round(sigma_sq_mu_60, 0)
         
         sigma_d_80 = gamma_1[0:128] * bar_H[0:128]
         sigma_sq_mu_80 = 1 / sum(1/sigma_d_80**2)
-        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 80'] = sigma_sq_mu_80
+        dft.loc[dft.index[-1], 'Composite Deviation Uncertainty 80'] = np.round(sigma_sq_mu_80, 0)
         
         
         
         weighted_variance_1 = sum(sigma_d_1**2 / aw_1) / sum(1 / aw_1)
-        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_1'] = weighted_variance_1
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_1'] = np.round(weighted_variance_1, 0)
         weighted_variance_2 = sum(sigma_d_2**2 / aw_2) / sum(1 / aw_2)
-        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_2'] = weighted_variance_2
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_2'] = np.round(weighted_variance_2, 0)
         
         weighted_variance_3 = sum(sigma_d_3**2 / aw_3) / sum(1 / aw_3)
-        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_3'] = weighted_variance_3
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_3'] = np.round(weighted_variance_3, 0)
         
         weighted_variance_4 = sum(sigma_d_1**2 / aw_4) / sum(1 / aw_4)
-        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4'] = weighted_variance_4
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4'] = np.round(weighted_variance_4, 0)
         
         weighted_variance_4 = sum(sigma_d_4**2 / aw_4) / sum(1 / aw_4)
-        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4_1'] = weighted_variance_4
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4_1'] = np.round(weighted_variance_4, 0)
         
         sigma_d_simple = np.mean(predictions * 0.290)
         weighted_variance_4 = sum(sigma_d_simple**2 / aw_4) / sum(1 / aw_4)
-        dft.loc[dft.index[-1], 'Simple Deviation Uncertainty_4'] = weighted_variance_4
+        dft.loc[dft.index[-1], 'Simple Deviation Uncertainty_4'] = np.round(weighted_variance_4, 0)
         
         
 #         total_uncertainty = residual_variance + MAE_GD + var_mu
@@ -1392,29 +1392,29 @@ def aggregate_statistics(
             sigma_m = predictions.var(axis = 1), 
             sigma_x = predictions.var(axis = 0)
         )
-        dft.loc[dft.index[-1], 'Bootstrap Uncertainty'] = var_mu
+        dft.loc[dft.index[-1], 'Bootstrap Uncertainty'] = np.round(var_mu, 0)
         
         
         
         
         boot = predictions.var(axis = 1)
-        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4_2'] = 1 / sum(1/boot)
+        dft.loc[dft.index[-1], 'Weighted Deviation Uncertainty_4_2'] = np.round(1 / sum(1/boot), 0)
 
         weighted_boot = sum(boot / aw_1) / sum(1/aw_1)
         
-        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_1'] = weighted_boot
+        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_1'] = np.round(weighted_boot, 0)
         
         weighted_boot = sum(boot / aw_2) / sum(1/aw_2)
         
-        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_2'] = weighted_boot
+        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_2'] = np.round(weighted_boot, 0)
         
         weighted_boot = sum(boot / aw_3) / sum(1/aw_3)
         
-        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_3'] = weighted_boot
+        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_3'] = np.round(weighted_boot, 0)
         
         weighted_boot = sum(boot / aw_4) / sum(1/aw_4)
         
-        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_4'] = weighted_boot
+        dft.loc[dft.index[-1], 'Weighted Bootstrap Uncertainty_4'] = np.round(weighted_boot, 0)
         
         # Residual Correction Factor
         
@@ -1426,26 +1426,26 @@ def aggregate_statistics(
         
         
         
-        dft.loc[dft.index[-1], 'Residual Correction'] = weighted_residual
+        dft.loc[dft.index[-1], 'Residual Correction'] = np.round(weighted_residual, 0)
                                   
         sigma_rc = gamma * rc
         
         weighted_residual_uncertainty = sum(sigma_rc**2 / aw_1) / sum(1/aw_1)
-        dft.loc[dft.index[-1], 'Residual Correction Uncertainty'] = weighted_residual_uncertainty
+        dft.loc[dft.index[-1], 'Residual Correction Uncertainty'] = np.round(weighted_residual_uncertainty, 0)
         
         
         if weighted_residual <= 0:
             corrected_thickness = hat_mu_1 - weighted_residual
-            dft.loc[dft.index[-1], 'Corrected Thickness'] = corrected_thickness
-            dft.loc[dft.index[-1], 'Corrected Thickness Uncertainty'] = weighted_variance_1 + weighted_residual_uncertainty
+            dft.loc[dft.index[-1], 'Corrected Thickness'] = np.round(corrected_thickness, 0)
+            dft.loc[dft.index[-1], 'Corrected Thickness Uncertainty'] = np.round(weighted_variance_1, 0)+ weighted_residual_uncertainty
         if weighted_residual > 0:
-            dft.loc[dft.index[-1], 'Corrected Thickness'] = hat_mu_1
-            dft.loc[dft.index[-1], 'Corrected Thickness Uncertainty'] = weighted_variance_1 
+            dft.loc[dft.index[-1], 'Corrected Thickness'] = np.round(hat_mu_1, 0)
+            dft.loc[dft.index[-1], 'Corrected Thickness Uncertainty'] = np.round(weighted_variance_1, 0)
         
         # MAE base uncertainty
         
         MAE_GD = 16.321**2
-        dft.loc[dft.index[-1], 'MAE Uncertainty'] = MAE_GD
+        dft.loc[dft.index[-1], 'MAE Uncertainty'] = np.round(MAE_GD, 0)
 
         
         
@@ -1568,12 +1568,12 @@ def load_notebook_data(
     df = pd.merge(df, RGI, on = 'RGIId')
     
     
-    df['Slope'][df['Slope'] == -9] = np.nan
+    df['Slope'][df['Slope'] == -9] = 0.01
 
-    df['Lmax'][df['Lmax'] == -9] = np.nan
-    df['Zmin'][df['Zmin'] == -999] = np.nan
-    df['Zmax'][df['Zmax'] == -999] = np.nan
-    df['Zmed'][df['Zmed'] == -999] = np.nan
+    df['Lmax'][df['Lmax'] == -9] = 0.01
+    df['Zmin'][df['Zmin'] == -999] = 0.01
+    df['Zmax'][df['Zmax'] == -999] = 0.01
+    df['Zmed'][df['Zmed'] == -999] = 0.01
 #     df['Upper Bound'] = df['Upper Bound'] - df['Weighted Mean Thickness']
 #     df['Lower Bound'] = df['Weighted Mean Thickness'] - df['Lower Bound']
 
@@ -1726,28 +1726,32 @@ def assign_arrays(
 ):
     data = load_notebook_data(parameterization)
     data = data.dropna(subset = 'Farinotti Mean Thickness')
-
-
-    thick_est_unc = (
-        data['Weighted Mean Thickness ' + method].to_numpy() + 
-        data['Weighted Deviation Uncertainty_' + method].to_numpy() + 
-        data['MAE Uncertainty'].to_numpy()
-    )
-
+    data['Farinotti Mean Thickness'] = np.round(data['Farinotti Mean Thickness'], 0)
+    data['Farinotti Mean Thickness'][data['Farinotti Mean Thickness'] == 0.0] = 0.1
+    
+    data['est_vol'] = data['Weighted Mean Thickness ' + method] / 1e3 * data['Area']
+    data['far_vol'] = data['Farinotti Mean Thickness'] / 1e3 * data['Area']
+    
+    pd_index = data[
+        (data['est_vol'] > size_thresh_1) & 
+        (data['est_vol'] < size_thresh_2) &
+        (data['far_vol'] > size_thresh_1) &
+        (data['far_vol'] < size_thresh_2)
+    ].index
+    
     thick_est = data['Weighted Mean Thickness '+ method].to_numpy()
-
     thick_far = data['Farinotti Mean Thickness'].to_numpy()
-
     area = data['Area'].to_numpy()
+    
+    
 
     x = thick_far / 1e3 * area
     y = thick_est / 1e3 * area
-    unc = np.sqrt(thick_est_unc) / 1e3 * area
+#     unc = np.sqrt(thick_est_unc) / 1e3 * area
 
 
 #         print(x.max())
 #         print(y.max())
-        
         
         
     index = np.where(
@@ -1755,14 +1759,13 @@ def assign_arrays(
     )
     x_new = x[index]
     y_new = y[index]
-    unc_new = unc[index]
     
     pth = 'arrays/'+parameterization+method+'_vol_density.npy'
     if os.path.isfile(pth) == True:
-#         print('density array found')
+        print('density array found')
         z = np.load(pth)
     elif os.path.isfile(pth) == False:
-#         print('calculating density array')
+        print('calculating density array')
         from scipy.stats import gaussian_kde
         xy = np.vstack([np.log10(x),np.log10(y)])
         z = gaussian_kde(xy)(xy)
@@ -1773,11 +1776,11 @@ def assign_arrays(
         str(size_thresh_1) + '-' + str(size_thresh_2)+'_density.npy'
     )
     if os.path.isfile(z_new_pth) == True:
-#         print('threshold density array found')
+        print('threshold density array found')
         z_new = np.load(z_new_pth)
         
     elif os.path.isfile(z_new_pth) == False:
-#         print('calculating density of desired threshold')
+        print('calculating density of desired threshold')
         from scipy.stats import gaussian_kde
         xy = np.vstack([np.log10(x_new),np.log10(y_new)])
 #         print(xy)
@@ -1785,29 +1788,32 @@ def assign_arrays(
         np.save(z_new_pth, z_new)
         
     
-    return x,y,z,unc,x_new,y_new,z_new,unc_new,data,index
+    return x,y,z,x_new,y_new,z_new,data,pd_index
 
 
 def assign_sub_arrays(
-    est_ind,i,j,
+    index,i,j,
     parameterization = '4',method = '1', 
     feature = 'Area'
     
 #     size_thresh_1 = 1e-5, size_thresh_2 = 1e4,
 ):
     data = load_notebook_data(parameterization)
-    data = data.dropna(subset = 'Farinotti Mean Thickness')
 
-    data = data.iloc[est_ind]
-    data['Slope'][data['Slope'] == -9] = np.nan
-    data['Lmax'][data['Lmax'] == -9] = np.nan
-    data['Zmin'][data['Zmin'] == -999] = np.nan
-    data['Zmax'][data['Zmax'] == -999] = np.nan
-    data['Zmed'][data['Zmed'] == -999] = np.nan
+    data = data.iloc[index]
+    data['Slope'] = data['Slope'] + .00001
+    data['Zmin'] = data['Zmin'] + .00001
+    data['Lmax'][data['Lmax'] == 'NaN'] = 0.1
+#     data['Slope'][data['Slope'] == -9] = np.nan
+#     data['Lmax'][data['Lmax'] == -9] = np.nan
+#     data['Zmin'][data['Zmin'] == -999] = np.nan
+#     data['Zmax'][data['Zmax'] == -999] = np.nan
+#     data['Zmed'][data['Zmed'] == -999] = np.nan
 
 #     data = data.drop(
 #         data[
-#             ( |
+#             (data['Slope'] == -9) |
+#             (data['Lmax'] == -9) |
 #             (data['Zmin'] == -999) |
 #             (data['Zmax'] == -999) |
 #             (data['Zmed'] == -999)
@@ -1850,11 +1856,11 @@ def assign_sub_arrays(
         '-' + str(i) + '-' + str(j) + '_density.npy'
     )
     if os.path.isfile(pth) == True:
-#         print('threshold density array found')
+        print('threshold density array found')
         z = np.load(pth)
         
     elif os.path.isfile(pth) == False:
-#         print('calculating thickness density of desired threshold')
+        print('calculating thickness density of desired threshold')
         from scipy.stats import gaussian_kde
         xy = np.vstack([np.log10(x),np.log10(y)])
         print(xy)
@@ -1876,25 +1882,24 @@ def assign_sub_arrays(
         '-' + str(i) + '-' + str(j) + '_density.npy'
     )
     if os.path.isfile(pth_f) == True:
-#         print(feature + '-thickness density arrays found')
+        print(feature + '-thickness density arrays found')
         zf = np.load(pth_f)
         ze = np.load(pth_e)
         
     elif os.path.isfile(pth_f) == False:
 #         zf = 1
 #         ze = 1
-#         print('calculating '+feature + '-thickness density of desired threshold')
+        print('calculating '+feature + '-thickness density of desired threshold')
         from scipy.stats import gaussian_kde
         xy = np.vstack([np.log10(x),np.log10(feat)])
-        print(xy)
+#         print(xy)
         zf = gaussian_kde(xy)(xy)
         np.save(pth_f,zf)
         
         xy = np.vstack([np.log10(y),np.log10(feat)])
         ze = gaussian_kde(xy)(xy)
         np.save(pth_e,ze)
-    data['Slope'] = data['Slope'] + .00001
-    data['Zmin'] = data['Zmin'] + .00001
+
     return x,y,z,zf,ze,unc, data, feat
 
 
