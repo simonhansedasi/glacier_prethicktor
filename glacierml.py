@@ -105,7 +105,7 @@ def parameterize_data(parameterization = '1', pth = '/data/fast1/glacierml/data/
         data[data['distance test'] >= float(config[parameterization]['distance threshold'])].index
     )
     data = data.drop([
-#         'RGIId',
+        'RGIId',
         'region', 
         'RGI Centroid Distance', 
         'AVG Radius', 
