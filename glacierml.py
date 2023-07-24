@@ -1020,27 +1020,18 @@ def compute_model_weights( parameterization, pth = '/home/prethicktor/data/'):
     
 
         est = pd.read_pickle('model_weights/param' + parameterization + '_weighting_data.pkl')
-        model_list = [
-             '0', '1', '2', '3', '4', '5', '6', '7', '8',
-             '9', '10', '11', '12', '13', '14', '15', '16',
-             '17', '18', '19', '20', '21', '22', '23', '24',
-        ]
-        pool_list = [
-             'pr_0', 'pr_1', 'pr_2', 'pr_3', 'pr_4', 'pr_5', 'pr_6', 'pr_7', 'pr_8',
-             'pr_9', 'pr_10', 'pr_11', 'pr_12', 'pr_13', 'pr_14', 'pr_15', 'pr_16',
-             'pr_17', 'pr_18', 'pr_19', 'pr_20', 'pr_21', 'pr_22', 'pr_23', 'pr_24',
-        ]
-        weight_list = [
-             'w_0', 'w_1', 'w_2', 'w_3', 'w_4', 'w_5', 'w_6', 'w_7', 'w_8',
-             'w_9', 'w_10', 'w_11', 'w_12', 'w_13', 'w_14', 'w_15', 'w_16',
-             'w_17', 'w_18', 'w_19', 'w_20', 'w_21', 'w_22', 'w_23', 'w_24',
-        ]
-
-        res_list = [
-             'r_0', 'r_1', 'r_2', 'r_3', 'r_4', 'r_5', 'r_6', 'r_7', 'r_8',
-             'r_9', 'r_10', 'r_11', 'r_12', 'r_13', 'r_14', 'r_15', 'r_16',
-             'r_17', 'r_18', 'r_19', 'r_20', 'r_21', 'r_22', 'r_23', 'r_24',
-        ]
+        model_list = []
+        res_list = []
+        pool_list = []
+        weight_list = []
+        for i in range(0,25,1):
+            model_list.append(str(i))
+            res_list.append('r_'+str(i))
+            pool_list.append('pr_'+str(i))
+            weight_list.append('w_'+str(i))
+        est[model_list] = np.round(est[model_list], 0)
+        est[res_list] = np.round(est[model_list], 0)
+        est[pool_list] = np.round(est[pool_list], 2)
 
         weights = pd.DataFrame()
         architecture_weights = pd.DataFrame()
@@ -1492,6 +1483,93 @@ def aggregate_statistics(
         parameterization + '.pkl'
     ) 
 
+    
+def weighter(mean_thickness, mean_ci, var, var_ci, parameterization = '4'):
+    weights = np.load(
+        'model_weights/architecture_weights_' + parameterization +'.pkl', allow_pickle = True
+    )
+    weight1 = weights['aw_1']
+    weight2 = weights['aw_2']
+    weight3 = weights['aw_3']
+    weight4 = weights['aw_4']
+    weights_1 = np.tile(weights['aw_1'], (2,1)).T
+    weights_2 = np.tile(weights['aw_2'], (2,1)).T
+    weights_3 = np.tile(weights['aw_3'], (2,1)).T
+    weights_4 = np.tile(weights['aw_4'], (2,1)).T
+    t = np.array(
+        [
+            (sum(mean_thickness/weight1) / sum(1/weight1)),
+            (sum(mean_thickness/weight2) / sum(1/weight2)),
+            (sum(mean_thickness/weight3) / sum(1/weight3)),
+            (sum(mean_thickness/weight4) / sum(1/weight4)),
+        ]
+    )
+    tu = np.array(
+        [
+            (sum(mean_ci/weights_1) / sum(1/weights_1)),
+            (sum(mean_ci/weights_2) / sum(1/weights_2)),
+            (sum(mean_ci/weights_3) / sum(1/weights_3)),
+            (sum(mean_ci/weights_4) / sum(1/weights_4))
+        ]
+    )
+    
+    v = np.array(
+        [
+            (sum(var/weight1) / sum(1/weight1)),
+            (sum(var/weight2) / sum(1/weight2)),
+            (sum(var/weight3) / sum(1/weight3)),
+            (sum(var/weight4) / sum(1/weight4))
+        ]
+    )
+    
+    vu = np.array(
+        [
+            (sum(var_ci/weights_1) / sum(1/weights_1)),
+            (sum(var_ci/weights_2) / sum(1/weights_2)),
+            (sum(var_ci/weights_3) / sum(1/weights_3)),
+            (sum(var_ci/weights_4) / sum(1/weights_4))
+        ]
+    )
+    
+    return t,tu, v, vu
+
+
+
+def calculate_confidence_intervals(predictions):
+    mean = []
+    mean_ci = []
+    mean_ci_width = []
+
+    var = []
+    var_ci = []
+    var_ci_width = []
+
+    std = []
+    std_ci = []
+    std_ci_width = []
+    for i in range(0,161,1):
+    #     print(pr[i][:])
+    #     break
+        mean_i, var_i, std_i = st.bayes_mvs(np.array(predictions)[i][:], alpha=0.95)
+
+
+        mean_i_width = mean_i[1][1] - mean_i[1][0]
+        std_i_width = std_i[1][1] - std_i[1][0]
+        var_i_width = var_i[1][1] - var_i[1][0]
+
+        mean.append(mean_i[0])
+        mean_ci.append(mean_i[1])
+        mean_ci_width.append(mean_i_width)
+
+        std.append(std_i[0])
+        std_ci.append(std_i[1])
+        std_ci_width.append(std_i_width)
+
+        var.append(var_i[0])
+        var_ci.append(var_i[1])
+        var_ci_width.append(var_i_width)
+        
+    return mean, mean_ci, var, var_ci
 
 '''
 '''
