@@ -1892,7 +1892,14 @@ def assign_arrays(
     thick_far = data['Farinotti Mean Thickness'].to_numpy()
 
     area = data['Area'].to_numpy()
-
+    
+    pd_index = data[
+        (data['Weighted Mean Thickness ' + method] * data['Area'] >= size_thresh_1) &
+        (data['Weighted Mean Thickness ' + method] * data['Area'] <= size_thresh_2) &
+        (data['Farinotti Mean Thickness'] * data['Area'] >= size_thresh_1) &
+        (data['Farinotti Mean Thickness'] * data['Area'] <= size_thresh_2)
+    ].index
+    
     x = thick_far / 1e3 * area
     y = thick_est / 1e3 * area
     unc = np.sqrt(thick_est_unc) / 1e3 * area
@@ -1938,7 +1945,7 @@ def assign_arrays(
         np.save(z_new_pth, z_new)
         
     
-    return x,y,z,unc,x_new,y_new,z_new,unc_new,data,index
+    return x,y,z,x_new,y_new,z_new,data,pd_index
 
 
 def assign_sub_arrays(
@@ -1951,7 +1958,7 @@ def assign_sub_arrays(
     data = load_notebook_data(parameterization)
     data = data.dropna(subset = 'Farinotti Mean Thickness')
 
-    data = data.iloc[est_ind]
+    data = data.loc[est_ind]
     data['Slope'][data['Slope'] == -9] = np.nan
     data['Lmax'][data['Lmax'] == -9] = np.nan
     data['Zmin'][data['Zmin'] == -999] = np.nan
