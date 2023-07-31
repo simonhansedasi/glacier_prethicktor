@@ -415,8 +415,7 @@ input = normalized data and selected learning rate
 output = dnn model with desired layer architecture, ready to be trained.
 '''
 def build_dnn_model(
-    norm, learning_rate=0.01, layer_1 = 10, layer_2 = 5, dropout = True, 
-    loss = 'mean_absolute_error'
+    norm, learning_rate=0.01, layer_1 = 10, layer_2 = 5, loss = 'mae'
 ):
 #     def coeff_determination(y_true, y_pred):
 #         SS_res =  K.sum(K.square( y_true-y_pred )) 
@@ -424,40 +423,36 @@ def build_dnn_model(
 #     return ( 1 - SS_res/(SS_tot + K.epsilon()) )
 
     
-    if dropout == True:
-        model = keras.Sequential(
-            [
-                  norm,
-                  layers.Dense(layer_1, activation='relu'),
-                  layers.Dropout(rate = 0.1, seed = 0),
-                  layers.Dense(layer_2, activation='relu'),
-
-                  layers.Dense(1) 
-            ]
-        )
-#         if loss == 'mean_squared_error':
-#             def coeff_determination(y_true, y_pred):
-#                 SS_res =  K.sum(K.square( y_true-y_pred )) 
-#                 SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) ) 
-#             return ( 1 - SS_res/(SS_tot + K.epsilon()) )
-#             model.compile(optimizer='adam', loss='mean_squared_error', metrics=[coeff_determination])
-#         if loss == 'mean_absolute_error':
-#             model.compile(loss='mean_absolute_error',
-#                     optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate))
+    model = keras.Sequential(
+        [
+              norm,
+              layers.Dense(layer_1, activation='relu'),
+              layers.Dropout(rate = 0.1, seed = 0),
+              layers.Dense(layer_2, activation='relu'),
+              layers.Dense(1) 
+        ]
+    )
+    
+    if loss == 'mse':
+        model.compile(optimizer='sgd', loss=tf.keras.losses.MeanSquaredError())
+    if loss == 'mae':
         
-    else:
-        model = keras.Sequential(
-            [
-                  norm,
-                  layers.Dense(layer_1, activation='relu'),
-                  layers.Dense(layer_2, activation='relu'),
+        model.compile(
+            loss='mean_absolute_error',
+            optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate)
+        )    
+#     def coeff_determination(y_true, y_pred):
+#         SS_res =  K.sum(K.square( y_true-y_pred )) 
+#         SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) ) 
+#         return ( 1 - SS_res/(SS_tot + keras.epsilon()) )
+    
+#     model_mse.compile(
+#         optimizer='adam', loss='mean_squared_error', metrics=[coeff_determination]
+#     )
 
-                  layers.Dense(1) 
-            ]
-        )
 
-        model.compile(loss='mean_absolute_error',
-                    optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate))
+        
+        
         
     
     return model
@@ -471,6 +466,7 @@ output = loss plots for desired model
 '''
 def plot_loss(history):
 #     plt.subplots(figsize=(10,5))
+
     plt.plot(
         history['loss'], 
          label='loss',
@@ -486,6 +482,7 @@ def plot_loss(history):
     plt.ylabel('Error (m)')
     plt.legend()
     plt.grid(True)
+
     
 
      
@@ -495,41 +492,42 @@ input = dataset, desired: learning rate, validation split, epochs, random state.
 output = saved weights for trained model and model results saved as a csv
 '''
 
-def build_and_train_model(dataset,
-#                           learning_rate = 0.01,
-#                           validation_split = 0.2,
-#                           epochs = 100,
-                          
-                          parameterization = 'sm',
-#                           res = 'sr',
-                          layer_1 = 10,
-                          layer_2 = 5,
-                          random_state = 0,
-                          dropout = True,
-                          verbose = False,
-                          writeToFile = True,
-                          loss = 'mean_absolute_error'
+def build_and_train_model(
+    dataset,
+    loss = 'mse',
+    parameterization = '4',
+    layer_1 = 10,
+    layer_2 = 5,
+    random_state = 0,
+    dropout = True,
+    verbose = False,
+    writeToFile = True,
                          ):
     # define paths
     arch = str(layer_1) + '-' + str(layer_2)
-    svd_mod_pth = 'saved_models/' + parameterization + '/' + arch + '/'
-    svd_res_pth = 'saved_results/' + parameterization + '/' + arch + '/'
+    
+    model_pth = 'saved_models/' + loss+ '_' + parameterization + '/'
+    results_pth = 'saved_results/' + loss+ '_' + parameterization + '/'
+    
+    svd_mod_pth = 'saved_models/' + loss+ '_' + parameterization + '/' + arch + '/'
+    svd_res_pth = 'saved_results/' + loss + '_' + parameterization + '/' + arch + '/'
 
     # code snippet to make folders for saved models and results if they do not already exist
-    isdir = os.path.isdir(svd_mod_pth)
 
+    isdir = os.path.isdir(model_pth)
+    if isdir == False:
+        os.makedirs(model_pth)
+    isdir = os.path.isdir(results_pth)
+    if isdir == False:
+        os.makedirs(results_pth)
+    isdir = os.path.isdir(svd_mod_pth)
     if isdir == False:
         os.makedirs(svd_mod_pth)
-
     isdir = os.path.isdir(svd_res_pth)
     if isdir == False:
         os.makedirs(svd_res_pth)
+        
 
-
-    if dropout == True:
-        dropout = '1'
-    elif dropout == False:
-        dropout = '0'
 
 
 #     split data
@@ -551,12 +549,17 @@ def build_and_train_model(dataset,
 
 #      DNN model
     dnn_model = {}
-    dnn_history = {}
-    dnn_results = {}
+    model = {}
+    model_history = {}
 
-    # set up model with  normalized data and defined layer architecture
-    dnn_model = build_dnn_model(normalizer['ALL'], 0.01, layer_1, layer_2, dropout, loss)
     
+    # set up model with  normalized data and defined layer architecture
+
+    
+    model = build_dnn_model(
+        normalizer['ALL'], 0.01, layer_1, layer_2,loss = loss
+    )
+
     # set up callback function to cut off training when performance reaches peak
     callback = tf.keras.callbacks.EarlyStopping(
         monitor = 'val_loss',
@@ -567,9 +570,9 @@ def build_and_train_model(dataset,
         baseline = None,
         restore_best_weights = True
     )
-    
+
     # train model on previously selected and splitdata
-    dnn_history['MULTI'] = dnn_model.fit(
+    model_history = model.fit(
         train_features,
         train_labels,
         validation_split=0.2,
@@ -577,34 +580,34 @@ def build_and_train_model(dataset,
         verbose=0, 
         epochs=2000
     )
-    df = pd.DataFrame(dnn_history['MULTI'].history)
-    #save model, results, and history
+    df = pd.DataFrame(model_history.history)
+
 
     if writeToFile:
 
-#         df = pd.DataFrame(dnn_history['MULTI'].history)
 
 
         history_filename = (
             svd_res_pth +
-#             str(layer_1) + '_' + str(layer_2) + '_' + 
             str(random_state)
         )
 
+
         df.to_pickle(  history_filename + '.pkl' )
 
-        
+
         model_filename =  (
             svd_mod_pth + 
             str(random_state)
         )
 
-        dnn_model.save(  model_filename  )
 
-        return history_filename, model_filename
+        model.save(  model_filename  )
+
+#         return history_filename, model_filename
     
     else:
-        return dnn_model, df, normalizer
+        return model, df, normalizer
     
 
     
@@ -630,142 +633,172 @@ def build_model_ensemble(
     data, parameterization, verbose = True
 ):
     
+    
+    
     # build models
     RS = range(0,25,1)
     print(data)
     layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-    for layer_2_input in (layer_2_list):
-        for layer_1_input in (layer_1_list):
-            if layer_1_input <= layer_2_input:
-                pass
-            elif layer_1_input > layer_2_input:
+    loss_functions = ['mse','mae']
+    for loss in loss_functions:
+        for layer_2_input in (layer_2_list):
+            for layer_1_input in (layer_1_list):
+                if layer_1_input <= layer_2_input:
+                    pass
+                elif layer_1_input > layer_2_input:
 
-                arch = str(layer_1_input) + '-' + str(layer_2_input)
-                dropout = True
-                print('Running multi-variable DNN regression with parameterization ' + 
-                    str(parameterization) + 
-                    ', layer architecture = ' +
-                    arch)
+                    arch = str(layer_1_input) + '-' + str(layer_2_input)
+                    dropout = True
 
-                for rs in tqdm(RS):
+                    isdir = 'saved_models/' + loss+ '_' + parameterization + '/' + arch + '/'
+                    if os.path.isdir(isdir) == True:
+                        pass
+                    elif os.path.isdir(isdir) == False:
+                        print(
+                            'Running multi-variable DNN regression with parameterization ' + 
+                            str(parameterization) + 
+                            ', layer architecture = ' +
+                            arch
+                             )
+                        for rs in tqdm(RS):
+                            build_and_train_model(
 
-                    build_and_train_model(
-                        data, 
-                        parameterization = parameterization, 
-#                             res = parameterization,
-                        layer_1 = layer_1_input,
-                        layer_2 = layer_2_input,
-                        random_state = rs, 
-                    )   
+                                data, 
+                                loss,
+                                parameterization = parameterization, 
+                        #                             res = parameterization,
+                                layer_1 = layer_1_input,
+                                layer_2 = layer_2_input,
+                                random_state = rs, 
+
+                            )  
 
                     
 def assess_model_performance(data, parameterization = '1'):
-    # evaluate model loss and then calculate model statistics
-    model_predictions = pd.DataFrame()
-    model_statistics = pd.DataFrame()
-    rootdir = 'saved_models/' + parameterization + '/'
+    rootdirs = [
+        'saved_models/mse_' + parameterization + '/', 
+        'saved_models/mae_' + parameterization + '/'
+    ]
 
     print('loading and evaluating models...')
-    for arch in tqdm(os.listdir(rootdir)):       
-        pth = os.path.join(rootdir, arch)
-        for folder in (os.listdir(pth)):
-            architecture = arch
-            model_loc = (
-                rootdir + 
-                arch + 
-                '/' + 
-                folder
+
+    for rootdir in rootdirs:
+        
+        if 'mse' in rootdir:
+            loss = 'mse'
+        if 'mae' in rootdir:
+            loss = 'mae'
+        
+#         is
+        
+        mp = pd.DataFrame()
+        ms = pd.DataFrame()
+
+        mod_stats = 'temp/model_statistics_' + loss + '_' + parameterization + '.pkl'
+        mod_preds = 'temp/model_predictions_' + loss + '_' + parameterization  +  '.pkl'
+
+
+        if os.path.isfile(mod_stats) == True and os.path.isfile(mod_preds) == True:
+            print('Models evaluated, moving on')
+            pass
+
+        elif os.path.isfile(mod_stats) == False or os.path.isfile(mod_preds) == False:
+            for arch in tqdm(os.listdir(rootdir)):       
+                pth = os.path.join(rootdir, arch)
+                for folder in (os.listdir(pth)):
+                    model_loc = (
+                        rootdir + 
+                        arch + 
+                        '/' + 
+                        folder
+                    )
+                    model_name = folder
+                    dnn_model = load_dnn_model(model_loc)
+                    df = evaluate_model(
+                        arch, model_name, data, dnn_model, parameterization, loss
+                    )
+
+                    mp = pd.concat([mp, df], ignore_index = True)
+            mp.rename(columns = {0:'avg train thickness'},inplace = True)
+            mp.to_pickle(
+                'temp/model_predictions_' + loss + '_' + parameterization  +  '.pkl'
+            )
+            ms = pd.DataFrame()
+            for arch in mp['layer architecture'].unique():
+                dft = mp[mp['layer architecture'] == arch]
+                ms_temp = pd.DataFrame(
+                    {
+                        'layer architecture':[dft['layer architecture'].iloc[-1]],
+                        'loss':[dft['loss'].iloc[-1]],
+                        'train loss avg':[np.mean(dft['train loss'])],
+                        'test loss avg':[np.mean(dft['test loss'])],
+                        'parameters':[dft['total parameters'].iloc[-1]],
+                        'inputs':[(len(data) * (len(data.columns) -1))],
+                        'trained parameters':[dft['total parameters'].iloc[-1] - (
+                            len(data.columns) + (len(data.columns) - 1)
+                        )]
+
+                    }
+                )
+                ms = pd.concat([ms, ms_temp])
+            ms.to_pickle(
+                'temp/model_statistics_' + loss + '_' +
+                parameterization + 
+                '.pkl'
             )
 
-            model_name = folder
-            dnn_model = load_dnn_model(model_loc)
-            df = evaluate_model(architecture, model_name, data, dnn_model, parameterization)
 
-            model_predictions = pd.concat([model_predictions, df], ignore_index = True)
-    model_predictions.rename(columns = {0:'avg train thickness'},inplace = True)
-    model_predictions.to_pickle('zults/model_predictions_' + parameterization + '.pkl')
-    # calculate statistics
-    print('calculating statistics...')
-    dnn_model = {}
-
-    for arch in tqdm(list(model_predictions['layer architecture'].unique())):
-        model_thicknesses = model_predictions[model_predictions['layer architecture'] == arch]
-
-
-        model_name = ('0')
-
-        model_loc = (
-            rootdir + 
-            arch + 
-            '/' +
-            '0'
-        )
-        isdir = os.path.isdir(model_loc)
-        if isdir == False:
-            print('model not here, calculating next model')
-        elif isdir == True:
-
-
-            dnn_model = load_dnn_model(model_loc)
-            df = calculate_model_avg_statistics(
-                dnn_model,
-                arch,
-                data,
-                model_thicknesses
-            )
-
-            model_statistics = pd.concat(
-                [model_statistics, df], ignore_index = True
-            )
-
-
-        model_statistics['architecture weight 1'] = (
-            sum(model_statistics['test mae avg']) / model_statistics['test mae avg']
-        )
-        model_statistics['architecture weight 2'] = (
-            model_statistics['test mae avg'] / sum(model_statistics['test mae avg'])
-        )
-        model_statistics.to_pickle(
-            'zults/model_statistics_' + 
-            parameterization + 
-            '.pkl'
-        )
+        
 
 def evaluate_model(
     arch,
     rs,
-    dataset,
+    data,
     dnn_model,
-    parameterization
+    parameterization,
+    loss,
+
 ):
 
     (
         train_features, test_features, train_labels, test_labels
     ) = split_data(
-        dataset, random_state = int(rs)
+        data, random_state = int(rs)
     )
     
     features = pd.concat([train_features,test_features], ignore_index = True)
     labels = pd.concat([train_labels, test_labels], ignore_index = True)
     
-    mae_test = dnn_model.evaluate(
-                    test_features, test_labels, verbose=0
-                )
-    mae_train = dnn_model.evaluate(
+
+    loss_train = dnn_model.evaluate(
         train_features, train_labels, verbose=0
     )
+    loss_test = dnn_model.evaluate(
+        test_features, test_labels, verbose=0
+    )    
+
+
     df = features
-    thicknesses = (dnn_model.predict(features).flatten())
+    thicknesses = (dnn_model.predict(features, verbose = 0).flatten())
     df['model'] = rs
-    df['test mae'] = mae_test
-    df['train mae'] = mae_train
-    df['layer architecture'] = arch
+    df['loss'] = loss
+    df['test loss'] = loss_test
+    df['train loss'] = loss_train
+    df['layer architecture'] = str(arch)
     df['parameterization'] = parameterization
     df['total parameters'] = dnn_model.count_params() 
     df['Thickness'] = labels
     df['Estimated Thickness'] = thicknesses
     df['Residual'] = df['Estimated Thickness'] - df['Thickness']
+    
+    
+
+    df['trained parameters'] = df['total parameters'] - (
+        len(data.columns) + (len(data.columns) - 1)
+    )
+
+#     df['total inputs'] = 
 
     return df
 
@@ -775,54 +808,46 @@ def evaluate_model(
 '''
 def calculate_model_avg_statistics(
     dnn_model,
-    arch, 
     dataset,
-    model_thicknesses
+    model_thicknesses,
+    loss,
+    architecture
 ):
-    
     df = pd.DataFrame({
                 'Line1':[1]
     })
-    
-    test_mae_mean = np.mean(model_thicknesses['test mae'])
-    test_mae_std_dev = np.std(model_thicknesses['test mae'])
+    test_loss_avg = np.mean(model_thicknesses['test loss'])
 
-    train_mae_mean = np.mean(model_thicknesses['train mae'])
-    train_mae_std_dev = np.std(model_thicknesses['train mae'])
+    train_loss_avg = np.mean(model_thicknesses['train loss'])
 
     df.loc[
         df.index[-1], 'layer architecture'
-    ] = arch  
+    ] = architecture
+
+                        
 
     
     df.loc[
-        df.index[-1], 'total parameters'
-    ] = dnn_model.count_params() 
-
+        df.index[-1],  'loss' 
+    ] = loss
+    
     df.loc[
-        df.index[-1], 'trained parameters'
-    ] = df.loc[
-        df.index[-1], 'total parameters'
-    ] - (len(dataset.columns) + (len(dataset.columns) - 1))
-
+        df.index[-1], 'test loss avg'
+    ] = test_loss_avg
+    
     df.loc[
-        df.index[-1], 'total inputs'
-    ] = (len(dataset) * (len(dataset.columns) -1))
+        df.index[-1], 'train loss avg'
+    ] = train_loss_avg
+    df['total parameters'] = dnn_model.count_params() 
 
-    df.loc[
-        df.index[-1], 'test mae avg'
-    ] = test_mae_mean
-
-    df.loc[df.index[-1], 'train mae avg'] = train_mae_mean
-
-    df.loc[df.index[-1], 'test mae std dev'] = test_mae_std_dev
-
-    df.loc[df.index[-1], 'train mae std dev'] = train_mae_std_dev
+    df['trained parameters'] = df['total parameters'] - (
+        len(data.columns) + (len(data.columns) - 1)
+    )
+    df['total inputs'] = (len(data) * (len(data.columns) -1))
     
     df = df.dropna()
 
-
-    df = df.sort_values('test mae avg')
+#     df = df.sort_values('test ' + loss + ' avg')
     df = df.drop('Line1', axis = 1)
 
     return df
@@ -837,41 +862,45 @@ def estimate_thickness(
         useMP = False,
         
     ):
-    RGI = load_RGI(pth = '/home/prethicktor/data/RGI/rgi60-attribs/')
-#     RGI = load_RGI(pth = '/data/fast1/glacierml/data/RGI/rgi60-attribs/')
+#     RGI = load_RGI(pth = '/home/prethicktor/data/RGI/rgi60-attribs/')
+    RGI = load_RGI(pth = '/data/fast1/glacierml/data/RGI/rgi60-attribs/')
 
     RGI['region'] = RGI['RGIId'].str[6:8]
     RGI = RGI.reset_index()
     RGI = RGI.drop('index', axis=1)
     
-    if useMP == False:
-        print('Estimating thicknesses')
-        for arch in tqdm(model_statistics['layer architecture'].unique()):
-            make_estimates(
+    loss_functions = ['mse','mae']
+    for loss in loss_functions:
+    
+        if useMP == False:
+            print('Estimating thicknesses')
+            for arch in tqdm(model_statistics['layer architecture'].unique()):
+                make_estimates(
+                    RGI,
+                    parameterization, 
+                    verbose,
+                    arch,
+                    loss
+                )
+
+
+        else:
+            arch = model_statistics['layer architecture']
+            from functools import partial
+            import multiprocessing
+            pool = multiprocessing.pool.Pool(processes=5) 
+
+            newfunc = partial(
+                make_estimates,
                 RGI,
                 parameterization, 
-                verbose,
-                arch,
+                verbose
+    #             arch
             )
-
-
-    else:
-        arch = model_statistics['layer architecture']
-        from functools import partial
-        import multiprocessing
-        pool = multiprocessing.pool.Pool(processes=5) 
-
-        newfunc = partial(
-            make_estimates,
-            RGI,
-            parameterization, 
-            verbose
-#             arch
-        )
-        output = pool.map(newfunc, arch.unique())
-#     print(output[1])
-#     for i in arch:
-#         print(output[i])
+            output = pool.map(newfunc, arch.unique())
+    #     print(output[1])
+    #     for i in arch:
+    #         print(output[i])
 
 
         
@@ -880,70 +909,77 @@ def make_estimates(
     parameterization,
     verbose,
     arch,
-    
+    loss
 ):
-    if verbose: print(f'Estimating RGI with layer architecture {arch}, parameterization {parameterization}')
-    dfs = pd.DataFrame()
-    RGI_for_predictions = RGI[[
-        'CenLon', 'CenLat', 'Slope', 'Zmin', 'Zmed', 'Zmax', 'Area', 'Aspect', 'Lmax'
-    ]]
     
-#     .drop(['region', 'RGIId'], axis = 1)
-    for rs in tqdm(range(0,25,1)):
-        rs = str(rs)
-        results_path = 'saved_results/' + parameterization + '/' + arch + '/'
-        history_name = rs
-        dnn_history = {}
-        dnn_history[rs] = pd.read_pickle(results_path + rs)
-#         if exclude == True:
-#         if abs((
-#             dnn_history[history_name]['loss'].iloc[-1]
-#         ) - dnn_history[history_name]['val_loss'].iloc[-1]) >= 3:
-#             pass
-#         else:
+    file_name = 'temp/RGI_predicted_' + loss + '_' +  parameterization + '_' + arch + '.pkl' 
 
-        model_path = (
-            'saved_models/' + parameterization + '/' + arch + '/' + rs
-        )
-
-        dnn_model = tf.keras.models.load_model(model_path)
-
-        s = pd.Series(
-            dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
-            name = rs
-        )
-        dfs[rs] = s
-
-    RGI_prethicked = RGI.copy() 
-    RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
-    RGI_prethicked['avg predicted thickness'] = dfs.mean(axis = 1)
-    RGI_prethicked['predicted thickness std dev'] = dfs.std(axis = 1)
-
-    RGI_prethicked.to_pickle(
-        'zults/RGI_predicted_' +
-        parameterization + '_' + arch + '.pkl'          
-    )    
-
-    return RGI_prethicked
+#     print(file_name)
+    
+#     mod_preds = 'temp/model_predictions_' + loss + '_' + parameterization  +  '.pkl'
 
 
-def compile_model_weighting_data(parameterization):
+    if os.path.isfile(file_name) == True:
+#         print('Models evaluated, moving on')
+        pass
+    if os.path.isfile(file_name) == False:
+#     if verbose: print(f'Estimating RGI with layer architecture {arch}, parameterization {parameterization}')
+        dfs = pd.DataFrame()
+        RGI_for_predictions = RGI[[
+            'CenLon', 'CenLat', 'Slope', 'Zmin', 'Zmed', 'Zmax', 'Area', 'Aspect', 'Lmax'
+        ]]
+
+    #     .drop(['region', 'RGIId'], axis = 1)
+#         print(f'Estimating RGI thicknesses with architecture {arch}, parameterization ' +
+#               f'{parameterization}, compiled using {loss}')
+        for rs in (range(0,25,1)):
+            rs = str(rs)
+    #         results_path = 'saved_results/' + loss + '_' + parameterization + '/' + arch + '/'
+    #         history_name = rs
+    #         dnn_history = {}
+    #         dnn_history[rs] = pd.read_pickle(results_path + rs +'.pkl')
+            model_path = (
+                'saved_models/' + loss + '_' + parameterization + '/' + arch + '/' + rs
+            )
+
+            dnn_model = tf.keras.models.load_model(model_path)
+
+            s = pd.Series(
+                dnn_model.predict(RGI_for_predictions, verbose=0).flatten(), 
+                name = rs
+            )
+            dfs[rs] = s
+
+        RGI_prethicked = RGI.copy() 
+        RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
+
+        RGI_prethicked.to_pickle(
+            'temp/RGI_predicted_' + loss + '_' + 
+            parameterization + '_' + arch + '.pkl'          
+        )    
+
+
+
+def compile_model_weighting_data(parameterization, arch,loss):
+    
     path = 'model_weights/'
 #     for j in tqdm(reversed(range(1,5,1))):
-    file = path + 'param' + parameterization + '_weighting_data.pkl'   
-    if os.path.isfile(file) == True:
-        architecture_weights = pd.read_pickle(file)
-        residual_model = np.load('model_weights/residual_model_' + parameterization + '.npy',)
-    if os.path.isfile(file) == False:
-
+    file = path + 'param' + parameterization + '_' + loss + '_weighting_data.pkl'  
+    file_path = file
+#     print(file_path)
+    if os.path.isfile(file_path) == True:
+        print('Weighting data compiled')
+        pass
+    if os.path.isfile(file_path) == False:
         glac = parameterize_data(parameterization)
-        arch = list_architectures(parameterization)
-
         dft = pd.DataFrame()
+        print('Compiling model estimates...')
         for architecture in tqdm(arch['layer architecture'].unique()):
         #     print(architecture)
-            df_glob = load_global_predictions(parameterization, architecture = architecture)
+            df_glob = load_global_predictions(parameterization,loss, architecture = architecture)
             dft = pd.concat([dft, df_glob])
+        dft.to_hdf('predicted_thicknesses/compiled_raw_' + loss + '_' + parameterization + '.h5', 
+          key = 'compiled_raw', mode = 'a')
         df = dft[[
                 'layer architecture','RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
                 '11','12','13','14','15','16','17','18','19','20','21',
@@ -960,21 +996,23 @@ def compile_model_weighting_data(parameterization):
         for i in range(0,25,1):
             est['r_'+str(i)] = ((np.round(est[str(i)], 0) - est['Thickness']))
 
-        est.to_pickle('model_weights/param' + parameterization + '_weighting_data.pkl')
+        est.to_pickle('model_weights/param' + parameterization + '_' + loss + '_weighting_data.pkl')
 
 
 
 
-def compute_model_weights(parameterization, pth = '/home/prethicktor/data/'):
+def compute_model_weights(parameterization, loss, pth = '/home/prethicktor/data/'):
     path = 'model_weights/'
-    file = path + 'architecture_weights_' + parameterization + '.pkl'   
+    file = path + 'architecture_weights_' + loss + '_' + parameterization  +  '.pkl'   
     if os.path.isfile(file) == True:
         architecture_weights = pd.read_pickle(file)
-        residual_model = np.load('model_weights/residual_model_' + parameterization + '.npy',)
+        residual_model = np.load('model_weights/residual_model_' + loss + '_' + 
+                                 parameterization + '.npy',)
     if os.path.isfile(file) == False:
     
 
-        est = pd.read_pickle('model_weights/param' + parameterization + '_weighting_data.pkl')
+        est = pd.read_pickle('model_weights/param' + parameterization +
+                             '_' + loss +  '_weighting_data.pkl')
         model_list = []
         res_list = []
         pool_list = []
@@ -1073,12 +1111,12 @@ def compute_model_weights(parameterization, pth = '/home/prethicktor/data/'):
         architecture_weights['var_2'] = architecture_weights['std_2']**2
         architecture_weights['var_3'] = architecture_weights['std_3']**2
 
-        architecture_weights.to_pickle('model_weights/architecture_weights_' + 
+        architecture_weights.to_pickle('model_weights/architecture_weights_' + loss + '_' + 
                                        parameterization + '.pkl')
 #         residual_model.to_pickle('model_weights/residual_model_' + parameterization + '.pkl')
         
         np.save(
-            'model_weights/residual_model_' + parameterization,
+            'model_weights/residual_model_' + loss + '_' + parameterization,
             residual_model, 
             allow_pickle=True, 
             fix_imports=True)
@@ -1095,114 +1133,231 @@ def compute_model_weights(parameterization, pth = '/home/prethicktor/data/'):
 
 
 
-def calculate_RGI_thickness_statistics(architecture_weights, residual_model, model_statistics, parameterization, useMP = False):
+def calculate_RGI_thickness_statistics(
+    architecture_weights, residual_model, 
+    model_statistics, parameterization,  loss,
+    useMP = False
+):
     arch_list = model_statistics.sort_values('layer architecture')
     
-    aggregate_statistics(architecture_weights, residual_model, arch_list, parameterization, 
+    aggregate_statistics(architecture_weights, residual_model, arch_list, parameterization, loss,
                         useMP = useMP)
 
 
-
+# def agg_stats():
+#     df = pd.read_hdf(
+#         'predicted_thicknesses/compiled_raw_' + parameterization + '.h5',
+#         key = 'compiled_raw', mode = 'a'
+#     )    
+#     arch_list = df['layer architecture'].unique()
+#     model_list = []
+#     for i in range(0,25,1):
+#         model_list.append(str(i))
+    
+#     df = df.to_numpy()
+    
     
 def aggregate_statistics(
     architecture_weights, 
     residual_model, 
     arch_list, 
     parameterization, 
+    loss,
     verbose = True,
     useMP = False
 ):
     
-    print('Stacking estimates...')
-    compiled_raw = stack_predictions(parameterization, architecture_weights, arch_list)
-    print('Estimates stacked')
-    stacked_stats = np.array()
-    for this_rgi_id, obj in tqdm(compiled_raw): 
-                
-        predictions = np.array(obj[[
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-            '11','12','13','14','15','16','17','18','19','20','21',
-            '22','23','24',
-        ]])
+    final_pth  = ('predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
+                   loss + '_' + parameterization + '.pkl') 
+    if os.path.isfile(final_pth) == True:
+        print('Already done here')
+        pass
+    if os.path.isfile(final_pth) == False:       
+        if useMP == False:
+            print('Stacking estimates...')
+            _,compiled_raw = stack_predictions(
+                parameterization, architecture_weights, arch_list,loss
+            )
+            print('Estimates stacked')
+            stacked_stats = pd.DataFrame()
+            print('Applying weights...')
+            for this_rgi_id, obj in tqdm(compiled_raw): 
+                rgiid = np.array([this_rgi_id])
+                predictions = np.array(obj[[
+                    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+                    '11','12','13','14','15','16','17','18','19','20','21',
+                    '22','23','24',
+                ]])
 
-        aw = np.array(
-            [obj['aw_1'], obj['aw_2'], obj['aw_3'], obj['aw_4']]
-        )
-        
-        wt = weight_thicknesses(predictions, aw)
+                aw = np.array(
+                    [
+                        obj['aw_1'], 
+                        obj['aw_2'], 
+                        obj['aw_3'], 
+                        obj['aw_4']
+                    ]
+                )
+                wt = weight_thicknesses(predictions, aw)
+                gamma = np.array([
+                    obj['IQR_1'] / 1.34896, 
+                    obj['IQR_2'] / 1.34896, 
+                    obj['IQR_3'] / 1.34896, 
+                    obj['IQR_4'] / 1.34896
+                ])
 
-        gamma = np.array(
-            [data['IQR_1'] / 1.34896, 
-             data['IQR_2'] / 1.34896, 
-             data['IQR_3'] / 1.34896, 
-             data['IQR_4'] / 1.34896]
-        )
+        #         print(gamma)
+                bar_H = predictions.mean(axis = 1)
+                boot = predictions.var(axis = 1)
+
+                uwds, muwds, wds, wb  = estimate_uncertainties(gamma, bar_H, aw, boot)
+
+                wrc, wrc_unc = compute_residual_correction(wt,wds, bar_H, residual_model, gamma, aw)
+
+                gc = np.array([
+                    len(predictions.flatten())
+                ])
+                stats_table = pd.DataFrame(
+                    {'RGIId':[rgiid.flatten()], 'WT1':[wt[0]],'WT2':[wt[1]],'WT3':[wt[2]],
+                     'WT4':[wt[3]],
+                     'UWDS1':[uwds[0]],'UWDS2':[uwds[1]],'UWDS3':[uwds[2]],'UWDS4':[uwds[3]],
+                     'MUWDS1':[muwds[0]],'MUWDS2':[muwds[1]],'MUWDS3':[muwds[2]],'MUWDS4':[muwds[3]],
+                     'MUWDS5':[muwds[4]],
+                     'WDS1':[wds[0]],'WDS2':[wds[1]],'WDS3':[wds[2]],'WDS4':[wds[3]],
+                     'WB1':[wb[0]],'WB2':[wb[1]],'WB3':[wb[2]],'WB4':[wb[3]],
+                     'WRC1':[wrc[0]],'WRC2':[wrc[1]],'WRC3':[wrc[2]],'WRC4':[wrc[3]],
+                     'WRC_UNC1':[wrc_unc[0]],'WRC_UNC2':[wrc_unc[1]],'WRC_UNC3':[wrc_unc[2]],
+                     'WRC_UNC4':[wrc_unc[3]],'GC':[gc]
+                    })
+
+                stacked_stats = pd.concat((stacked_stats, stats_table), axis = 0)
+            stacked_stats.to_pickle(
+                'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
+                loss + '_' + parameterization + '.pkl'
+            ) 
+        if useMP == True:
+            crunch_numbers()
         
-        boot = predictions.var(axis = 1)
         
-        uwds, muwds, wds, wb  = estimate_uncertainties(gamma, bar_H, aw, boot)
         
-        wrc, wrc_unc = compute_residual_correction(bar_H, residual_model, gamma, aw)
         
-        gc = len(predictions.flatten())
-        
-        stats_table = np.concatenate(
-            (this_rgi_id, wt, uwds, muwds, wds, wb, wrc, wrc_unc, gc), axis = 1
-        )
-        stacked_stats = np.concatenate((stats_table, stacked_stats), axis = 0)
-    
-    stacked_stats.np.save(
+def crunch_numbers():
+    import multiprocessing as mp
+
+    print('loading df')
+    df = pd.read_hdf(
+        'predicted_thicknesses/compiled_raw_' + '4' + '.h5',
+        key = 'compiled_raw', mode = 'a'
+    )
+    # df_index_list = []
+    # for i in range(0, len(df), 3):
+    #     df_index_list.append(i)
+
+    # df = df.loc[
+    #     df_index_list
+    # ]
+
+    print('df loaded')
+
+    grp_lst_args = list(df.groupby('RGIId').groups.items())
+    print('df grouped')
+
+
+
+    model_list = []
+    for i in range(0,25,1):
+        model_list.append(str(i))
+
+
+
+    pool = mp.Pool(processes = (32))
+    for _ in tqdm(pool.imap_unordered(calc_dist2,grp_lst_args,df),total = len(grp_lst_args)):
+        pass
+    results = pool.map(calc_dist2, grp_lst_args)
+
+    pool.close()
+    pool.join()
+
+    stacked_stats = np.concatenate(results)
+    np.save(
         'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
-        parameterization + '.npy'
+        loss + '_' + parameterization + '.npy', stacked_stats
     ) 
+    print(stacked_stats)
 
-
-    
-    
-def crunch_numbers_2(arg):
+def calc_dist2(arg, df):
+    stacked_stats = np.empty(shape = [1,31])
     grp, lst = arg
-    dft = df[model_list].loc[lst]
-    
-    mean_thickness, mean_ci, var_ci = gl.calculate_confidence_intervals(predictions)
-    
-    
-    t1,lt1,ut1,t2,lt2,ut2,t3,lt3,ut3,t4,lt4,ut4 = gl.mean_weighter(architecture_weights)
-    return pd.DataFrame(
-           [ [grp,
-              t1,lt1,ut1,t2,lt2,ut2,t3,lt3,ut3,t4,lt4,ut4,
-#                   upper_thickness
+#     print('working on ' + grp)
+    dft = df.loc[lst]
+    aw = np.array(
+            [
+                dft['aw_1'], 
+                dft['aw_2'], 
+                dft['aw_3'], 
+                dft['aw_4']
+            ]
+        )
+    predictions = df[model_list].loc[lst].to_numpy()   
+    wt = gl.weight_thicknesses(predictions, aw)
 
-             ]
-           ],
-           columns=[
-               'RGIId','mean1','lower1','upper1',
-                       'mean2','lower2','upper2',
-                       'mean3','lower3','upper3',
-                       'mean4','lower4','upper4',
-           ])
+    gamma = np.array([
+        dft['IQR_1'] / 1.34896, 
+        dft['IQR_2'] / 1.34896, 
+        dft['IQR_3'] / 1.34896, 
+        dft['IQR_4'] / 1.34896
+    ])
+
+    bar_H = predictions.mean(axis = 1)
+    boot = predictions.var(axis = 1)
+
+    uwds, muwds, wds, wb  = gl.estimate_uncertainties(gamma, bar_H, aw, boot)
+    residual_model = np.load('model_weights/residual_model_' + parameterization + '.npy')
+
+    wrc, wrc_unc = gl.compute_residual_correction(wt,wds, bar_H, residual_model, gamma, aw)
+
+    gc = np.array([
+        [len(predictions.flatten())]
+    ])
+    prg = np.array([[grp]])
+    list_a = [prg, wt, uwds, muwds, wds, wb, wrc, wrc_unc, gc]
+
+
+
+    stats_table = np.concatenate(
+        (prg, wt, uwds, muwds, wds, wb, wrc, wrc_unc, gc), axis = 1
+    )
+    return stats_table
     
-
-
-
-def stack_predictions(parameterization, architecture_weights, arch_list):
-    pth = 'predicted_thicknesses/compiled_raw_' + parameterization + '.h5'   
+def stack_predictions(parameterization, architecture_weights, arch_list,loss):
+    pth = 'predicted_thicknesses/compiled_raw_' + loss + '_' + parameterization + '.h5'  
+    statistics = pd.DataFrame()
+    for file in (os.listdir('temp/')):
+        if 'statistics_' + loss + '_' +  parameterization in file:
+            file_reader = pd.read_pickle('temp/' + file)
+            statistics = pd.concat([statistics, file_reader], ignore_index = True)
     if os.path.isfile(pth) == True:
+        print('Loading df')
         df = pd.read_hdf(
-            'predicted_thicknesses/compiled_raw_' + parameterization + '.h5',
+            'predicted_thicknesses/compiled_raw_' + loss + '_' + parameterization + '.h5',
             key = 'compiled_raw', mode = 'a'
         )
-
+        df = pd.merge(df, statistics, on = 'layer architecture')
+        df = df[[
+                'layer architecture','RGIId','0', '1', '2', '3', '4',
+                '5', '6', '7', '8', '9','10',
+                '11','12','13','14','15','16','17','18','19','20','21',
+                '22','23','24'
+        ]]
+        df = pd.merge(df, architecture_weights, how = 'inner', on = 'layer architecture')
+        
+        
     if os.path.isfile(pth) == False:
+        print('Building df')
         df = pd.DataFrame(columns = [
                 'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
                 '11','12','13','14','15','16','17','18','19','20','21',
                 '22','23','24',
         ])
-    #     print('Architectures listed')
-
-
-#         print('Compiling predictions...')
-    #     print(arch_list)
         for arch in tqdm(arch_list['layer architecture'].unique()):
             df_glob = load_global_predictions(
                 parameterization = parameterization,
@@ -1210,11 +1365,6 @@ def stack_predictions(parameterization, architecture_weights, arch_list):
             )
 
             df = pd.concat([df,df_glob])
-#         statistics = pd.DataFrame()
-#         for file in (os.listdir('zults/')):
-#             if 'statistics_' + parameterization in file:
-#                 file_reader = pd.read_pickle('zults/' + file)
-#                 statistics = pd.concat([statistics, file_reader], ignore_index = True)
 
         df = pd.merge(df, statistics, on = 'layer architecture')
         df = df[[
@@ -1228,190 +1378,190 @@ def stack_predictions(parameterization, architecture_weights, arch_list):
 #         print('Grouping predictions')
 
         
-        df.to_hdf('predicted_thicknesses/compiled_raw_' + parameterization + '.h5', 
-                  key = 'compiled_raw', mode = 'a')
     compiled_raw = df.groupby('RGIId')[[
-            'layer architecture','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-            '11','12','13','14','15','16','17','18','19','20','21',
-            '22','23','24','aw_1','aw_2','aw_3','aw_4'
+        'layer architecture','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
+        '11','12','13','14','15','16','17','18','19','20','21',
+        '22','23','24','aw_1','aw_2','aw_3','aw_4','IQR_1','IQR_2','IQR_3','IQR_4'
     ]]
-    return compiled_raw
+
+    return df,compiled_raw
 
 
 
 def weight_thicknesses(predictions, aw):
-    bar_H = predictions.mean(axis = 1).to_numpy()
-
+    bar_H = predictions.mean(axis = 1)
     weighted_thicknesses = np.array([
-        sum( (bar_H) / (aw[:,0,:]) ) / sum(1/aw[:,0,:]),
-        sum( (bar_H) / (aw[:,1,:]) ) / sum(1/aw[:,1,:]),
-        sum( (bar_H) / (aw[:,2,:]) ) / sum(1/aw[:,2,:]),
-        sum( (bar_H) / (aw[:,3,:]) ) / sum(1/aw[:,3,:]),
+        sum( (bar_H) / (aw[:,:][0]) ) / sum(1/aw[:,:][0]),
+        sum( (bar_H) / (aw[:,:][1]) ) / sum(1/aw[:,:][1]),
+        sum( (bar_H) / (aw[:,:][2]) ) / sum(1/aw[:,:][2]),
+        sum( (bar_H) / (aw[:,:][3]) ) / sum(1/aw[:,:][3]),
 
-    ])
-    return wt
+    ]).T
+    return weighted_thicknesses
 
 
-def estimate_uncertainties(gamma, bar_H, aw):
+def estimate_uncertainties(gamma, bar_H, aw, boot):
     deviation_sigma = gamma * bar_H
 
     wds = np.array([
-        sum( (deviation_sigma[0])**2 / (aw[:,0,:]) ) / sum(1/aw[:,0,:]),
-        sum( (deviation_sigma[1])**2 / (aw[:,1,:]) ) / sum(1/aw[:,1,:]),
-        sum( (deviation_sigma[2])**2 / (aw[:,2,:]) ) / sum(1/aw[:,2,:]),
-        sum( (deviation_sigma[3])**2 / (aw[:,3,:]) ) / sum(1/aw[:,3,:]),
+        sum( (deviation_sigma[0])**2 / (aw[:,:][0]) ) / sum(1/aw[:,:][0]),
+        sum( (deviation_sigma[1])**2 / (aw[:,:][1]) ) / sum(1/aw[:,:][1]),
+        sum( (deviation_sigma[2])**2 / (aw[:,:][2]) ) / sum(1/aw[:,:][2]),
+        sum( (deviation_sigma[3])**2 / (aw[:,:][3]) ) / sum(1/aw[:,:][3]),
 
-    ])
-
-    uwds = 1 / sum(deviation_sigma**2)
-
+    ]).T
+#     print(wds)
+    uwds = np.array([
+       1 / sum(deviation_sigma[0]**2),
+       1 / sum(deviation_sigma[1]**2),
+       1 / sum(deviation_sigma[2]**2),
+       1 / sum(deviation_sigma[3]**2)
+        
+    ]).T
     muwds = np.array(
         [
             1 / sum(
-                1/((gamma[:,0,:][0:3] * bar_H[0:3])**2)
+                1/((gamma[0][0:3] * bar_H[0:3])**2)
             ),
             1 / sum(
-                1/((gamma[:,0,:][0:32] * bar_H[0:32])**2)
+                1/((gamma[0][0:32] * bar_H[0:32])**2)
             ),
             1 / sum(
-                1/((gamma[:,0,:][0:64] * bar_H[0:64])**2)
+                1/((gamma[0][0:64] * bar_H[0:64])**2)
             ),
             1 / sum(
-                1/((gamma[:,0,:][0:96] * bar_H[0:96])**2)
+                1/((gamma[0][0:96] * bar_H[0:96])**2)
             ),
             1 / sum(
-                1/((gamma[:,0,:][0:128] * bar_H[0:128])**2)
+                1/((gamma[0][0:128] * bar_H[0:128])**2)
             ),
         ]
-    )
-            
+    )  
     wb = np.array([
-        sum( (boot) / (aw[:,0,:]) ) / sum(1/aw[:,0,:]),
-        sum( (boot) / (aw[:,1,:]) ) / sum(1/aw[:,1,:]),
-        sum( (boot) / (aw[:,2,:]) ) / sum(1/aw[:,2,:]),
-        sum( (boot) / (aw[:,3,:]) ) / sum(1/aw[:,3,:]),
+        sum( (boot) / (aw[:,:][0]) ) / sum(1/aw[:,:][0]),
+        sum( (boot) / (aw[:,:][1]) ) / sum(1/aw[:,:][1]),
+        sum( (boot) / (aw[:,:][2]) ) / sum(1/aw[:,:][2]),
+        sum( (boot) / (aw[:,:][3]) ) / sum(1/aw[:,:][3]),
 
     ])
+    return uwds, muwds, wds, wb
 
-
-    return wds, uwds, muwds, wb
-
-def compute_residual_correction(bar_H, residual_model, gamma, aw):
+def compute_residual_correction(wt,wds, bar_H, residual_model, gamma, aw):
+    
     rc = residual_model[0]*bar_H**2 + residual_model[1]*bar_H + residual_model[2]
     wrc = np.array(
         [
-            sum(rc / aw[:,0,:]) / sum(1/aw[:,0,:]),
-            sum(rc / aw[:,1,:]) / sum(1/aw[:,1,:]),
-            sum(rc / aw[:,2,:]) / sum(1/aw[:,2,:]),
-            sum(rc / aw[:,3,:]) / sum(1/aw[:,3,:]),
+            sum(rc / aw[:,:][0]) / sum(1/aw[:,:][0]),
+            sum(rc / aw[:,:][1]) / sum(1/aw[:,:][1]),
+            sum(rc / aw[:,:][2]) / sum(1/aw[:,:][2]),
+            sum(rc / aw[:,:][3]) / sum(1/aw[:,:][3]),
 
         ]
     )
 
     sigma_rc = np.array([
-        gamma[0] * rc,
-        gamma[1] * rc,
-        gamma[2] * rc,
-        gamma[3] * rc,
+        gamma[0] * rc[0],
+        gamma[1] * rc[1],
+        gamma[2] * rc[2],
+        gamma[3] * rc[3],
     ])
-
     wrc_unc = np.array([
-        sum(sigma_rc**2 / aw[:,0,:]) / sum(1/aw[:,0,:]),
-        sum(sigma_rc**2 / aw[:,1,:]) / sum(1/aw[:,1,:]),
-        sum(sigma_rc**2 / aw[:,2,:]) / sum(1/aw[:,2,:]),
-        sum(sigma_rc**2 / aw[:,3,:]) / sum(1/aw[:,3,:]),
+        sum(sigma_rc[0]**2 / aw[:,:][0]) / sum(1/aw[:,:][0]),
+        sum(sigma_rc[1]**2 / aw[:,:][1]) / sum(1/aw[:,:][1]),
+        sum(sigma_rc[2]**2 / aw[:,:][2]) / sum(1/aw[:,:][2]),
+        sum(sigma_rc[3]**2 / aw[:,:][3]) / sum(1/aw[:,:][3])
     ])
+    
 
 
+    wrc[np.where(wrc <= 0)] =  (-1 * wrc[np.where(wrc <= 0)]) + wt[np.where(wrc <= 0)]
+    wrc_unc[np.where(wrc <= 0)]  = wrc_unc[np.where(wrc <= 0)] 
 
-    if weighted_rec <= 0:
-        corrected_thickness = weighted_thickness - weighted_rc
-        corrected_thickness_unc = weighted_residual_uncertainty
+#     print(wds)
+#     print(wrc)
+    wrc[np.where(wrc > 0)] =  0 + wt[np.where(wrc > 0)]
 
+    wrc_unc[np.where(wrc > 0)] = 0 + wds[np.where(wrc > 0)] 
 
-    if weighted_rc > 0:
-        corrected_thickness = weighted_thickness
-        corrected_thickness_unc = weighted_deviation
-        
     return wrc, wrc_unc
 
     
 
-def ci__weighter(mean_thickness, mean_ci, var, var_ci, parameterization = '4'):
-    weights = np.load(
-        'model_weights/architecture_weights_' + parameterization +'.pkl', allow_pickle = True
-    )
-    weight1 = weights['aw_1']
-    weight2 = weights['aw_2']
-    weight3 = weights['aw_3']
-    weight4 = weights['aw_4']
-    weights_1 = np.tile(weights['aw_1'], (2,1)).T
-    weights_2 = np.tile(weights['aw_2'], (2,1)).T
-    weights_3 = np.tile(weights['aw_3'], (2,1)).T
-    weights_4 = np.tile(weights['aw_4'], (2,1)).T
-    t = np.array(
-        [
-            (sum(mean_thickness/weight1) / sum(1/weight1)),
-            (sum(mean_thickness/weight2) / sum(1/weight2)),
-            (sum(mean_thickness/weight3) / sum(1/weight3)),
-            (sum(mean_thickness/weight4) / sum(1/weight4)),
-        ]
-    )
-    tu = np.array(
-        [
-            (sum(mean_ci/weights_1) / sum(1/weights_1)),
-            (sum(mean_ci/weights_2) / sum(1/weights_2)),
-            (sum(mean_ci/weights_3) / sum(1/weights_3)),
-            (sum(mean_ci/weights_4) / sum(1/weights_4))
-        ]
-    )
+# def ci__weighter(mean_thickness, mean_ci, var, var_ci, parameterization = '4'):
+#     weights = np.load(
+#         'model_weights/architecture_weights_' + parameterization +'.pkl', allow_pickle = True
+#     )
+#     weight1 = weights['aw_1']
+#     weight2 = weights['aw_2']
+#     weight3 = weights['aw_3']
+#     weight4 = weights['aw_4']
+#     weights_1 = np.tile(weights['aw_1'], (2,1)).T
+#     weights_2 = np.tile(weights['aw_2'], (2,1)).T
+#     weights_3 = np.tile(weights['aw_3'], (2,1)).T
+#     weights_4 = np.tile(weights['aw_4'], (2,1)).T
+#     t = np.array(
+#         [
+#             (sum(mean_thickness/weight1) / sum(1/weight1)),
+#             (sum(mean_thickness/weight2) / sum(1/weight2)),
+#             (sum(mean_thickness/weight3) / sum(1/weight3)),
+#             (sum(mean_thickness/weight4) / sum(1/weight4)),
+#         ]
+#     )
+#     tu = np.array(
+#         [
+#             (sum(mean_ci/weights_1) / sum(1/weights_1)),
+#             (sum(mean_ci/weights_2) / sum(1/weights_2)),
+#             (sum(mean_ci/weights_3) / sum(1/weights_3)),
+#             (sum(mean_ci/weights_4) / sum(1/weights_4))
+#         ]
+#     )
     
-    return t,tu
+#     return t,tu
 
 
 
-def calculate_confidence_intervals(predictions):
-    mean = []
-    mean_ci = []
-    mean_ci_width = []
+# def calculate_confidence_intervals(predictions):
+#     mean = []
+#     mean_ci = []
+#     mean_ci_width = []
 
-    var = []
-    var_ci = []
-    var_ci_width = []
+#     var = []
+#     var_ci = []
+#     var_ci_width = []
 
-    std = []
-    std_ci = []
-    std_ci_width = []
-    for i in range(0,161,1):
-    #     print(pr[i][:])
-    #     break
-        mean_i, var_i, std_i = st.bayes_mvs(np.array(predictions)[i][:], alpha=0.95)
+#     std = []
+#     std_ci = []
+#     std_ci_width = []
+#     for i in range(0,161,1):
+#     #     print(pr[i][:])
+#     #     break
+#         mean_i, var_i, std_i = st.bayes_mvs(np.array(predictions)[i][:], alpha=0.95)
 
 
-        mean_i_width = mean_i[1][1] - mean_i[1][0]
-        std_i_width = std_i[1][1] - std_i[1][0]
-        var_i_width = var_i[1][1] - var_i[1][0]
+#         mean_i_width = mean_i[1][1] - mean_i[1][0]
+#         std_i_width = std_i[1][1] - std_i[1][0]
+#         var_i_width = var_i[1][1] - var_i[1][0]
 
-        mean.append(mean_i[0])
-        mean_ci.append(mean_i[1])
-        mean_ci_width.append(mean_i_width)
+#         mean.append(mean_i[0])
+#         mean_ci.append(mean_i[1])
+#         mean_ci_width.append(mean_i_width)
 
-        std.append(std_i[0])
-        std_ci.append(std_i[1])
-        std_ci_width.append(std_i_width)
+#         std.append(std_i[0])
+#         std_ci.append(std_i[1])
+#         std_ci_width.append(std_i_width)
 
-        var.append(var_i[0])
-        var_ci.append(var_i[1])
-        var_ci_width.append(var_i_width)
+#         var.append(var_i[0])
+#         var_ci.append(var_i[1])
+#         var_ci_width.append(var_i_width)
         
-    return mean, mean_ci, var, var_ci
+#     return mean, mean_ci, var, var_ci
 
 '''
 '''
 def list_architectures(
     parameterization = '1'
 ):
-    root_dir = 'zults/'
+    root_dir = 'temp/'
     arch_list = pd.DataFrame()
     for file in (os.listdir(root_dir)):
         
@@ -1435,14 +1585,17 @@ def list_architectures(
 
 def load_global_predictions(
     parameterization,
+    loss,
+
     architecture,
+    pth = 'temp/'
 ):
     
 #     print(architecture)
-    root_dir = 'zults/'
+    root_dir = pth
     for file in (os.listdir(root_dir)):
             # print(file)
-        if ('RGI_predicted_' + parameterization + '_' + architecture in file):
+        if ('RGI_predicted_' + loss + '_' + parameterization + '_' + architecture in file):
             RGI_predicted = pd.read_pickle(root_dir + file)
 
             RGI_predicted['layer architecture'] = architecture
@@ -1455,47 +1608,29 @@ def load_global_predictions(
 
 
 def load_notebook_data(
-    parameterization = '1', pth = ''
+    parameterization = '1',loss = 'first', pth = ''
 ):
-    df = pd.DataFrame(np.load(
+    df = pd.read_pickle(
             pth + 'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_'+
-            parameterization + '.npy'
-    ))
-    
+            loss +  '_' + parameterization + '.pkl'
+    )
+    df['RGIId'] = df['RGIId'].str[0]
+    df['GC'] = df['GC'].str[0]
+#     print(df)
     df = df.rename(
         columns = {
-            0:'RGIId',
-            1:'WT1',
-            2:'WT2',
-            3:'WT3',
-            4:'WT4',
-            5:'UWDS1',
-            6:'UWDS2',
-            7:'UWDS3',
-            8:'UWDS4',
-            9:'MUWDS1',
-            10:'MUWDS2',
-            11:'MUWDS3',
-            12:'MUWDS4',
-            13:'WDS1',
-            14:'WDS2',
-            15:'WDS3',
-            16:'WDS4',
-            17:'WB1',
-            18:'WB2',
-            19:'WB3',
-            20:'WB4',
-            21:'WRC1',
-            22:'WRC2',
-            23:'WRC3',
-            24:'WRC4',
-            25:'WRC_UNC1',
-            26:'WRC_UNC2',
-            27:'WRC_UNC3',
-            28:'WRC_UNC4',
-            29:'est count'
+            0:'RGIId', 1:'WT1', 2:'WT2', 3:'WT3', 4:'WT4', 5:'UWDS1', 6:'UWDS2', 7:'UWDS3',8:'UWDS4',
+            9:'MUWDS1', 10:'MUWDS2', 11:'MUWDS3', 12:'MUWDS4', 13:'MUWDS5',
+            14:'WDS1', 15:'WDS2', 16:'WDS3', 17:'WDS4', 18:'WB1', 19:'WB2', 20:'WB3', 21:'WB4',
+            22:'WRC1', 23:'WRC2', 24:'WRC3', 25:'WRC4',
+            26:'WRC_UNC1', 27:'WRC_UNC2', 28:'WRC_UNC3', 29:'WRC_UNC4',
+            30:'GC'
         }
     )
+    df = df.reset_index()
+    df = df.drop('index', axis = 1)
+
+    
     
     
     df['region'] = df['RGIId'].str[6:8]
@@ -1534,31 +1669,35 @@ def load_notebook_data(
     ref['region'] = ref['RGIId'].str[6:8]
     ref = ref.sort_values('RGIId')
 
-    ref['Farinotti Volume (km3)'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
+#     ref['Farinotti Volume (km3)'] = (ref['Farinotti Mean Thickness'] / 1e3 )* ref['Area']
 
     ref['region'] = ref['RGIId'].str[6:8]
 #     ref = ref.dropna(subset = ['Farinotti Mean Thickness'])
 #     print(ref)
     ref = ref.rename(columns = {
-         'Mean Thickness':'Farinotti Mean Thickness',
-         'Shapiro-Wilk statistic':'Farinotti Shapiro-Wilk statistic',
-         'Shapiro-Wilk p_value':'Farinotti Shapiro-Wilk p_value',
-         'Median Thickness':'Farinotti Median Thickness',
-         'Thickness STD':'Farinotti Thickness STD',
-         'Skew':'Farinotti Skew',
+         'Farinotti Mean Thickness':'FMT',
+#          'Shapiro-Wilk statistic':'FSW stat',
+#          'Shapiro-Wilk p_value':'FSW p',
+#          'Farinotti Mean Thickness':'FMT',
+#          'Median Thickness':'Farinotti Median Thickness',
+#          'Thickness STD':'Farinotti Thickness STD',
+#          'Skew':'Farinotti Skew',
 #          'Farinotti Volume (km3)'
     })
 #     print(ref)
     ref = ref[[
-         'Farinotti Mean Thickness',
-         'Farinotti Shapiro-Wilk statistic',
-         'Farinotti Shapiro-Wilk p_value',
-         'Farinotti Median Thickness',
-         'Farinotti Thickness STD',
-         'Farinotti Skew',
+         'FMT',
+#          'FSW stat',
+#          'FSW p',
+#          'FMT',
+#          'Farinotti Median Thickness',
+#          'Farinotti Thickness STD',
+#          'Farinotti Skew',
          'RGIId',
-         'Farinotti Volume (km3)'
+#          'Farinotti Volume (km3)'
     ]]
+#     print(ref)
+
     df = df[[
          'RGIId',
          'WT1',
@@ -1573,6 +1712,7 @@ def load_notebook_data(
          'MUWDS2',
          'MUWDS3',
          'MUWDS4',
+         'MUWDS5',
          'WDS1',
          'WDS2',
          'WDS3',
@@ -1589,7 +1729,7 @@ def load_notebook_data(
          'WRC_UNC2',
          'WRC_UNC3',
          'WRC_UNC4',
-         'est count'
+         'GC',
          'region',
          'CenLat',
          'CenLon',
@@ -1603,7 +1743,42 @@ def load_notebook_data(
     ]]
     
     df = pd.merge(df, ref, on = 'RGIId', how = 'inner')
+#     print(df)
+    number_list = []
+    item_list = ['WRC_UNC','WDS','WB','UWDS','MUWDS']
+    column_list = []
+    for k in range(1,5,1):
+        number_list.append(k)
+    for item in item_list:
+        for k in number_list:
+            column_string = item + str(k)
+            column_list.append(column_string)
 
+    col_string1 = item + str(5)
+    column_list.append(col_string1)
+    
+    df[column_list] = np.sqrt(df[column_list])
+    
+    
+    
+    rounding_list = []
+    item_list = ['WT','WRC','WRC_UNC','WDS','WB','UWDS','MUWDS']
+    column_list = []
+    for k in range(1,5,1):
+        rounding_list.append(k)
+    for item in item_list:
+        for k in rounding_list:
+            column_string = item + str(k)
+            column_list.append(column_string)
+
+    col_string1 = item + str(5)
+    col_string2 = 'FMT'
+    column_list.append(col_string1)
+    column_list.append(col_string2)
+    
+    df[column_list] = np.round(df[column_list], 0)
+    df['FMT'][df['FMT'] ==0] = 0.1
+    
     return df
 
 
@@ -1613,7 +1788,7 @@ def assign_arrays(
     size_thresh_1 = 1e-5, size_thresh_2 = 1e4,
     new_data = True
 ):
-    data = load_notebook_data(parameterization)
+    data = load_notebook_data(parameterization, loss)
     data = data.dropna(subset = 'Farinotti Mean Thickness')
 
 
