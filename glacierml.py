@@ -368,7 +368,7 @@ output = dataframe and series randomly selected and populated as either training
 # Randomly selects data from a df for a given random state (usually iterated over a range of 25)
 # Necessary variables for training and predictions
 def split_data(df, random_state = 0):
-    train_dataset = df.sample(frac=0.7, random_state=random_state)
+    train_dataset = df.sample(frac=0.8, random_state=random_state)
     test_dataset = df.drop(train_dataset.index)
 
     train_features = train_dataset.copy()
@@ -492,35 +492,135 @@ build_and_train_model
 input = dataset, desired: learning rate, validation split, epochs, random state. module and res are defined as inputs when run and determine where data is saved.
 output = saved weights for trained model and model results saved as a csv
 '''
-
 def build_and_train_model(
     dataset,
+    rs,
     loss = 'mse',
     parameterization = '4',
     layer_1 = 10,
     layer_2 = 5,
-    random_state = 0,
+    
     dropout = True,
     verbose = False,
     writeToFile = True,
                          ):
     # define paths
     arch = str(layer_1) + '-' + str(layer_2)
-    
-    model_pth = 'saved_models/' + loss+ '_' + parameterization + '/'
-    results_pth = 'saved_results/' + loss+ '_' + parameterization + '/'
-    
+
     svd_mod_pth = 'saved_models/' + loss+ '_' + parameterization + '/' + arch + '/'
     svd_res_pth = 'saved_results/' + loss + '_' + parameterization + '/' + arch + '/'
 
     # code snippet to make folders for saved models and results if they do not already exist
 
-    isdir = os.path.isdir(model_pth)
+
+    isdir = os.path.isdir(svd_mod_pth)
     if isdir == False:
-        os.makedirs(model_pth)
-    isdir = os.path.isdir(results_pth)
+        os.makedirs(svd_mod_pth)
+    isdir = os.path.isdir(svd_res_pth)
     if isdir == False:
-        os.makedirs(results_pth)
+        os.makedirs(svd_res_pth)
+        
+
+
+
+#     split data
+    (
+        train_features, test_features, train_labels, test_labels
+    ) = split_data(dataset, random_state = rs)
+
+    normalizer = {}
+    variable_list = list(train_features)
+    for variable_name in variable_list:
+        normalizer[variable_name] = preprocessing.Normalization(input_shape=[1,], axis=None)
+        normalizer[variable_name].adapt(np.array(train_features[variable_name]))
+
+    normalizer['ALL'] = preprocessing.Normalization(axis=-1)
+    normalizer['ALL'].adapt(np.array(train_features))
+
+#      DNN model
+    dnn_model = {}
+    model = {}
+    model_history = {}
+
+    
+    # set up model with  normalized data and defined layer architecture
+
+    
+    model = build_dnn_model(
+        normalizer['ALL'], 0.01, layer_1, layer_2,loss = loss
+    )
+
+    # set up callback function to cut off training when performance reaches peak
+    callback = tf.keras.callbacks.EarlyStopping(
+        monitor = 'val_loss',
+        min_delta = 0.001,
+        patience = 10,
+        verbose = 0,
+        mode = 'auto',
+        baseline = None,
+        restore_best_weights = True
+    )
+
+    # train model on previously selected and splitdata
+    model_history = model.fit(
+        train_features,
+        train_labels,
+        validation_split=0.2,
+        callbacks = [callback],
+        verbose=0, 
+        epochs=2000
+    )
+    df = pd.DataFrame(model_history.history)
+
+    if writeToFile:
+
+
+
+        history_filename = (
+            svd_res_pth +
+            str(rs)
+        )
+
+
+        df.to_pickle(  history_filename + '.pkl' )
+
+
+        model_filename =  (
+            svd_mod_pth + 
+            str(rs)
+        )
+
+
+        model.save(  model_filename  )
+#         return history_filename, model_filename
+    
+    else:
+        return model, df, normalizer
+
+
+
+
+def build_and_train_folded_model(
+    dataset,
+    k,
+    loss = 'mse',
+    parameterization = '4',
+    layer_1 = 10,
+    layer_2 = 5,
+    random_state = 3,
+    dropout = True,
+    verbose = False,
+    writeToFile = True,
+                         ):
+    # define paths
+    arch = str(layer_1) + '-' + str(layer_2)
+
+    svd_mod_pth = 'saved_models/xval_' + loss+ '_' + parameterization + '/' + arch + '/'
+    svd_res_pth = 'saved_results/xval_' + loss + '_' + parameterization + '/' + arch + '/'
+
+    # code snippet to make folders for saved models and results if they do not already exist
+
+
     isdir = os.path.isdir(svd_mod_pth)
     if isdir == False:
         os.makedirs(svd_mod_pth)
@@ -580,14 +680,13 @@ def build_and_train_model(
     )
     df = pd.DataFrame(model_history.history)
 
-
     if writeToFile:
 
 
 
         history_filename = (
             svd_res_pth +
-            str(random_state)
+            str(k)
         )
 
 
@@ -596,12 +695,11 @@ def build_and_train_model(
 
         model_filename =  (
             svd_mod_pth + 
-            str(random_state)
+            str(k)
         )
 
 
         model.save(  model_filename  )
-
 #         return history_filename, model_filename
     
     else:
@@ -624,12 +722,9 @@ def load_dnn_model(
 '''
 Workflow functions
 '''
-
-
-
 def build_model_ensemble(
-    data, parameterization, verbose = True
-):
+    data, parameterization, loss, verbose = True
+): 
     
     
     
@@ -638,124 +733,229 @@ def build_model_ensemble(
     print(data)
     layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-    loss_functions = ['mse','mae']
-    for loss in loss_functions:
-        for layer_2_input in (layer_2_list):
-            for layer_1_input in (layer_1_list):
-                if layer_1_input <= layer_2_input:
+#     loss_functions = ['mse','mae']
+#     for loss in loss_functions:
+    for layer_2_input in (layer_2_list):
+        for layer_1_input in (layer_1_list):
+            if layer_1_input <= layer_2_input:
+                pass
+            elif layer_1_input > layer_2_input:
+
+                arch = str(layer_1_input) + '-' + str(layer_2_input)
+                dropout = True
+                print(
+                    'Running regression with parameterization ' + 
+                    str(parameterization) + 
+                    ', loss = ' + loss + 
+                    ', architecture = ' + arch 
+                     )
+
+                for rs in tqdm(RS):
+                    isdir = (
+                        'saved_models/' + loss+ '_' + parameterization + 
+                        '/' + arch + '/' + str(rs) + '/'
+                    )
+                    if os.path.isdir(isdir) == True:
+                        pass
+                    elif os.path.isdir(isdir) == False:
+
+                        build_and_train_model(
+
+                            data, 
+                            rs,
+                            loss,
+                            parameterization = parameterization, 
+                    #                             res = parameterization,
+                            layer_1 = layer_1_input,
+                            layer_2 = layer_2_input,
+    #                         random_state = rs, 
+
+                        ) 
+
+
+def build_folded_model_ensemble(
+    data, parameterization, loss,k, verbose = True
+): 
+    
+    
+    
+    # build models
+#     RS = range(0,25,1)
+    print(data)
+    layer_1_list = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+    layer_2_list = [2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+#     loss_functions = ['mse','mae']
+#     for loss in loss_functions:
+    for layer_2_input in (layer_2_list):
+        for layer_1_input in (layer_1_list):
+            if layer_1_input <= layer_2_input:
+                pass
+            elif layer_1_input > layer_2_input:
+
+                arch = str(layer_1_input) + '-' + str(layer_2_input)
+                dropout = True
+                print(
+                    'Running regression with parameterization ' + 
+                    str(parameterization) + 
+                    ', loss = ' + loss + ', K* = ' + k +
+                    ', architecture = ' + arch 
+                     )
+
+#                 for rs in tqdm(RS):
+                isdir = (
+                    'saved_models/xval_' + loss+ '_' + parameterization + 
+                    '/' + arch + '/' + str(k) + '/'
+                )
+                if os.path.isdir(isdir) == True:
                     pass
-                elif layer_1_input > layer_2_input:
+                elif os.path.isdir(isdir) == False:
 
-                    arch = str(layer_1_input) + '-' + str(layer_2_input)
-                    dropout = True
-                    print(
-                        'Running regression with parameterization ' + 
-                        str(parameterization) + 
-                        ', layer architecture = ' +
-                        arch + ' compiled using ' + loss
-                         )
+                    build_and_train_folded_model(
 
-                    for rs in tqdm(RS):
-                        isdir = (
-                            'saved_models/' + loss+ '_' + parameterization + 
-                            '/' + arch + '/' + str(rs) + '/'
-                        )
-                        if os.path.isdir(isdir) == True:
-                            pass
-                        elif os.path.isdir(isdir) == False:
+                        data, 
+                        k,
+                        loss,
+                        parameterization = parameterization, 
+                #                             res = parameterization,
+                        layer_1 = layer_1_input,
+                        layer_2 = layer_2_input,
+#                         random_state = rs, 
 
-                            build_and_train_model(
-
-                                data, 
-                                loss,
-                                parameterization = parameterization, 
-                        #                             res = parameterization,
-                                layer_1 = layer_1_input,
-                                layer_2 = layer_2_input,
-                                random_state = rs, 
-
-                            )  
-
-                    
-def assess_model_performance(data, parameterization = '1'):
-    rootdirs = [
-        'saved_models/mse_' + parameterization + '/', 
-        'saved_models/mae_' + parameterization + '/'
-    ]
+                    )  
+def assess_model_performance(data, loss,parameterization = '1'):
+#     rootdirs = [
+#         'saved_models/xval' + parameterization + '/', 
+#         'saved_models/mae_' + parameterization + '/'
+#     ]
+    print(data)
+    rootdir = 'saved_models/' +  loss + '_' + parameterization + '/'
 
     print('loading and evaluating models...')
 
-    for rootdir in rootdirs:
-        
-        if 'mse' in rootdir:
-            loss = 'mse'
-        if 'mae' in rootdir:
-            loss = 'mae'
-        
-#         is
-        
-        mp = pd.DataFrame()
-        ms = pd.DataFrame()
+    mp = pd.DataFrame()
+    ms = pd.DataFrame()
 
-        mod_stats = 'temp/model_statistics_' + loss + '_' + parameterization + '.pkl'
-        mod_preds = 'temp/model_predictions_' + loss + '_' + parameterization  +  '.pkl'
+    mod_stats = 'temp/model_statistics_'  + loss + '_' + parameterization + '.pkl'
+    mod_preds = 'temp/model_predictions_' + loss + '_' + parameterization  +  '.pkl'
 
 
-        if os.path.isfile(mod_stats) == True and os.path.isfile(mod_preds) == True:
-            print('Models evaluated, moving on')
-            pass
+    if os.path.isfile(mod_stats) == True and os.path.isfile(mod_preds) == True:
+        print('Models evaluated, moving on')
+        pass
 
-        elif os.path.isfile(mod_stats) == False or os.path.isfile(mod_preds) == False:
-            for arch in tqdm(os.listdir(rootdir)):       
-                pth = os.path.join(rootdir, arch)
-                for folder in (os.listdir(pth)):
-                    model_loc = (
-                        rootdir + 
-                        arch + 
-                        '/' + 
-                        folder
-                    )
-                    model_name = folder
-                    dnn_model = load_dnn_model(model_loc)
-                    df = evaluate_model(
-                        arch, model_name, data, dnn_model, parameterization, loss
-                    )
-
-                    mp = pd.concat([mp, df], ignore_index = True)
-            mp.rename(columns = {0:'avg train thickness'},inplace = True)
-            mp.to_pickle(
-                'temp/model_predictions_' + loss + '_' + parameterization  +  '.pkl'
-            )
-            ms = pd.DataFrame()
-            for arch in mp['layer architecture'].unique():
-                dft = mp[mp['layer architecture'] == arch]
-                ms_temp = pd.DataFrame(
-                    {
-                        'layer architecture':[dft['layer architecture'].iloc[-1]],
-                        'loss':[dft['loss'].iloc[-1]],
-                        'train loss avg':[np.mean(dft['train loss'])],
-                        'test loss avg':[np.mean(dft['test loss'])],
-                        'parameters':[dft['total parameters'].iloc[-1]],
-                        'inputs':[(len(data) * (len(data.columns) -1))],
-                        'trained parameters':[dft['total parameters'].iloc[-1] - (
-                            len(data.columns) + (len(data.columns) - 1)
-                        )]
-
-                    }
+    elif os.path.isfile(mod_stats) == False or os.path.isfile(mod_preds) == False:
+        for arch in tqdm(os.listdir(rootdir)):       
+            pth = os.path.join(rootdir, arch)
+            for folder in (os.listdir(pth)):
+                model_loc = (
+                    rootdir + 
+                    arch + 
+                    '/' + 
+                    folder
                 )
-                ms = pd.concat([ms, ms_temp])
-            ms.to_pickle(
-                'temp/model_statistics_' + loss + '_' +
-                parameterization + 
-                '.pkl'
+                model_name = folder
+                dnn_model = load_dnn_model(model_loc)
+                df = evaluate_model(
+                    arch, model_name, data, dnn_model, parameterization, loss
+                )
+
+                mp = pd.concat([mp, df], ignore_index = True)
+        mp.rename(columns = {0:'avg train thickness'},inplace = True)
+        mp.to_pickle(
+            'temp/model_predictions_' + loss + '_' + parameterization  +  '.pkl'
+        )
+        ms = pd.DataFrame()
+        for arch in mp['layer architecture'].unique():
+            dft = mp[mp['layer architecture'] == arch]
+            ms_temp = pd.DataFrame(
+                {
+                    'layer architecture':[dft['layer architecture'].iloc[-1]],
+                    'loss':[dft['loss'].iloc[-1]],
+                    'loss avg':[np.mean(dft['loss score'])],
+#                     'test loss avg':[np.mean(dft['test loss'])],
+                    'parameters':[dft['total parameters'].iloc[-1]],
+                    'inputs':[(len(data) * (len(data.columns) -1))],
+                    'trained parameters':[dft['total parameters'].iloc[-1] - (
+                        len(data.columns) + (len(data.columns) - 1)
+                    )]
+
+                }
             )
+            ms = pd.concat([ms, ms_temp])
+        ms.to_pickle(
+            'temp/model_statistics_' + loss + '_' +
+            parameterization + 
+            '.pkl'
+        )
+                    
+def assess_folded_model_performance(data, k, loss,parameterization = '1'):
+#     rootdirs = [
+#         'saved_models/xval' + parameterization + '/', 
+#         'saved_models/mae_' + parameterization + '/'
+#     ]
+    print(data)
+    rootdir = 'saved_models/xval_' +  loss + '_' + parameterization + '/'
+
+    print('loading and evaluating models...')
+
+    mp = pd.DataFrame()
+    ms = pd.DataFrame()
+
+    mod_stats = 'temp/model_statistics_xval_'+k+'_'  + loss + '_' + parameterization + '.pkl'
+    mod_preds = 'temp/model_predictions_xval_' +k+ '_'+ loss + '_' + parameterization  +  '.pkl'
 
 
-        
+    if os.path.isfile(mod_stats) == True and os.path.isfile(mod_preds) == True:
+        print('Models evaluated, moving on')
+        pass
+
+    elif os.path.isfile(mod_stats) == False or os.path.isfile(mod_preds) == False:
+        for arch in tqdm(os.listdir(rootdir)):       
+            pth = os.path.join(rootdir, arch)
+            for folder in (os.listdir(pth)):
+                model_loc = (
+                    rootdir + 
+                    arch + 
+                    '/' + 
+                    folder
+                )
+                model_name = folder
+                dnn_model = load_dnn_model(model_loc)
+                df = evaluate_model(
+                    arch, model_name, data, dnn_model, parameterization, loss
+                )
+
+                mp = pd.concat([mp, df], ignore_index = True)
+        mp.rename(columns = {0:'avg train thickness'},inplace = True)
+        mp.to_pickle(
+            'temp/model_predictions_xval_' + loss + '_' + parameterization  +  '.pkl'
+        )
+        ms = pd.DataFrame()
+        for arch in mp['layer architecture'].unique():
+            dft = mp[mp['layer architecture'] == arch]
+            ms_temp = pd.DataFrame(
+                {
+                    'layer architecture':[dft['layer architecture'].iloc[-1]],
+                    'loss':[dft['loss'].iloc[-1]],
+                    'loss avg':[np.mean(dft['loss score'])],
+#                     'test loss avg':[np.mean(dft['test loss'])],
+                    'parameters':[dft['total parameters'].iloc[-1]],
+                    'inputs':[(len(data) * (len(data.columns) -1))],
+                    'trained parameters':[dft['total parameters'].iloc[-1] - (
+                        len(data.columns) + (len(data.columns) - 1)
+                    )]
+
+                }
+            )
+            ms = pd.concat([ms, ms_temp])
+        ms.to_pickle(
+            'temp/model_statistics_xval_' +k+'_' + loss + '_' +
+            parameterization + 
+            '.pkl'
+        )
 
 def evaluate_model(
     arch,
-    rs,
     data,
     dnn_model,
     parameterization,
@@ -763,30 +963,19 @@ def evaluate_model(
 
 ):
 
-    (
-        train_features, test_features, train_labels, test_labels
-    ) = split_data(
-        data, random_state = int(rs)
+    features = data.drop('Thickness',axis = 1)
+    labels = data['Thickness']
+    loss_score = dnn_model.evaluate(
+        features, labels, verbose = 0
     )
     
-    features = pd.concat([train_features,test_features], ignore_index = True)
-    labels = pd.concat([train_labels, test_labels], ignore_index = True)
-    
-
-    loss_train = dnn_model.evaluate(
-        train_features, train_labels, verbose=0
-    )
-    loss_test = dnn_model.evaluate(
-        test_features, test_labels, verbose=0
-    )    
-
 
     df = features
-    thicknesses = (dnn_model.predict(features, verbose = 0).flatten())
-    df['model'] = rs
+    thicknesses = (dnn_model.predict(data.drop('Thickness',axis = 1), verbose = 0).flatten())
     df['loss'] = loss
-    df['test loss'] = loss_test
-    df['train loss'] = loss_train
+    df['loss score'] = loss_score
+#     df['test loss'] = loss_test
+#     df['train loss'] = loss_train
     df['layer architecture'] = str(arch)
     df['parameterization'] = parameterization
     df['total parameters'] = dnn_model.count_params() 
@@ -800,7 +989,47 @@ def evaluate_model(
         len(data.columns) + (len(data.columns) - 1)
     )
 
-#     df['total inputs'] = 
+
+    return df
+        
+
+def evaluate_folded_model(
+    arch,
+    k,
+    data,
+    dnn_model,
+    parameterization,
+    loss,
+
+):
+
+    features = data.drop('Thickness',axis = 1)
+    labels = data['Thickness']
+    loss_score = dnn_model.evaluate(
+        features, labels, verbose = 0
+    )
+    
+
+    df = features
+    thicknesses = (dnn_model.predict(data.drop('Thickness',axis = 1), verbose = 0).flatten())
+    df['model'] = k
+    df['loss'] = loss
+    df['loss score'] = loss_score
+#     df['test loss'] = loss_test
+#     df['train loss'] = loss_train
+    df['layer architecture'] = str(arch)
+    df['parameterization'] = parameterization
+    df['total parameters'] = dnn_model.count_params() 
+    df['Thickness'] = labels
+    df['Estimated Thickness'] = thicknesses
+    df['Residual'] = df['Estimated Thickness'] - df['Thickness']
+    
+    
+
+    df['trained parameters'] = df['total parameters'] - (
+        len(data.columns) + (len(data.columns) - 1)
+    )
+
 
     return df
 
@@ -859,9 +1088,11 @@ def calculate_model_avg_statistics(
 def estimate_thickness(
         arch_list,
 #         arch,
+#         loss,
         parameterization = '1',
         verbose = True,
         useMP = False,
+        xval = False,
         
     ):
 #     RGI = load_RGI(pth = '/home/prethicktor/data/RGI/rgi60-attribs/')
@@ -871,35 +1102,37 @@ def estimate_thickness(
     RGI = RGI.reset_index()
     RGI = RGI.drop('index', axis=1)
     
-    loss_functions = ['mse','mae']
-    for loss in loss_functions:
+#     loss_functions = ['mse','mae']
+#     for loss in loss_functions:
     
-        if useMP == False:
-            print('Estimating thicknesses')
+    if useMP == False:
+        print('Estimating thicknesses')
+        for loss in ['mae','mse']:
             for arch in tqdm(arch_list):
                 make_estimates(
                     RGI,
                     parameterization, 
                     verbose,
                     arch,
-                    loss
+                    loss,
+                    xval
                 )
 
 
-        else:
-            arch = model_statistics['layer architecture']
-            from functools import partial
-            import multiprocessing
-            pool = multiprocessing.pool.Pool(processes=5) 
+    else:
+        arch = model_statistics['layer architecture']
+        from functools import partial
+        import multiprocessing
+        pool = multiprocessing.pool.Pool(processes=5) 
 
-            newfunc = partial(
-                make_estimates,
-                RGI,
-                parameterization, 
-                verbose
-    #             arch
-            )
-            output = pool.map(newfunc, arch.unique())
+        newfunc = partial(
+            make_estimates,
+            RGI,
+            parameterization, 
+            verbose
+#             arch
+        )
+        output = pool.map(newfunc, arch.unique())
     #     print(output[1])
     #     for i in arch:
     #         print(output[i])
@@ -911,13 +1144,23 @@ def make_estimates(
     parameterization,
     verbose,
     arch,
-    loss
+    loss,
+    xval
 ):
-    
-    file_name = 'temp/RGI_predicted_' + loss + '_' +  parameterization + '_' + arch + '.pkl' 
+#     for loss in ['mae','mse']:
+    if xval == True:
+        file_name = (
+            'temp/RGI_predicted_xval_' +  loss + '_' +
+            parameterization + '_' + arch + '.pkl' 
+        )
 
+    elif xval == False:
+        file_name = (
+            'temp/RGI_predicted_' +  loss + '_' + 
+            parameterization + '_' + arch + '.pkl' 
+        )
 #     print(file_name)
-    
+
 #     mod_preds = 'temp/model_predictions_' + loss + '_' + parameterization  +  '.pkl'
 
 
@@ -934,15 +1177,21 @@ def make_estimates(
     #     .drop(['region', 'RGIId'], axis = 1)
 #         print(f'Estimating RGI thicknesses with architecture {arch}, parameterization ' +
 #               f'{parameterization}, compiled using {loss}')
-        for rs in (range(0,25,1)):
+        if xval == True:
+            model_range = range(1,4,1)
+        if xval == False:
+            model_range = range(0,25,1)
+        for rs in model_range:
+
             rs = str(rs)
-    #         results_path = 'saved_results/' + loss + '_' + parameterization + '/' + arch + '/'
-    #         history_name = rs
-    #         dnn_history = {}
-    #         dnn_history[rs] = pd.read_pickle(results_path + rs +'.pkl')
-            model_path = (
-                'saved_models/' + loss + '_' + parameterization + '/' + arch + '/' + rs
-            )
+            if xval == True:
+                model_path = (
+                    'saved_models/xval_' + loss + '_' + parameterization + '/' + arch + '/' + rs
+                )
+            if xval == False:
+                model_path = (
+                    'saved_models/' + loss + '_' + parameterization + '/' + arch + '/' + rs
+                )
 
             dnn_model = tf.keras.models.load_model(model_path)
 
@@ -951,23 +1200,36 @@ def make_estimates(
                 name = rs
             )
             dfs[rs] = s
-
+#             dfs['loss'] = loss
         RGI_prethicked = RGI.copy() 
         RGI_prethicked = pd.concat([RGI_prethicked, dfs], axis = 1)
+        if xval == True:
+            RGI_prethicked.to_pickle(
+                'temp/RGI_predicted_xval_' + loss + '_' +
+                parameterization + '_' + arch + '.pkl'          
+            )    
+        if xval == False:
+            RGI_prethicked.to_pickle(
+                'temp/RGI_predicted_' + loss + '_' +
+                parameterization + '_' + arch + '.pkl'          
+            )    
 
-        RGI_prethicked.to_pickle(
-            'temp/RGI_predicted_' + loss + '_' + 
-            parameterization + '_' + arch + '.pkl'          
-        )    
-
-
-
-def compile_model_weighting_data(parameterization, arch_list,loss):
-    
-    path = 'model_weights/'
+def compile_model_weighting_data(parameterization, arch_list, xval = False):
+    if xval == True:
+        path = 'model_weights/xval_'
+        save_path = 'predicted_thicknesses/compiled_raw_xval_'
+        df_list = [[
+                'layer architecture','RGIId', '1', '2', '3'
+        ]]
+    if xval == False:
+        path = 'model_weights/'
+        save_path = 'predicted_thicknesses/compiled_raw_'
+        df_list = [[
+                'layer architecture','RGIId', '0','1', '2', '3','4','5','6','7','8','9','10',
+                '11', '12', '13','14','15','16','17','18','19','11','21', '22', '23','24'            
+        ]]
 #     for j in tqdm(reversed(range(1,5,1))):
-    file = path + 'param' + parameterization + '_' + loss + '_weighting_data.pkl'  
-    file_path = file
+    file_path = path + 'param' + parameterization +  '_weighting_data.pkl'  
 #     print(file_path)
     if os.path.isfile(file_path) == True:
         print('Weighting data compiled')
@@ -977,49 +1239,61 @@ def compile_model_weighting_data(parameterization, arch_list,loss):
         dft = pd.DataFrame()
         print('Compiling model estimates...')
         for architecture in tqdm(arch_list):
+            for loss in ['mae','mse']:
         #     print(architecture)
-            df_glob = load_global_predictions(parameterization,loss, architecture = architecture)
-            dft = pd.concat([dft, df_glob])
-        dft.to_hdf('predicted_thicknesses/compiled_raw_' + loss + '_' + parameterization + '.h5', 
+                df_glob = load_global_predictions(
+                    parameterization,xval, loss = loss,architecture = architecture
+                )
+                dft = pd.concat([dft, df_glob])
+        dft.to_hdf(save_path + parameterization + '.h5', 
           key = 'compiled_raw', mode = 'a')
-        df = dft[[
-                'layer architecture','RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-                '11','12','13','14','15','16','17','18','19','20','21',
-                '22','23','24',
-        ]]
+        df = dft[df_list]
 
         glathida_estimates = pd.merge(glac, df, how = 'inner', on = 'RGIId')
 
         est = glathida_estimates
 
-        for i in range(0,25,1):
+        for i in range(1,4,1):
             est['pr_'+str(i)] = ((np.round(est[str(i)], 0) - est['Thickness'])) / est['Thickness']
 
-        for i in range(0,25,1):
+        for i in range(1,4,1):
             est['r_'+str(i)] = ((np.round(est[str(i)], 0) - est['Thickness']))
 
-        est.to_pickle('model_weights/param' + parameterization + '_' + loss + '_weighting_data.pkl')
+        est.to_pickle(file_path)
 
 
 
 
-def compute_model_weights(parameterization, loss, pth = '/home/prethicktor/data/'):
-    path = 'model_weights/'
-    file = path + 'architecture_weights_' + loss + '_' + parameterization  +  '.pkl'   
+def compute_model_weights(parameterization, xval = False,pth = '/home/prethicktor/data/'):
+    if xval == True:
+        path = 'model_weights/xval_'
+        file_path = path + 'architecture_weights_' + parameterization  +  '.pkl'   
+        
+    if xval == True:
+        path = 'model_weights/'
+        file_path = path + 'architecture_weights_' + parameterization  +  '.pkl'   
+        
+        
     if os.path.isfile(file) == True:
         architecture_weights = pd.read_pickle(file)
-        residual_model = np.load('model_weights/residual_model_' + loss + '_' + 
+        residual_model = np.load(path + 'residual_model_' + loss + '_' + 
                                  parameterization + '.npy',)
     if os.path.isfile(file) == False:
     
 
-        est = pd.read_pickle('model_weights/param' + parameterization +
-                             '_' + loss +  '_weighting_data.pkl')
+        est = pd.read_pickle(path + 'param' + parameterization +
+                               '_weighting_data.pkl')
         model_list = []
         res_list = []
         pool_list = []
         weight_list = []
-        for i in range(0,25,1):
+        
+        if xval == True:
+            model_range = range(1,4,1)
+        if xval == False:
+            model_range = range(0,25,1)
+        
+        for i in model_range:
             model_list.append(str(i))
             res_list.append('r_'+str(i))
             pool_list.append('pr_'+str(i))
@@ -1027,66 +1301,73 @@ def compute_model_weights(parameterization, loss, pth = '/home/prethicktor/data/
         est[model_list] = np.round(est[model_list], 0)
         est[res_list] = np.round(est[model_list], 0)
         est[pool_list] = np.round(est[pool_list], 2)
-
+#         print(est)
+#         print(list(est))
         
         weights = pd.DataFrame()
         architecture_weights = pd.DataFrame()
         print('Calculating weights')
         for i in tqdm(est['layer architecture'].unique()):
-            dft = est[est['layer architecture'] == str(i)]
-            
-            simple_var = np.var(dft[res_list].to_numpy().flatten())
-            q75, q25 = np.nanpercentile(dft[res_list], [75,25])
-            sigma_simple = ((q75 - q25) ) / 1.34896
-            
-            bias_1 = np.mean(dft[pool_list].to_numpy()) * np.mean(dft[model_list].to_numpy())
-            q75, q25 = np.nanpercentile(dft[pool_list], [75,25])
-            IQR_1 = q75 - q25
-            sigma_1 = (IQR_1 * np.mean(dft[model_list].to_numpy())) / 1.34896
+            for loss in ['mae','mse']:
+                dft = est[
+                    (est['layer architecture'] == str(i)) &
+                    (est['loss'] == loss)
+                ]
 
-            w_1 = pd.Series(abs(bias_1) + sigma_1**2, name = 'weight')
+                simple_var = np.var(dft[res_list].to_numpy().flatten())
+                q75, q25 = np.nanpercentile(dft[res_list], [75,25])
+                sigma_simple = ((q75 - q25) ) / 1.34896
 
-            bias_2 = np.mean(dft[pool_list].to_numpy() * dft[model_list].to_numpy())
-            q75, q25 = np.nanpercentile(est[pool_list], [75,25])
-            IQR_2 = q75 - q25
-            sigma_2 = (IQR_2 * np.mean(dft[model_list].to_numpy())) / 1.34896
+                bias_1 = np.mean(dft[pool_list].to_numpy()) * np.mean(dft[model_list].to_numpy())
+                q75, q25 = np.nanpercentile(dft[pool_list], [75,25])
+                IQR_1 = q75 - q25
+                sigma_1 = (IQR_1 * np.mean(dft[model_list].to_numpy())) / 1.34896
 
-            w_2 = (abs(bias_2) + sigma_2**2)
-            
-            
-            bias_3 = np.mean(est[pool_list].to_numpy()) * np.mean(dft[model_list].to_numpy())
-            q75, q25 = np.nanpercentile(est[pool_list], [75,25])
-            IQR_3 = q75 - q25
-            sigma_3 = (IQR_3 * np.mean(dft[model_list].to_numpy())) / 1.34896
+                w_1 = pd.Series(abs(bias_1) + sigma_1**2, name = 'weight')
 
-            w_3 = (abs(bias_3) + sigma_3**2)
-            w_4 = simple_var
+                bias_2 = np.mean(dft[pool_list].to_numpy() * dft[model_list].to_numpy())
+                q75, q25 = np.nanpercentile(est[pool_list], [75,25])
+                IQR_2 = q75 - q25
+                sigma_2 = (IQR_2 * np.mean(dft[model_list].to_numpy())) / 1.34896
+
+                w_2 = (abs(bias_2) + sigma_2**2)
 
 
-            architecture_weights = pd.concat([architecture_weights, w_1])
-            architecture_weights = architecture_weights.reset_index()
-            architecture_weights = architecture_weights.drop('index', axis = 1)
-            architecture_weights.loc[architecture_weights.index[-1], 'layer architecture'] = i
-            architecture_weights.loc[architecture_weights.index[-1], 'simple var'] = simple_var
+                bias_3 = np.mean(est[pool_list].to_numpy()) * np.mean(dft[model_list].to_numpy())
+                q75, q25 = np.nanpercentile(est[pool_list], [75,25])
+                IQR_3 = q75 - q25
+                sigma_3 = (IQR_3 * np.mean(dft[model_list].to_numpy())) / 1.34896
 
-            architecture_weights.loc[architecture_weights.index[-1], 'std_1'] = sigma_1
-            architecture_weights.loc[architecture_weights.index[-1], 'IQR_1'] = IQR_1
-            architecture_weights.loc[architecture_weights.index[-1], 'bias_1'] = bias_1
-            architecture_weights.loc[architecture_weights.index[-1], 'std_2'] = sigma_2
-            architecture_weights.loc[architecture_weights.index[-1], 'IQR_2'] = IQR_2
-            architecture_weights.loc[architecture_weights.index[-1], 'bias_2'] = bias_2
-            architecture_weights.loc[architecture_weights.index[-1], 'std_3'] = sigma_3
-            architecture_weights.loc[architecture_weights.index[-1], 'IQR_3'] = IQR_3
-            architecture_weights.loc[architecture_weights.index[-1], 'bias_3'] = bias_3
-            architecture_weights.loc[architecture_weights.index[-1], 'IQR_4'] = sigma_simple
+                w_3 = (abs(bias_3) + sigma_3**2)
+                w_4 = simple_var
 
-            architecture_weights.loc[architecture_weights.index[-1], 'aw_2'] = w_2
-            architecture_weights.loc[architecture_weights.index[-1], 'aw_3'] = w_3
-            architecture_weights.loc[architecture_weights.index[-1], 'aw_4'] = w_4
+
+                architecture_weights = pd.concat([architecture_weights, w_1])
+                architecture_weights = architecture_weights.reset_index()
+                architecture_weights = architecture_weights.drop('index', axis = 1)
+                architecture_weights.loc[architecture_weights.index[-1], 'layer architecture'] = i
+                architecture_weights.loc[architecture_weights.index[-1], 'loss'] = loss
+                architecture_weights.loc[architecture_weights.index[-1], 'simple var'] = simple_var
+
+
+                architecture_weights.loc[architecture_weights.index[-1], 'std_1'] = sigma_1
+                architecture_weights.loc[architecture_weights.index[-1], 'IQR_1'] = IQR_1
+                architecture_weights.loc[architecture_weights.index[-1], 'bias_1'] = bias_1
+                architecture_weights.loc[architecture_weights.index[-1], 'std_2'] = sigma_2
+                architecture_weights.loc[architecture_weights.index[-1], 'IQR_2'] = IQR_2
+                architecture_weights.loc[architecture_weights.index[-1], 'bias_2'] = bias_2
+                architecture_weights.loc[architecture_weights.index[-1], 'std_3'] = sigma_3
+                architecture_weights.loc[architecture_weights.index[-1], 'IQR_3'] = IQR_3
+                architecture_weights.loc[architecture_weights.index[-1], 'bias_3'] = bias_3
+                architecture_weights.loc[architecture_weights.index[-1], 'IQR_4'] = sigma_simple
+
+                architecture_weights.loc[architecture_weights.index[-1], 'aw_2'] = w_2
+                architecture_weights.loc[architecture_weights.index[-1], 'aw_3'] = w_3
+                architecture_weights.loc[architecture_weights.index[-1], 'aw_4'] = w_4
 
         print('calculating residual curve...')
         df = pd.DataFrame()
-        for i in range(0,25,1):
+        for i in range(1,4,1):
             x = pd.DataFrame(
                     pd.Series(
                         est[str(i)] - est['Thickness'],
@@ -1113,12 +1394,12 @@ def compute_model_weights(parameterization, loss, pth = '/home/prethicktor/data/
         architecture_weights['var_2'] = architecture_weights['std_2']**2
         architecture_weights['var_3'] = architecture_weights['std_3']**2
 
-        architecture_weights.to_pickle('model_weights/architecture_weights_' + loss + '_' + 
+        architecture_weights.to_pickle(path + 'architecture_weights_'  + 
                                        parameterization + '.pkl')
 #         residual_model.to_pickle('model_weights/residual_model_' + parameterization + '.pkl')
         
         np.save(
-            'model_weights/residual_model_' + loss + '_' + parameterization,
+            path + 'residual_model_'  + parameterization,
             residual_model, 
             allow_pickle=True, 
             fix_imports=True)
@@ -1137,12 +1418,13 @@ def compute_model_weights(parameterization, loss, pth = '/home/prethicktor/data/
 
 def calculate_RGI_thickness_statistics(
     architecture_weights, residual_model, 
-    parameterization,  loss,
-    useMP = False
+    parameterization, 
+    useMP = False,
+    xval = False
 ):
     
-    aggregate_statistics(architecture_weights, residual_model, parameterization, loss,
-                        useMP = useMP)
+    aggregate_statistics(architecture_weights, residual_model, parameterization,
+                        useMP = useMP,xval = xval)
 
 
 # def agg_stats():
@@ -1162,13 +1444,20 @@ def aggregate_statistics(
     architecture_weights, 
     residual_model, 
     parameterization, 
-    loss,
+    xval,
     verbose = True,
-    useMP = False
+    useMP = False,
+    
 ):
     arch_list = architecture_weights['layer architecture']
-    final_pth  = ('predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
-                   str(loss) + '_' + str(parameterization) + '.pkl') 
+    if xval == True:
+        path = 'predicted_thicknesses/xval_'
+    if xval == False:
+        path = 'predicted_thicknesses/'
+    final_pth  = (
+        path + 'sermeq_aggregated_bootstrap_predictions_parameterization_' + 
+        str(parameterization) + '.pkl'
+    ) 
     if os.path.isfile(final_pth) == True:
         print('Already done here')
         pass
@@ -1176,7 +1465,7 @@ def aggregate_statistics(
         if useMP == False:
             print('Stacking estimates...')
             _,compiled_raw = stack_predictions(
-                architecture_weights, parameterization, loss
+                architecture_weights, parameterization,xval
             )
             print('Estimates stacked')
             stacked_stats = pd.DataFrame()
@@ -1184,9 +1473,7 @@ def aggregate_statistics(
             for this_rgi_id, obj in tqdm(compiled_raw): 
                 rgiid = np.array([this_rgi_id])
                 pr = np.array(obj[[
-                    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-                    '11','12','13','14','15','16','17','18','19','20','21',
-                    '22','23','24',
+                    '1', '2', '3'
                 ]])
 
                 aw = np.array(
@@ -1230,8 +1517,8 @@ def aggregate_statistics(
 
                 stacked_stats = pd.concat((stacked_stats, stats_table), axis = 0)
             stacked_stats.to_pickle(
-                'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
-                loss + '_' + parameterization + '.pkl'
+                'predicted_thicknesses/xval_sermeq_aggregated_bootstrap_predictions_parameterization_' + 
+                parameterization + '.pkl'
             ) 
         if useMP == True:
             crunch_numbers()
@@ -1239,95 +1526,26 @@ def aggregate_statistics(
         
         
         
-def crunch_numbers():
-    import multiprocessing as mp
 
-    print('loading df')
-    df = pd.read_hdf(
-        'predicted_thicknesses/compiled_raw_' + '4' + '.h5',
-        key = 'compiled_raw', mode = 'a'
-    )
-    # df_index_list = []
-    # for i in range(0, len(df), 3):
-    #     df_index_list.append(i)
-
-    # df = df.loc[
-    #     df_index_list
-    # ]
-
-    print('df loaded')
-
-    grp_lst_args = list(df.groupby('RGIId').groups.items())
-    print('df grouped')
-
-
-
-    model_list = []
-    for i in range(0,25,1):
-        model_list.append(str(i))
-
-
-
-    pool = mp.Pool(processes = (32))
-    for _ in tqdm(pool.imap_unordered(calc_dist2,grp_lst_args,df),total = len(grp_lst_args)):
-        pass
-    results = pool.map(calc_dist2, grp_lst_args)
-
-    pool.close()
-    pool.join()
-
-    stacked_stats = np.concatenate(results)
-    np.save(
-        'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
-        loss + '_' + parameterization + '.npy', stacked_stats
-    ) 
-    print(stacked_stats)
-
-def calc_dist2(arg, df):
-    stacked_stats = np.empty(shape = [1,31])
-    grp, lst = arg
-#     print('working on ' + grp)
-    dft = df.loc[lst]
-    aw = np.array(
-            [
-                dft['aw_1'], 
-                dft['aw_2'], 
-                dft['aw_3'], 
-                dft['aw_4']
-            ]
-        )
-    predictions = df[model_list].loc[lst].to_numpy()   
-    wt = gl.weight_thicknesses(predictions, aw)
-
-    gamma = np.array([
-        dft['IQR_1'] / 1.34896, 
-        dft['IQR_2'] / 1.34896, 
-        dft['IQR_3'] / 1.34896, 
-        dft['IQR_4'] / 1.34896
-    ])
-
-    uwds, muwds, wds, wb  = gl.estimate_uncertainties(gamma, predictions, aw)
-    residual_model = np.load('model_weights/residual_model_' + parameterization + '.npy')
-
-    wrc, wrc_unc = gl.compute_residual_correction(wt,wds, bar_H, residual_model, gamma, aw)
-
-    gc = np.array([
-        [len(predictions.flatten())]
-    ])
-    prg = np.array([[grp]])
-    list_a = [prg, wt, uwds, muwds, wds, wb, wrc, wrc_unc, gc]
-
-
-
-    stats_table = np.concatenate(
-        (prg, wt, uwds, muwds, wds, wb, wrc, wrc_unc, gc), axis = 1
-    )
-    return stats_table
     
-def stack_predictions(architecture_weights, parameterization = '4', loss = 'first'):
-    pth = str(
-        'predicted_thicknesses/compiled_raw_' + str(loss) + '_' + str(parameterization) + '.h5'
-    )
+def stack_predictions(architecture_weights,xval, parameterization = '4'):
+    if xval == True:
+        
+        pth = str(
+            'predicted_thicknesses/compiled_raw_xval_'  + str(parameterization) + '.h5'
+        )
+        df_list = [[
+                'layer architecture','RGIId', '1', '2', '3'        
+        ]]
+    if xval == True:
+        
+        pth = str(
+            'predicted_thicknesses/compiled_raw_'  + str(parameterization) + '.h5'
+        )
+        df_list = [[
+                'layer architecture','RGIId', '0','1', '2', '3','4','5','6','7','8','9','10',
+                '11', '12', '13','14','15','16','17','18','19','11','21', '22', '23','24'            
+        ]]
     print(pth)
     statistics = pd.DataFrame()
 #     for file in (os.listdir('zults/')):
@@ -1338,51 +1556,46 @@ def stack_predictions(architecture_weights, parameterization = '4', loss = 'firs
     if os.path.isfile(pth) == True:
         print('Loading df')
         df = pd.read_hdf(
-            'predicted_thicknesses/compiled_raw_' + loss + '_' + parameterization + '.h5',
+            pth + parameterization + '.h5',
             key = 'compiled_raw', mode = 'a'
         )
 #         df = pd.merge(df, statistics, on = 'layer architecture')
-        df = df[[
-                'layer architecture','RGIId','0', '1', '2', '3', '4',
-                '5', '6', '7', '8', '9','10',
-                '11','12','13','14','15','16','17','18','19','20','21',
-                '22','23','24'
-        ]]
+        df = df[df_list]
         df = pd.merge(df, architecture_weights, how = 'inner', on = 'layer architecture')
         
         
     if os.path.isfile(pth) == False:
         print('Building df')
-        df = pd.DataFrame(columns = [
-                'RGIId','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-                '11','12','13','14','15','16','17','18','19','20','21',
-                '22','23','24',
-        ])
+        
+        df = pd.DataFrame(columns = df_list)
         for arch in tqdm(architecture_weights['layer architecture'].unique()):
-            df_glob = load_global_predictions(
-                parameterization = parameterization,
-                architecture = arch
-            )
+            for loss in ['mae','mse']:
+                df_glob = load_global_predictions(
+                    parameterization = parameterization,
+                    architecture = arch, loss = loss,
+                )
 
-            df = pd.concat([df,df_glob])
+                df = pd.concat([df,df_glob])
 
 #         df = pd.merge(df, statistics, on = 'layer architecture')
-        df = df[[
-                'layer architecture','RGIId','0', '1', '2', '3', '4',
-                '5', '6', '7', '8', '9','10',
-                '11','12','13','14','15','16','17','18','19','20','21',
-                '22','23','24'
-        ]]
-        df = pd.merge(df, architecture_weights, how = 'inner', on = 'layer architecture')
+        df = df[
+                df_list
+        ]
+        df = pd.merge(df, architecture_weights, how = 'inner', on = ['layer architecture','loss'])
         
 #         print('Grouping predictions')
 
-        
-    compiled_raw = df.groupby('RGIId')[[
-        'layer architecture','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10',
-        '11','12','13','14','15','16','17','18','19','20','21',
-        '22','23','24','aw_1','aw_2','aw_3','aw_4','IQR_1','IQR_2','IQR_3','IQR_4'
-    ]]
+    if xval == True:
+        compiled_raw = df.groupby('RGIId')[[
+            'layer architecture','1', '2', '3',
+            'aw_1','aw_2','aw_3','aw_4','IQR_1','IQR_2','IQR_3','IQR_4'
+        ]]
+    if xval == False:
+        compiled_raw = df.groupby('RGIId')[[
+            'layer architecture','0','1', '2', '3','4','5','6','7','8','9','10',
+            '11', '12', '13','14','15','16','17','18','19','11','21', '22', '23','24'   
+            'aw_1','aw_2','aw_3','aw_4','IQR_1','IQR_2','IQR_3','IQR_4'
+        ]]
 
     return df,compiled_raw
 
@@ -1605,21 +1818,33 @@ def list_architectures(
 def load_global_predictions(
     parameterization,
     loss,
-
+    xval,
     architecture,
-    pth = 'temp/'
+    pth = 'temp/',
 ):
     
 #     print(architecture)
-    root_dir = pth
-    for file in (os.listdir(root_dir)):
-            # print(file)
-        if ('RGI_predicted_' + loss + '_' + parameterization + '_' + architecture in file):
-            RGI_predicted = pd.read_pickle(root_dir + file)
+    if xval == True:
+        root_dir = pth
+        for file in (os.listdir(root_dir)):
+                # print(file)
+            if ('RGI_predicted_xval_' + parameterization + '_' + architecture in file):
+                RGI_predicted = pd.read_pickle(root_dir + file)
 
-            RGI_predicted['layer architecture'] = architecture
+                RGI_predicted['layer architecture'] = architecture
 
-            RGI_predicted['parameterization'] =  parameterization
+                RGI_predicted['parameterization'] =  parameterization
+                
+    if xval == False:
+        root_dir = pth
+        for file in (os.listdir(root_dir)):
+                # print(file)
+            if ('RGI_predicted_' + parameterization + '_' + architecture in file):
+                RGI_predicted = pd.read_pickle(root_dir + file)
+
+                RGI_predicted['layer architecture'] = architecture
+
+                RGI_predicted['parameterization'] =  parameterization
 
 
     return RGI_predicted
@@ -1627,11 +1852,16 @@ def load_global_predictions(
 
 
 def load_notebook_data(
-    parameterization = '1',loss = 'first', pth = ''
+    parameterization = '1',xval = False, pth = ''
 ):
+    if xval == True:
+        path = pth + 'predicted_thicknesses/xval_sermeq_aggregated_bootstrap_predictions_parameterization_'
+        
+    if xval == False:
+        path = pth + 'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_'
     df = pd.read_pickle(
-            pth + 'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_'+
-            loss +  '_' + parameterization + '.pkl'
+            pth + 
+             parameterization + '.pkl'
     )
     df['RGIId'] = df['RGIId'].str[0]
     df['GC'] = df['GC'].str[0]
