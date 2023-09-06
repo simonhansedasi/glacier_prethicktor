@@ -37,7 +37,6 @@ def load_RGI(
     pth = '/data/fast1/glacierml/data/RGI/rgi60-attribs/', 
     region_selection = 'all'
 ):
-    print(pd.__version__)
     if len(str(region_selection)) == 1:
         N = 1
         region_selection = str(region_selection).zfill(N + len(str(region_selection)))
