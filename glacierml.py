@@ -1167,7 +1167,7 @@ def aggregate_statistics(
     useMP = False
 ):
     arch_list = architecture_weights['layer architecture']
-    final_pth  = ('predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_' + 
+    final_pth  = ('predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
                    str(loss) + '_' + str(coregistration) + '.pkl') 
     if os.path.isfile(final_pth) == True:
         print('Already done here')
@@ -1230,7 +1230,7 @@ def aggregate_statistics(
 
                 stacked_stats = pd.concat((stacked_stats, stats_table), axis = 0)
             stacked_stats.to_pickle(
-                'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_' + 
+                'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
                 loss + '_' + coregistration + '.pkl'
             ) 
         if useMP == True:
@@ -1278,7 +1278,7 @@ def crunch_numbers():
 
     stacked_stats = np.concatenate(results)
     np.save(
-        'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_' + 
+        'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_' + 
         loss + '_' + coregistration + '.npy', stacked_stats
     ) 
     print(stacked_stats)
@@ -1630,7 +1630,7 @@ def load_notebook_data(
     coregistration = '1',loss = 'first', pth = ''
 ):
     df = pd.read_pickle(
-            pth + 'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_coregistration_'+
+            pth + 'predicted_thicknesses/sermeq_aggregated_bootstrap_predictions_parameterization_'+
             loss +  '_' + coregistration + '.pkl'
     )
     df['RGIId'] = df['RGIId'].str[0]
