@@ -1,0 +1,29 @@
+[DEFAULT]
+parameterization = DEFAULT
+size threshold = 0.25
+distance threshold = 0.25
+area scrubber = on
+
+[1]
+parameterization = 1
+size threshold = 0
+area scrubber = off
+distance threshold = 9999
+
+[2]
+parameterization = 2
+size threshold = 0.25
+distance threshold = .25
+area scrubber = on
+
+[3]
+parameterization = 3
+size threshold = 0.5
+distance threshold = 0.5
+area scrubber = on
+
+[4]
+parameterization = 4
+size threshold = 0.75
+distance threshold = 0.75
+area scrubber = on
