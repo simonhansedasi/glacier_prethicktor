@@ -15,6 +15,7 @@ import warnings
 import logging
 from scipy.stats import shapiro
 import pickle
+import math
 
 
 # tf.random.set_seed(42)
@@ -360,7 +361,7 @@ def get_id(RGI,glathida,version,verbose,i):
         
         
 '''
-split_data
+
 input = name of dataframe and selected random state.
 output = dataframe and series randomly selected and populated as either training or test features or labels
 '''
@@ -1991,6 +1992,440 @@ def assign_sub_arrays(
     data['Slope'] = data['Slope'] + .00001
     data['Zmin'] = data['Zmin'] + .00001
     return x,y,z,zf,ze,unc, data, feat
+
+
+
+'''
+Residual Distrubtion Functions
+'''
+def find_glacier_resid(df):
+
+    dfr = pd.DataFrame()
+    for i in (range(1,4,1)):
+        x = pd.DataFrame(
+                pd.Series(
+                    (df[str(i)] - df['Thickness']),
+                    name = 'Residual'
+            )
+        )
+        
+        x_ = pd.DataFrame(
+                pd.Series(
+                    (df[str(i)] - df['Thickness']) / df['Thickness'],
+                    name = 'Percent Residual'
+            )
+        )
+#         x_ = x.divide(df['Thickness'])
+        y = pd.DataFrame(
+            pd.Series(
+                df['Thickness'],
+                name = 'Thickness'
+            )
+        )
+        l = pd.DataFrame(
+            pd.Series(
+                df['Lmax'],
+                name = 'Lmax'
+            )
+        )
+        a = pd.DataFrame(
+            pd.Series(
+                df['Area'],
+                name = 'Area'
+            )
+        )
+
+        s = pd.DataFrame(
+            pd.Series(
+                df['Slope'],
+                name = 'Slope'
+            )
+        )
+
+        e = pd.DataFrame(
+            pd.Series(
+                df['Zmin'],
+                name = 'Zmin'
+            )
+        )
+
+        r = pd.DataFrame(
+            pd.Series(
+                df['RGIId'],
+                name = 'RGIId'
+            )
+        )
+        
+
+        f = pd.DataFrame(
+            pd.Series(
+                df['CenLon'],
+                name = 'Lon'
+            )
+        )
+        
+
+        g = pd.DataFrame(
+            pd.Series(
+                df['CenLat'],
+                name = 'Lat'
+            )
+        )
+        h = pd.DataFrame(
+            pd.Series(
+                df['Zmax'],
+                name = 'Zmax'
+            )
+        )
+        
+
+        j = pd.DataFrame(
+            pd.Series(
+                df['Aspect'],
+                name = 'Aspect'
+            )
+        )
+        dft = x.join(y)
+        dft = dft.join(x_)
+        dft = dft.join(l)
+        dft = dft.join(a)
+        dft = dft.join(s)
+        dft = dft.join(e)
+        dft = dft.join(r)
+        dft = dft.join(f)
+        dft = dft.join(g)
+        dft = dft.join(h)
+        dft = dft.join(j)
+
+        dfr = pd.concat([dfr, dft])
+    return dfr
+
+
+
+def findlog(x):
+    if x > 0:
+        log = math.log(x)
+    elif x < 0:
+        log = math.log(x*-1)*-1
+    elif x == 0:
+        log = 0
+    return log
+
+
+
+def find_variances(df, ml):
+    variances = pd.DataFrame()
+    for rgi_id in tqdm(df['RGIId'].unique()):
+        temp_df = df[df['RGIId'] == rgi_id]
+        x = pd.DataFrame(
+                pd.Series(
+                    temp_df[ml].var(axis = 1),
+                    name = 'Variance'
+            )
+        )
+
+    #     print(x)
+        a = pd.DataFrame(
+            pd.Series(
+                temp_df['Area'],
+                name = 'Area'
+            )
+        )
+        b = pd.DataFrame(
+            pd.Series(
+                temp_df['Slope'],
+                name = 'Slope'
+            )
+        )
+        c = pd.DataFrame(
+            pd.Series(
+                temp_df['Lmax'],
+                name = 'Lmax'
+            )
+        )
+        d = pd.DataFrame(
+            pd.Series(
+                temp_df['Zmin'],
+                name = 'Zmin'
+            )
+        )
+        e = pd.DataFrame(
+            pd.Series(
+                temp_df['Thickness'],
+                name = 'Thickness'
+            )
+        )
+        f = pd.DataFrame(
+            pd.Series(
+                temp_df['RGIId'],
+                name = 'RGIId'
+            )
+        )
+        g = pd.DataFrame(
+            pd.Series(
+                temp_df['Thickness'],
+                name = 'Thickness'
+            )
+        )
+
+    #     print(y)
+        another_temp_df = x.join(a)
+    #     print(dft)
+    #     another_temp_df = another_temp_df.join(a)
+        another_temp_df = another_temp_df.join(b)
+        another_temp_df = another_temp_df.join(c)
+        another_temp_df = another_temp_df.join(d)
+        another_temp_df = another_temp_df.join(e)
+        another_temp_df = another_temp_df.join(f)
+        variances = pd.concat([variances, another_temp_df])
+    return variances
+
+
+def variance_min_max(df, ml):
+    minvar = pd.DataFrame()
+    maxvar = pd.DataFrame()
+    for i in tqdm(df['RGIId'].unique()):
+        dft = df[df['RGIId'] == i]
+        f = pd.Series(dft[ml].var(axis = 1),name = 'Variance')
+        vmin = pd.DataFrame(
+            pd.Series(
+                    f.min(),
+                    name = 'VarMin'
+            )
+        )
+    #     print(var_rmin)
+        vmax = pd.DataFrame(
+            pd.Series(
+                    f.max(),
+                    name = 'VarMax'
+            )
+        )
+        rgi = pd.DataFrame(
+            pd.Series(
+                    i,
+                    name = 'RGIId'
+            )
+        )
+        a = pd.DataFrame(
+            pd.Series(
+                    dft['Area'].min(),
+                    name = 'Area'
+            )
+        )
+        b = pd.DataFrame(
+            pd.Series(
+                    dft['Lmax'].min(),
+                    name = 'Lmax'
+            )
+        )
+        c = pd.DataFrame(
+            pd.Series(
+                    dft['Slope'].min(),
+                    name = 'Slope'
+            )
+        )
+        d = pd.DataFrame(
+            pd.Series(
+                    dft['Zmin'].min(),
+                    name = 'Zmin'
+            )
+        )
+        e = pd.DataFrame(
+            pd.Series(
+                    dft['Thickness'].min(),
+                    name = 'Thickness'
+            )
+        )
+    #     print(rgi)
+        var_min = vmin.join(rgi)
+        var_min = var_min.join(a)
+        var_min = var_min.join(b)
+        var_min = var_min.join(c)
+        var_min = var_min.join(d)
+        var_min = var_min.join(e)
+        minvar = pd.concat([minvar,var_min])
+
+        var_max = vmax.join(rgi)
+        var_max = var_max.join(a)
+        var_max = var_max.join(b)
+        var_max = var_max.join(c)
+        var_max = var_max.join(d)
+        var_max = var_max.join(e)
+
+        maxvar = pd.concat([maxvar,var_max])
+    return minvar, maxvar
+
+def sample_coregistration_data(c = '3'):
+
+    tr = coregister_data(c)
+    
+#     if c == '4':
+#         tr = tr.drop(tr[tr['Thickness'] >= 300].index)
+#         tr = tr.drop(tr[tr['Thickness'] == 267].index)
+#         tr = tr.drop(tr[tr['Thickness'] == tr['Thickness'].min()].index)
+    tr = tr.drop('Thickness', axis = 1)
+    rfp = load_RGI()[list(tr)]
+    feat_list = ['Area','Lmax','Slope','Zmin']
+    name = ['mean', 'median', 'min', 'max','IQR','STD']
+    df1 = pd.DataFrame( columns = feat_list, index = name)
+    for i in feat_list:
+        df1t = tr[i]
+        upp = np.nanquantile(df1t, 0.75)
+        low = np.nanquantile(df1t, 0.25)
+        functions = [
+            np.round(np.nanmean(df1t), 3),
+            np.round(np.nanmedian(df1t), 3), 
+            np.round(np.nanmin(df1t), 3),
+            np.round(np.nanmax(df1t), 3),
+            np.round(upp - low, 3),
+            np.round(np.nanstd(df1t),3),
+    #         len(df1t)
+        ]
+        for n, fn in zip(name, functions):
+            df1[i].loc[n] = fn
+    df1 = df1.rename(columns = {
+        'Area':'Area (km$^2$)',
+        'Slope':'Slope (deg)',
+        'Lmax':'Max Length (m)',
+        'Zmin':'Min Elevation (m)',
+    })
+    df1 = df1.round(decimals = 3)
+    df1
+
+    name = ['mean', 'median', 'min', 'max','IQR','STD']
+    df2 = pd.DataFrame( columns = feat_list, index = name)
+    for i in feat_list:
+        df2t = rfp[i]
+        upp = np.nanquantile(df2t, 0.75)
+        low = np.nanquantile(df2t, 0.25)
+    #         print(np.quantile(df2t, 0.75))
+    #         print(np.quantile(df2t, 0.25))
+        functions = [
+            np.round(np.nanmean(df2t), 3),
+            np.round(np.nanmedian(df2t), 3), 
+            np.round(np.nanmin(df2t), 3),
+            np.round(np.nanmax(df2t), 3),
+            np.round(upp - low, 3),
+            np.round(np.nanstd(df2t),3),
+    #         len(df2t)
+        ]
+        for n, fn in zip(name, functions):
+            df2[i].loc[n] = fn
+    df2 = df2.rename(columns = {
+        'Area':'Area (km$^2$)',
+        'Slope':'Slope (deg)',
+        'Lmax':'Max Length (m)',
+        'Zmin':'Min Elevation (m)',
+    #         'WT1':'Est Thick (m)',
+    #         'Vol Diff':'Vol Diff (km$^3$)'
+    #         'Farinotti Mean Thickness':'Farinotti Thickness'
+    })
+    df2 = df2.round(decimals = 3)
+    df2
+
+
+    perc_samples = (df1 - df2) / df2
+    return perc_samples
+
+
+
+def sample_training_data(tr,rs = 0):
+#     tr = coregister_data(c)
+    trfeats, tefeats, trlabs, telabs = split_data(tr,rs)
+    
+    feat_list = ['Area','Lmax','Slope','Zmin']
+    name = ['mean', 'median', 'min', 'max','IQR','STD']
+    df1 = pd.DataFrame( columns = feat_list, index = name)
+    for i in feat_list:
+#         print(tefeats)
+        df1t = tefeats[i]
+        upp = np.nanquantile(df1t, 0.75)
+        low = np.nanquantile(df1t, 0.25)
+        functions = [
+            np.round(np.nanmean(df1t), 3),
+            np.round(np.nanmedian(df1t), 3), 
+            np.round(np.nanmin(df1t), 3),
+            np.round(np.nanmax(df1t), 3),
+            np.round(upp - low, 3),
+            np.round(np.nanstd(df1t),3),
+    #         len(df1t)
+        ]
+        for n, fn in zip(name, functions):
+            df1[i].loc[n] = fn
+    df1 = df1.round(decimals = 3)
+    df1
+
+    name = ['mean', 'median', 'min', 'max','IQR','STD']
+    df2 = pd.DataFrame( columns = feat_list, index = name)
+    for i in feat_list:
+        df2t = trfeats[i]
+        upp = np.nanquantile(df2t, 0.75)
+        low = np.nanquantile(df2t, 0.25)
+        functions = [
+            np.round(np.nanmean(df2t), 3),
+            np.round(np.nanmedian(df2t), 3), 
+            np.round(np.nanmin(df2t), 3),
+            np.round(np.nanmax(df2t), 3),
+            np.round(upp - low, 3),
+            np.round(np.nanstd(df2t),3),
+    #         len(df2t)
+        ]
+        for n, fn in zip(name, functions):
+            df2[i].loc[n] = fn
+    df2 = df2.round(decimals = 3)
+    df2
+    perc_samples = abs((df1 - df2) / df2)
+    
+    return perc_samples
+
+def sub_sample_training_data(data1,data2,rs = 0):
+#     trfeats, tefeats, trlabs, telabs = split_data(tr,rs)
+    
+    feat_list = ['Area','Lmax','Slope','Zmin']
+    name = ['mean', 'median', 'min', 'max','IQR','STD']
+    df1 = pd.DataFrame( columns = feat_list, index = name)
+    for i in feat_list:
+#         print(tefeats)
+        df1t = data1[i]
+        upp = np.nanquantile(df1t, 0.75)
+        low = np.nanquantile(df1t, 0.25)
+        functions = [
+            np.round(np.nanmean(df1t), 3),
+            np.round(np.nanmedian(df1t), 3), 
+            np.round(np.nanmin(df1t), 3),
+            np.round(np.nanmax(df1t), 3),
+            np.round(upp - low, 3),
+            np.round(np.nanstd(df1t),3),
+    #         len(df1t)
+        ]
+        for n, fn in zip(name, functions):
+            df1[i].loc[n] = fn
+    df1 = df1.round(decimals = 3)
+#     df1
+
+    name = ['mean', 'median', 'min', 'max','IQR','STD']
+    df2 = pd.DataFrame( columns = feat_list, index = name)
+    for i in feat_list:
+        df2t = data2[i]
+        upp = np.nanquantile(df2t, 0.75)
+        low = np.nanquantile(df2t, 0.25)
+        functions = [
+            np.round(np.nanmean(df2t), 3),
+            np.round(np.nanmedian(df2t), 3), 
+            np.round(np.nanmin(df2t), 3),
+            np.round(np.nanmax(df2t), 3),
+            np.round(upp - low, 3),
+            np.round(np.nanstd(df2t),3),
+    #         len(df2t)
+        ]
+        for n, fn in zip(name, functions):
+            df2[i].loc[n] = fn
+    df2 = df2.round(decimals = 3)
+    df2
+    perc_samples = (df1 - df2) / df2
+    
+    return perc_samples
+
 
 
     
