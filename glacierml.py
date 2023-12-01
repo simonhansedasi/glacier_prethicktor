@@ -368,8 +368,8 @@ output = dataframe and series randomly selected and populated as either training
 # Randomly selects data from a df for a given random state (usually iterated over a range of 25)
 # Necessary variables for training and predictions
 def split_data(df, random_state = 0):
-    train_dataset = df.sample(frac=0.7, random_state=random_state)
-    test_dataset = df.drop(train_dataset.index)
+    train_dataset = df.sample(frac=0.7, random_state=random_state).drop('RGIId', axis = 1)
+    test_dataset = df.drop(train_dataset.index).drop('RGIId', axis = 1)
 
     train_features = train_dataset.copy()
     test_features = test_dataset.copy()
@@ -432,8 +432,10 @@ def build_dnn_model(
     )
     
     if loss == 'mse':
-        model.compile(optimizer='adam', loss='mean_squared_error')
-
+        model.compile(
+            loss='mean_squared_error',
+            optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate)
+        )   
 #         model.compile(optimizer='sgd', loss=tf.keras.losses.MeanSquaredError())
     if loss == 'mae':
         
