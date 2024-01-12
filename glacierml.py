@@ -367,7 +367,7 @@ output = dataframe and series randomly selected and populated as either training
 '''
 # Randomly selects data from a df for a given random state (usually iterated over a range of 25)
 # Necessary variables for training and predictions
-def split_data(df, random_state = 0):
+def split_data(df, random_state = 0,var = 'Thickness'):
     train_dataset = df.sample(frac=0.7, random_state=random_state).drop('RGIId', axis = 1)
     test_dataset = df.drop(train_dataset.index).drop('RGIId', axis = 1)
 
@@ -375,8 +375,8 @@ def split_data(df, random_state = 0):
     test_features = test_dataset.copy()
 
     #define label - attribute training to be picked
-    train_labels = train_features.pop('Thickness')
-    test_labels = test_features.pop('Thickness')
+    train_labels = train_features.pop(var)
+    test_labels = test_features.pop(var)
     
     return train_features, test_features, train_labels, test_labels
 
