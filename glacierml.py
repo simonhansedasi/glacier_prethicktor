@@ -82,15 +82,17 @@ def load_RGI(
     return RGI
 
 
-def coregister_data(coregistration = '1', pth = '/data/fast1/glacierml/data/'):
+def coregister_data(coregistration = '1',form = '', pth = '/data/fast1/glacierml/data/',area = 'R'):
     import configparser
     config = configparser.ConfigParser()
     config.read('model_coregistration.txt')
 
     data = load_training_data(
+        form,
         pth = pth,
         area_scrubber = config[coregistration]['area scrubber'],
-        anomaly_input = float(config[coregistration]['size threshold'])
+        anomaly_input = float(config[coregistration]['size threshold']),
+        area = area,
     )
 
 
@@ -103,13 +105,31 @@ def coregister_data(coregistration = '1', pth = '/data/fast1/glacierml/data/'):
         'RGI Centroid Distance', 
         'AVG Radius', 
         'Roundness', 
-        'distance test', 
-        'size difference'
+#         'distance test', 
+#         'size difference'
     ], axis = 1)
     
+#     sd = data['SURVEY_DATE'].astype(str)
+    data = data.reset_index().drop('index',axis = 1)
+    data['SURVEY_DATE'] = data['SURVEY_DATE'].astype(str)
+
+    data['SURVEY_DATE'] = data['SURVEY_DATE'].str[:-6]
+    data['SURVEY_DATE'][data['SURVEY_DATE'] == ''] = '1953'
+    rgi_date = data['BgnDate'].astype(str).str[:-4]
+    gla_date  = data['SURVEY_DATE']
+#     sd[sd == ''] = 1950
+    tp = pd.Series((rgi_date.values.astype(int) - gla_date.values.astype(int)),name = 'YearsBetween')
+#     data = data.reset_index().drop('index',axis = 1)
+#     print(tp)
+    data = pd.concat([data,tp],axis = 1)
+    data['YearsBetween'][data['YearsBetween'] == 0] = 0.1
+    data['CR'] = (data['perc smaller']) / data['YearsBetween']
+#     data = data.drop(['SURVEY_DATE','BgnDate','YearsBetween'],axis = 1)
+#     data['CR'][data['CR'] == np.inf] = 0.5
     return data
 
 def load_training_data(
+    form,
     pth = '/data/fast1/glacierml/data/',
 #     alt_pth = '/home/prethicktor/data/',
     RGI_input = 'y',
@@ -117,6 +137,8 @@ def load_training_data(
     region_selection = 1,
     area_scrubber = 'off',
     anomaly_input = 0.5,
+    area = '',
+    
 #     data_version = 'v1'
 ):        
     import os
@@ -152,7 +174,8 @@ def load_training_data(
             'Lon',
             'area_g',
             'Slope',
-            'Thickness'
+            'Thickness',
+            'SURVEY_DATE'
         ]]
         df = df.rename(columns = {
             'area_g':'Area'
@@ -165,13 +188,26 @@ def load_training_data(
         RGI = load_RGI(pth = os.path.join(pth, 'RGI/rgi60-attribs/'))
 #         print(RGI)
         RGI['region'] = RGI['RGIId'].str[6:8]
-
+    
+        # drop glacier complexes
+        RGI = RGI.drop(RGI[RGI['Status'] == 1].index)
+        
+        # separate out glaciers
+        if form == 'glacier':
+            RGI = RGI[RGI['Form'] == 0]
+            
+        # separate out ice caps
+        if form == 'cap':
+            RGI = RGI[RGI['Form'] == 1]
+        
+        
+        
         # load glacier GlaThiDa data v2
         glacier = pd.read_csv(pth_5)    
         glacier = glacier.rename(columns = {
             'LAT':'Lat',
             'LON':'Lon',
-            'AREA':'Area',
+            'AREA':'Area_GlaThiDa',
             'MEAN_SLOPE':'Mean Slope',
             'MEAN_THICKNESS':'Thickness'
         })   
@@ -183,6 +219,7 @@ def load_training_data(
         
         
         glacier = glacier.dropna(subset = ['RGIId'])
+#         print(glacier)
         rgi_matches = len(glacier)
         rgi_matches_unique = len(glacier['RGIId'].unique())
         
@@ -198,11 +235,13 @@ def load_training_data(
         # make a temp df for the duplicated entries
         
         # calculate the difference in size as a percentage
-        df['size difference'] = abs(
-            ( (df['Area_x'] - df['Area_y']) )/ df['Area_y'] )
+        df['perc smaller'] = (
+            ( (df['Area'] - df['Area_GlaThiDa']) )/ df['Area_GlaThiDa'] )
+        
+        df['size difference'] = (
+            ( (df['Area'] - df['Area_GlaThiDa']) ))
                        
-        df = df.rename(columns = {'Area_x':'Area',})
-#         df = df.rename(columns = {'Area_y':'Area_GlaThiDa',})
+#         df = df.rename(columns = {'Area':'Area_RGI',})
         df = df[[
             'RGIId',
             'CenLat',
@@ -211,7 +250,7 @@ def load_training_data(
 #             'Lon',
             'Area',
 #             'Area_RGI',
-#             'Area_GlaThiDa',
+            'Area_GlaThiDa',
             'Zmin',
             'Zmed',
             'Zmax',
@@ -221,14 +260,18 @@ def load_training_data(
             'Thickness',
 #             'area_g',
             'region',
+            'perc smaller',
             'size difference',
 #             'index_x',
 #             'index_y',
-            'RGI Centroid Distance'
+            'RGI Centroid Distance',
+            'SURVEY_DATE',
+            'BgnDate'
         ]]
         
         if area_scrubber == 'on':          
-            df = df[df['size difference'] <= anomaly_input]
+            df = df[(df['perc smaller'] <= anomaly_input) & 
+                    (df['perc smaller'] >= -anomaly_input)]
 #             df = df.drop([
 #                 'size difference',
 # #                 'Area_y'
@@ -249,19 +292,32 @@ def load_training_data(
                 'Zmax',
                 'Area',
 #                 'Area_RGI',
-#                 'Area_GlaThiDa',
                 'Aspect',
                 'Lmax',
                 'Thickness',
                 'region',
                 'RGI Centroid Distance',
-                'size difference'
+                'perc smaller',
+                'size difference',
+                'SURVEY_DATE',
+                'Area_GlaThiDa',
+                'BgnDate'
             ]]
     
+
+#     if area == 'R':
+#         df = df.drop('Area_GlaThiDa', axis = 1)
+#     if area == 'G':
+#         df = df.drop('Area',axis = 1)
+#         df = df.rename(columns = {'Area_GlaThiDa':'Area'})
+#         df = df.rename(columns = {'Area_GlaThiDa':'Area'})
+#     print(len(df))
     # convert everything to common units (m)
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'].str[:-2].astype(float)
     df['RGI Centroid Distance'] = df['RGI Centroid Distance'] * 1e3
-
+#     df = df.rename(columns = {
+#         'Area_GlaThiDa':'Area'
+#     })
     df['Area'] = df['Area'] * 1e6     # Put area to meters for radius and roundness calc
 
     # make a guess of an average radius and "roundness" -- ratio of avg radius / width
@@ -271,12 +327,76 @@ def load_training_data(
     
     
     df['Area'] = df['Area'] / 1e6     # Put area back to sq km
+#     df['Area'] = df['Area'] - df['size difference']
 #     df['Area'] = np.log10(df['Area'])
 #     df['Lmax'] = np.log10(df['Lmax'])
-        
+#     df = df.rename(columns = {'Area_GlaThiDa':'Area'})
     return df
 
+def load_LOO_data(include_train = False,v = ''):
+    model_path = os.path.join(
+    '/data/fast1/glacierml/models/LOO' + v,'rgi_est_raw.pkl'
+    )
+    RGI = pd.read_pickle(model_path) 
+    if v == '_2':
+        RGI['Lmax'] = RGI['Lmax'] / 1e3
+    #### Add Farinotti mean thickness estimates ####
+    ref_pth = '/data/fast1/glacierml/data/reference_thicknesses/'
+    ref = pd.DataFrame()
+    for file in os.listdir(ref_pth):
+        if 'Farinotti' in file:
+            file_reader = pd.read_csv('reference_thicknesses/' + file)
+            ref = pd.concat([ref, file_reader], ignore_index = True) 
+    ref = ref.rename(columns = {
+         'Farinotti Mean Thickness':'FMT',
+    })
+    ref = ref[[
+         'FMT',
+         'RGIId',
+    ]]
 
+    df = pd.merge(RGI, ref, how = 'inner', on = 'RGIId')
+
+    # Estimate uncertainty in area
+    if v == '_r3':
+        train = coregister_data('3')
+    else:
+        train = coregister_data('4')
+    train = train.drop(train[train['RGIId'].duplicated(keep = False)].index)
+    train = train.sample(frac = 1,random_state = 0)
+    train = train.reset_index().drop('index', axis = 1)
+    E_delta_a = train['perc smaller']
+#     E_delta_a = E_delta_a.drop(E_delta_a[E_delta_a <-0.5].index)
+#     E_delta_a = E_delta_a.drop(E_delta_a[E_delta_a >0.5].index)
+#     E_delta_a = E_delta_a.reset_index().drop('index',axis = 1)
+    E_delta_a = E_delta_a.to_numpy()
+    E_delta_a = 1+E_delta_a
+    E_delta_a = E_delta_a.reshape(len(E_delta_a),1)
+
+    area = df['Area'].to_numpy()
+    area = area.reshape(len(df),1)
+
+    area_unc = (np.multiply(E_delta_a.T,area))
+
+    areas = []
+    for i in range(len(E_delta_a)):
+        areas.append('Area_unc_'+str(i))
+    cols = []
+    for i in range(len(train)):
+        cols.append(i)
+    df[cols] = np.round(df[cols],0)
+
+    # df[area_uncs] = area_unc
+
+    df = pd.concat([df,pd.DataFrame(area_unc,columns = areas)],axis = 1)
+    df[areas] = np.round(df[areas],3)
+    
+    if v == '_2':
+        train['Lmax'] = train['Lmax'] / 1e3
+    if include_train == True:
+        df = pd.merge(train, df, how = 'inner', on = list(train)[:-9])
+    return E_delta_a, areas, cols, df
+    
 
 '''
 GlaThiDa_RGI_index_matcher:
@@ -2110,6 +2230,8 @@ def findlog(x):
     elif x < 0:
         log = math.log(x*-1)*-1
     elif x == 0:
+        log = 0
+    elif x == 'nan':
         log = 0
     return log
 
