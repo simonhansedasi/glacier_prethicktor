@@ -6,16 +6,15 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-import os
+# import matplotlib.pyplot as plt
+# from tqdm import tqdm
+# import os
 import geopy.distance
-import warnings
-# from tensorflow.python.util import deprecation
-import logging
-from scipy.stats import shapiro
-import pickle
-import math
+# import warnings
+# import logging
+# from scipy.stats import shapiro
+# import pickle
+# import math
 
 
 # tf.random.set_seed(42)
@@ -250,7 +249,7 @@ def load_training_data(
 #             'Lon',
             'Area',
 #             'Area_RGI',
-            'Area_GlaThiDa',
+#             'Area_GlaThiDa',
             'Zmin',
             'Zmed',
             'Zmax',
@@ -276,9 +275,9 @@ def load_training_data(
 #                 'size difference',
 # #                 'Area_y'
 #             ], axis = 1)
-#             df = df.rename(columns = {
-#                 'Area_x':'Area'
-#             })
+            df = df.rename(columns = {
+                'Area_x':'Area'
+            })
 
             df = df[[
                 'RGIId',
@@ -300,7 +299,7 @@ def load_training_data(
                 'perc smaller',
                 'size difference',
                 'SURVEY_DATE',
-                'Area_GlaThiDa',
+#                 'Area_GlaThiDa',
                 'BgnDate'
             ]]
     
@@ -356,16 +355,25 @@ def load_LOO_data(include_train = False,v = ''):
     ]]
 
     df = pd.merge(RGI, ref, how = 'inner', on = 'RGIId')
-
+#     print(list(df))
     # Estimate uncertainty in area
     if v == '_r3':
         train = coregister_data('3')
+    if v == '_g-4':
+        train = coregister_data('4',form = 'glacier')
+    if v == '_g-3':
+        train = coregister_data('3',form = 'glacier')
     else:
         train = coregister_data('4')
+    
+    
     train = train.drop(train[train['RGIId'].duplicated(keep = False)].index)
     train = train.sample(frac = 1,random_state = 0)
     train = train.reset_index().drop('index', axis = 1)
     E_delta_a = train['perc smaller']
+#     print(len(E_delta_a))
+#     print(list(train))
+
 #     E_delta_a = E_delta_a.drop(E_delta_a[E_delta_a <-0.5].index)
 #     E_delta_a = E_delta_a.drop(E_delta_a[E_delta_a >0.5].index)
 #     E_delta_a = E_delta_a.reset_index().drop('index',axis = 1)
@@ -402,44 +410,45 @@ def load_LOO_data(include_train = False,v = ''):
 GlaThiDa_RGI_index_matcher:
 '''
 def match_GlaThiDa_RGI_index(
-    pth = '/data/fast1/glacierml/data/',
+#     pth = '/data/fast1/glacierml/data/',
+    RGI,glathida,
     verbose = False,
     useMP = False
 ):
     
-    import os
-    pth_1 = os.path.join(pth, 'T_data/')
-    pth_2 = os.path.join(pth, 'RGI/rgi60-attribs/')
-    pth_3 = os.path.join(pth, 'matched_indexes/', version)
+#     import os
+#     pth_1 = os.path.join(pth, 'T_data/')
+#     pth_2 = os.path.join(pth, 'RGI/rgi60-attribs/')
+#     pth_3 = os.path.join(pth, 'matched_indexes/', version)
     
-    glathida = pd.read_csv(pth_1 + 'T.csv')
-    glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
-    glathida['RGIId'] = np.nan
-    glathida['RGI Centroid Distance'] = np.nan
-    glathida = glathida.reset_index()
-    glathida = glathida.drop('index', axis = 1)
-    if verbose: print(glathida)
-    RGI = pd.DataFrame()
-    for file in os.listdir(pth_2):
-#         print(file)
-        file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
-        RGI = pd.concat([RGI, file_reader], ignore_index = True)
-    RGI = RGI.reset_index()
-    df = pd.DataFrame()
+#     glathida = pd.read_csv(pth_1 + 'T.csv')
+#     glathida = glathida.dropna(subset = ['MEAN_THICKNESS'])
+#     glathida['RGIId'] = np.nan
+#     glathida['RGI Centroid Distance'] = np.nan
+#     glathida = glathida.reset_index()
+#     glathida = glathida.drop('index', axis = 1)
+#     if verbose: print(glathida)
+#     RGI = pd.DataFrame()
+#     for file in os.listdir(pth_2):
+# #         print(file)
+#         file_reader = pd.read_csv(pth_2 + file, encoding_errors = 'replace', on_bad_lines = 'skip')
+#         RGI = pd.concat([RGI, file_reader], ignore_index = True)
+#     RGI = RGI.reset_index()
+#     df = pd.DataFrame()
     #iterate over each glathida index
     
     if useMP == False:
         centroid_distances = []
         RGI_ids = []
         for i in tqdm(glathida.index):
-            RGI_id_match, centroid_distance = get_id(RGI,glathida,version,verbose,i)
+            RGI_id_match, centroid_distance = get_id(RGI,glathida,verbose,i)
             centroid_distances.append(centroid_distance)
             RGI_ids.append(RGI_id_match)
     else:
         from functools import partial
         import multiprocessing
         pool = multiprocessing.pool.Pool(processes=48)         # create a process pool with 4 workers
-        newfunc = partial(get_id,RGI,glathida,version,verbose) #now we can call newfunc(i)
+        newfunc = partial(get_id,RGI,glathida,verbose) #now we can call newfunc(i)
         output = pool.map(newfunc, glathida.index)
 #         print(output)
 #         print(output)
@@ -449,14 +458,15 @@ def match_GlaThiDa_RGI_index(
         glathida.loc[glathida.index[i], 'RGIId'] = output[i][0]
         glathida.loc[glathida.index[i], 'RGI Centroid Distance'] = output[i][1]
 #         print(output)
-    isdir = os.path.isdir(pth_3)
-    if isdir == False:
-        os.makedirs(pth_3)
-    glathida.to_csv(pth_3 + 'GlaThiDa_with_RGIId_' + version + '.csv')
+    return glathida
+#     isdir = os.path.isdir(pth_3)
+#     if isdir == False:
+#         os.makedirs(pth_3)
+#     glathida.to_csv(pth_3 + 'GlaThiDa_with_RGIId_' + version + '.csv')
 
     
-def get_id(RGI,glathida,version,verbose,i):
-    if verbose: print(f'Working on Glathida ID {i}')
+def get_id(RGI,glathida,verbose,i):
+    if verbose: print(f'Working on Glathida index {i}')
     #obtain lat and lon from glathida 
     glathida_ll = (glathida.loc[i].LAT,glathida.loc[i].LON)
 
@@ -534,13 +544,7 @@ output = dnn model with desired layer architecture, ready to be trained.
 '''
 def build_dnn_model(
     norm, learning_rate=0.01, layer_1 = 10, layer_2 = 5, loss = 'mae'
-):
-#     def coeff_determination(y_true, y_pred):
-#         SS_res =  K.sum(K.square( y_true-y_pred )) 
-#         SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) ) 
-#     return ( 1 - SS_res/(SS_tot + K.epsilon()) )
-
-    
+):    
     model = keras.Sequential(
         [
               norm,
@@ -549,34 +553,18 @@ def build_dnn_model(
               layers.Dense(layer_2, activation='relu'),
               layers.Dense(1) 
         ]
-    )
-    
+    )    
     if loss == 'mse':
         model.compile(
             loss='mean_squared_error',
             optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate)
         )   
-#         model.compile(optimizer='sgd', loss=tf.keras.losses.MeanSquaredError())
     if loss == 'mae':
         
         model.compile(
             loss='mean_absolute_error',
             optimizer=tf.keras.optimizers.Adam(learning_rate = learning_rate)
-        )    
-#     def coeff_determination(y_true, y_pred):
-#         SS_res =  K.sum(K.square( y_true-y_pred )) 
-#         SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) ) 
-#         return ( 1 - SS_res/(SS_tot + keras.epsilon()) )
-    
-#     model_mse.compile(
-#         optimizer='adam', loss='mean_squared_error', metrics=[coeff_determination]
-#     )
-
-
-        
-        
-        
-    
+        )      
     return model
 
 
@@ -587,8 +575,6 @@ input = desired test results
 output = loss plots for desired model
 '''
 def plot_loss(history):
-#     plt.subplots(figsize=(10,5))
-
     plt.plot(
         history['loss'], 
          label='loss',
@@ -2224,17 +2210,27 @@ def find_glacier_resid(df):
 
 
 
+# def findlog(x):
+#     if x > 0:
+#         log = math.log(x)
+#     elif x < 0:
+#         log = math.log(x*-1)*-1
+#     elif x == 0:
+#         log = 0
+# #     elif x == 'nan':
+# #         log = 0
+#     return log
+
 def findlog(x):
-    if x > 0:
+    if math.isnan(x):
+        log = 0
+    elif x > 0:
         log = math.log(x)
     elif x < 0:
-        log = math.log(x*-1)*-1
-    elif x == 0:
-        log = 0
-    elif x == 'nan':
+        log = math.log(-x) * -1
+    else:  # x == 0
         log = 0
     return log
-
 
 
 def find_variances(df, ml):
