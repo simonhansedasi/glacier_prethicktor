@@ -363,28 +363,32 @@ def findlog(x):
 def load_LOO_data(
     home_path,
     include_train = False,
+    include_refs = False
 ):
 
-    RGI = pd.read_pickle(os.path.join(home_path,'models','LOO','rgi_est_raw.pkl'))
-    #### Add Farinotti mean thickness estimates ####
-    ref_pth = 'reference_thicknesses/'
-    ref = pd.DataFrame()
-    for file in os.listdir(ref_pth):
-        if 'Farinotti' in file:
-            file_reader = pd.read_csv('reference_thicknesses/' + file)
-            ref = pd.concat([ref, file_reader], ignore_index = True) 
-    ref = ref.rename(columns = {
-         'Farinotti Mean Thickness':'FMT',
-    })
-    ref = ref[[
-         'FMT',
-         'RGIId',
-    ]]
-
-    df = pd.merge(RGI, ref, how = 'inner', on = 'RGIId')
+    df = pd.read_pickle(os.path.join(home_path,'models','LOO','rgi_est_raw.pkl'))
+    # #### Add Farinotti mean thickness estimates ####
+    # ref_pth = 'reference_thicknesses/'
+    # ref = pd.DataFrame()
+    # for file in os.listdir(ref_pth):
+    #     if 'Farinotti' in file:
+    #         file_reader = pd.read_csv('reference_thicknesses/' + file)
+    #         ref = pd.concat([ref, file_reader], ignore_index = True) 
+    # ref = ref.rename(columns = {
+    #      'Farinotti Mean Thickness':'FMT',
+    # })
+    # print(ref)
+    # ref = ref[[
+    #      'FMT',
+    #      'RGIId',
+    # ]]
+    if include_refs == True:
+        ref = pd.read_pickle(os.path.join(home_path,'data/reference_thicknesses/refs.pkl'))
+        df = pd.merge(df, ref, how = 'inner', on = 'RGIId')
 
     # train = coregister_data_reform(home_path + '/data/', '4')
     train = coregister_data(home_path + '/data/', '4')
+    # train['Thickness'] = train['Thickness'] / 1e3
     train = train.sample(frac = 1,random_state = 0)
     train = train.reset_index().drop('index', axis = 1)
 
@@ -395,6 +399,9 @@ def load_LOO_data(
 
     if include_train == True:
         df = pd.merge(train, df, how = 'inner', on = list(train)[:-1])
+        
+#     df[cols] = df[cols] / 1e3
+#     df['FMT'] = df['FMT'] / 1e3
         
     return cols, df
 
