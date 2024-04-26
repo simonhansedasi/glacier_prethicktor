@@ -8,15 +8,17 @@ We treat estimating glacier thickness as a regression problem as opposed to ice 
     <li> tensorflow v. 2.12.0
 </ul>
 
-### Install conda environment with the following code snippet
+### Install conda environment and dependencies with the following code snippet
 ```
 conda install -n glacierml python=3.8.10
 conda activate glacierml
 pip install ipykernel
 python -m ipykernel install --user --name=prethicktor --display-name="glacierml (Python3.8.10)"
+pip install requests pandas tensorflow==2.12.0 tqdm geopy matplotlib scikit-learn
 ```
 
-Run the notebooks in number order. The rest are for data analysis.
+
+Run the notebooks in number order. Just set the home path and everything should be automated.
 
 <!-- 00-install_packages.ipynb will install the rest of the project dependencies.
 
