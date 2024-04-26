@@ -27,7 +27,10 @@ def set_paths(home_path):
     if not os.path.exists(glathida_path):
         os.makedirs(glathida_path)
     
-    
+    ref_path = os.path.join(data_path,'reference_thicknesses')
+    if not os.path.exists(ref_path):
+        os.makedirs(ref_path)
+        
     model_path = os.path.join(home_path,'models')
     if not os.path.exists(model_path):
         os.makedirs(model_path)
@@ -45,7 +48,7 @@ def set_paths(home_path):
     if not os.path.exists(LOO_path):
         os.makedirs(LOO_path)    
     return [
-        data_path, RGI_path, glathida_path, 
+        data_path, RGI_path, glathida_path, ref_path,
         coregistration_testing_path, 
         arch_test_path, LOO_path
     ]
