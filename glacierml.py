@@ -400,8 +400,8 @@ def load_LOO_data(
     if include_train == True:
         df = pd.merge(train, df, how = 'inner', on = list(train)[:-1])
         
-#     df[cols] = df[cols] / 1e3
-#     df['FMT'] = df['FMT'] / 1e3
+    df[cols] = df[cols] / 1e3
+    df['FMT'] = df['FMT'] / 1e3
         
     return cols, df
 
