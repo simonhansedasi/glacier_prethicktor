@@ -11,10 +11,10 @@ We treat estimating glacier thickness as a regression problem as opposed to ice 
 
 ### Install conda environment and dependencies with the following code snippet
 ```
-conda install -n glacierml python=3.8.10
+conda create -n glacierml python=3.8.10
 conda activate glacierml
 pip install ipykernel
-python -m ipykernel install --user --name=prethicktor --display-name="glacierml (Python3.8.10)"
+python -m ipykernel install --user --name=glacierml --display-name="glacierml (Python3.8.10)"
 ```
 
 
