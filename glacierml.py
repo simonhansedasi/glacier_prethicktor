@@ -1,10 +1,16 @@
 # import sys
 # !{sys.executable} -m pip install 
-import os
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from geopy.distance import geodesic
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # 0: default, 1: no INFO, 2: no INFO or WARNING, 3: no INFO, WARNING, or ERROR
+import warnings
+warnings.filterwarnings("ignore", message="oneDNN custom operations are on.*")
+warnings.filterwarnings("ignore", message="Could not find cuda drivers.*")
+warnings.filterwarnings("ignore", message="This TensorFlow binary is optimized.*")
+warnings.filterwarnings("ignore", message="TF-TRT Warning: Could not find TensorRT.*")
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -13,45 +19,8 @@ np.random.seed(42)
 
 
 
-def set_paths(home_path):
-    
-    data_path = os.path.join(home_path,'data')
-    if not os.path.exists(data_path):
-        os.makedirs(data_path)
-        
-    RGI_path = os.path.join(data_path,'RGI')
-    if not os.path.exists(RGI_path):
-        os.makedirs(RGI_path)
-        
-    glathida_path = os.path.join(data_path,'glathida')
-    if not os.path.exists(glathida_path):
-        os.makedirs(glathida_path)
-    
-    ref_path = os.path.join(data_path,'reference_thicknesses')
-    if not os.path.exists(ref_path):
-        os.makedirs(ref_path)
-        
-    model_path = os.path.join(home_path,'models')
-    if not os.path.exists(model_path):
-        os.makedirs(model_path)
-        
-    
-    coregistration_testing_path = os.path.join(model_path,'coregistration_testing')
-    if not os.path.exists(coregistration_testing_path):
-        os.makedirs(coregistration_testing_path)
-    
-    arch_test_path = os.path.join(model_path,'arch_testing')
-    if not os.path.exists(arch_test_path):
-        os.makedirs(arch_test_path)
-    
-    LOO_path = os.path.join(model_path,'LOO')
-    if not os.path.exists(LOO_path):
-        os.makedirs(LOO_path)    
-    return [
-        data_path, RGI_path, glathida_path, ref_path,
-        coregistration_testing_path, 
-        arch_test_path, LOO_path
-    ]
+
+
 
 
 
@@ -376,7 +345,7 @@ def load_LOO_data(
     
     
     if include_refs == True:
-        ref = pd.read_pickle(os.path.join(home_path,'data/reference_thicknesses/refs.pkl'))
+        ref = pd.read_pickle(os.path.join(home_path,'data/ref/refs.pkl'))
         df = pd.merge(df, ref, how = 'inner', on = 'RGIId')
         df['FMT'] = df['FMT'] / 1e3   
         
