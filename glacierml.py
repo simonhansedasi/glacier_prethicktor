@@ -346,7 +346,8 @@ def load_LOO_data(
     
     if include_refs == True:
         ref = pd.read_pickle(os.path.join(home_path,'data/ref/refs.pkl'))
-        df = pd.merge(df, ref, how = 'inner', on = 'RGIId')
+        df = pd.merge(df, ref, how = 'left', on = 'RGIId')
+        df['FMT'] = np.round(df['FMT'],0)
         df['FMT'] = df['FMT'] / 1e3   
         
     if include_train == True:
