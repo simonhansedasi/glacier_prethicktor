@@ -1,6 +1,6 @@
 # glacier_prethicktor
 
-10.5281/zenodo.11105542
+[![DOI](https://zenodo.org/badge/459624562.svg)](https://zenodo.org/doi/10.5281/zenodo.11105541)
 
 A machine learning approach to predicting glacier thicknesses.
 
